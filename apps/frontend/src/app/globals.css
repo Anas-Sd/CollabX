@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #0A0A0F;
+  --color-foreground: #E8E8F0;
+
+  --color-card: #111118;
+  --color-card-foreground: #E8E8F0;
+
+  --color-border: #1E1E2E;
+
+  --color-primary: #6C63FF;
+  --color-primary-foreground: #ffffff;
+
+  --color-secondary: #00D4AA;
+  --color-secondary-foreground: #ffffff;
+
+  --color-muted: #111118;
+  --color-muted-foreground: #6B6B80;
+
+  --color-danger: #FF4C4C;
+  --color-danger-foreground: #ffffff;
+
+  --color-success: #00D4AA;
+  --color-success-foreground: #ffffff;
+
+  --font-sans: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+}
+
+/* Base styles for dark theme */
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+/* Custom scrollbar to match dark UI */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted-foreground);
+}
