@@ -7,8 +7,8 @@ import { useNotificationStore } from '../../store/notificationStore';
 
 export default function CreateRoomModal({ isOpen, onClose }) {
   const [name, setName] = useState('');
-  const [duration, setDuration] = useState(30); 
-  const [limit, setLimit] = useState(2); 
+  const [duration, setDuration] = useState(30);
+  const [limit, setLimit] = useState(2);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { user } = useUserStore();
@@ -37,15 +37,15 @@ export default function CreateRoomModal({ isOpen, onClose }) {
     e.preventDefault();
     setLoading(true);
     try {
-      const payload = { 
+      const payload = {
         name: name || 'Untitled Workspace',
         maxMembers: limit
       };
       if (duration !== 'CUSTOM') payload.durationMinutes = duration;
-      
+
       const res = await api.post('/rooms', payload);
       const roomId = res.data.id || res.data.roomId;
-      
+
       if (roomId) {
         useNotificationStore.getState().addNotification('Workspace initialized successfully!', 'success');
         router.push(`/room/${roomId}`);
@@ -66,18 +66,18 @@ export default function CreateRoomModal({ isOpen, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Animated Backdrop Blur */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/60 backdrop-blur-xl transition-opacity animate-in fade-in duration-500"
         onClick={onClose}
       />
-      
+
       {/* Modal Container */}
       <div className="relative w-full max-w-lg transform rounded-3xl bg-[#0a0a0f]/90 border border-white/10 shadow-[0_0_60px_-15px_rgba(99,102,241,0.3)] overflow-hidden animate-in zoom-in-95 fade-in duration-300">
-        
+
         {/* Animated Top Glow Line */}
         <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-70"></div>
         <div className="absolute top-0 left-1/4 right-1/4 h-[1px] bg-white/50 blur-[2px]"></div>
-        
+
         {/* Ambient background glow */}
         <div className="absolute -top-32 -right-32 w-64 h-64 bg-primary/20 rounded-full blur-[80px] pointer-events-none"></div>
         <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-purple-500/10 rounded-full blur-[80px] pointer-events-none"></div>
@@ -133,11 +133,10 @@ export default function CreateRoomModal({ isOpen, onClose }) {
                     key={opt.label}
                     type="button"
                     onClick={() => handleSelectDuration(opt.value, opt.pro)}
-                    className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all relative z-10 ${
-                      duration === opt.value
+                    className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all relative z-10 ${duration === opt.value
                         ? 'bg-gradient-to-b from-white/10 to-transparent text-white shadow-[0_2px_10px_rgba(0,0,0,0.5)] border border-white/10'
                         : 'text-muted-foreground hover:text-white hover:bg-white/5 border border-transparent'
-                    }`}
+                      }`}
                   >
                     {opt.label}
                     {opt.pro && proBadge}
@@ -162,11 +161,10 @@ export default function CreateRoomModal({ isOpen, onClose }) {
                     key={opt.label}
                     type="button"
                     onClick={() => handleSelectLimit(opt.value, opt.pro)}
-                    className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all relative z-10 ${
-                      limit === opt.value
+                    className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all relative z-10 ${limit === opt.value
                         ? 'bg-gradient-to-b from-white/10 to-transparent text-white shadow-[0_2px_10px_rgba(0,0,0,0.5)] border border-white/10'
                         : 'text-muted-foreground hover:text-white hover:bg-white/5 border border-transparent'
-                    }`}
+                      }`}
                   >
                     {opt.label}
                     {opt.pro && proBadge}

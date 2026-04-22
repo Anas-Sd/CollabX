@@ -35,7 +35,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab }) {
     message: '',
     confirmText: '',
     hideCancel: false,
-    onConfirm: () => {}
+    onConfirm: () => { }
   });
 
   const openConfirm = (title, message, confirmText, onConfirm, hideCancel = false) => {
@@ -194,7 +194,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab }) {
                   <button
                     onClick={() => {
                       openConfirm(
-                        "End Workspace", 
+                        "End Workspace",
                         "Are you sure you want to end this workspace? This will forcefully disconnect all users and delete the session.",
                         "End Workspace",
                         () => api.post(`/rooms/${roomId}/end`).then(() => router.push('/dashboard'))
@@ -261,7 +261,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab }) {
 
                     <div className="flex items-center gap-2">
                       {isMe && (
-                        <button 
+                        <button
                           onClick={() => setIsMyMicMuted(!isMyMicMuted)}
                           className="p-1 hover:bg-background rounded transition-colors cursor-pointer"
                         >
@@ -446,9 +446,8 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab }) {
                     setConfirmModalConfig({ ...confirmModalConfig, isOpen: false });
                   }
                 }}
-                className={`px-4 py-2 text-white rounded-lg text-sm font-bold shadow-sm transition-colors ${
-                  confirmModalConfig.hideCancel ? 'bg-primary hover:bg-primary/90' : 'bg-danger hover:bg-danger/90 shadow-[0_0_15px_rgba(255,76,76,0.3)]'
-                }`}
+                className={`px-4 py-2 text-white rounded-lg text-sm font-bold shadow-sm transition-colors ${confirmModalConfig.hideCancel ? 'bg-primary hover:bg-primary/90' : 'bg-danger hover:bg-danger/90 shadow-[0_0_15px_rgba(255,76,76,0.3)]'
+                  }`}
               >
                 {confirmModalConfig.confirmText}
               </button>

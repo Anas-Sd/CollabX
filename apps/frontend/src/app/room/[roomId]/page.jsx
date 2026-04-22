@@ -26,7 +26,7 @@ export default function RoomPage() {
   const [isMounted, setIsMounted] = useState(false);
   const joinedRef = useRef(false);
   const hasWarnedRef = useRef(false);
-  
+
   const [timeLeft, setTimeLeft] = useState(null);
   const [extending, setExtending] = useState(false);
 
@@ -69,7 +69,7 @@ export default function RoomPage() {
         if (savedUnread) {
           useRoomStore.getState().setUnreadChatCount(parseInt(savedUnread, 10));
         }
-        
+
         if (!joinedRef.current) {
           useNotificationStore.getState().addNotification('Successfully joined workspace!', 'success');
           joinedRef.current = true;
@@ -135,7 +135,7 @@ export default function RoomPage() {
       setTimeLeft(null);
       return;
     }
-    
+
     const calculateTimeLeft = () => {
       const now = new Date();
       const expiration = new Date(expiresAt);
@@ -216,9 +216,8 @@ export default function RoomPage() {
           </div>
 
           {timeLeft !== null && timeLeft > 0 && (
-            <div className={`flex items-center gap-2 border px-3 py-1.5 rounded-full text-[10px] font-mono font-bold transition-colors ${
-              timeLeft <= 300 ? 'text-danger border-danger/30 bg-danger/10 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.3)]' : 'text-primary border-primary/30 bg-primary/10'
-            }`}>
+            <div className={`flex items-center gap-2 border px-3 py-1.5 rounded-full text-[10px] font-mono font-bold transition-colors ${timeLeft <= 300 ? 'text-danger border-danger/30 bg-danger/10 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.3)]' : 'text-primary border-primary/30 bg-primary/10'
+              }`}>
               <Clock size={12} />
               Ends: {Math.floor(timeLeft / 3600).toString().padStart(2, '0')}:{Math.floor((timeLeft % 3600) / 60).toString().padStart(2, '0')}:{(timeLeft % 60).toString().padStart(2, '0')}
             </div>
@@ -226,17 +225,16 @@ export default function RoomPage() {
         </div>
 
         <div className="flex items-center gap-4">
-          
+
           {timeLeft !== null && timeLeft <= 900 && isHost && (
-            <button 
+            <button
               onClick={handleExtend}
               disabled={extending || !isPro}
               title={!isPro ? "PRO Subscription Required" : ""}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
-                isPro 
-                ? 'bg-gradient-to-r from-yellow-500/20 to-amber-600/20 text-yellow-500 border border-yellow-500/30 hover:bg-yellow-500/30 hover:scale-105 active:scale-95 shadow-[0_0_15px_-3px_rgba(234,179,8,0.3)]' 
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${isPro
+                ? 'bg-gradient-to-r from-yellow-500/20 to-amber-600/20 text-yellow-500 border border-yellow-500/30 hover:bg-yellow-500/30 hover:scale-105 active:scale-95 shadow-[0_0_15px_-3px_rgba(234,179,8,0.3)]'
                 : 'bg-background/50 border border-border/50 text-muted-foreground cursor-not-allowed'
-              } ${extending && isPro ? 'opacity-50' : ''}`}
+                } ${extending && isPro ? 'opacity-50' : ''}`}
             >
               <Sparkles size={12} className={extending ? "animate-spin" : ""} />
               {extending ? 'Extending...' : '+30 Min'}

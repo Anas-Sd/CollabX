@@ -31,10 +31,10 @@ api.interceptors.response.use(
   (error) => {
     // Handle Timeouts
     if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
-      error.response = { 
-        ...error.response, 
-        status: 408, 
-        data: { message: 'The server took too long to respond. Please check your connection and try again.' } 
+      error.response = {
+        ...error.response,
+        status: 408,
+        data: { message: 'The server took too long to respond. Please check your connection and try again.' }
       };
     }
 
