@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useRoomStore } from '../store/roomStore';
 import { useUserStore } from '../store/userStore';
+import { useNotificationStore } from '../store/notificationStore';
 import api from '../lib/api';
 
 export const useWebSocket = (roomId) => {
@@ -61,26 +62,26 @@ export const useWebSocket = (roomId) => {
         }
         else if (destination === 'waitlist.status') {
           if (body === 'ACCEPTED') {
-            window.location.reload();
+            useNotificationStore.getState().addNotification('Your join request was approved!', 'success');
+            setTimeout(() => window.location.reload(), 1000);
           } else {
-            alert('Your request to join the workspace was rejected by the host.');
-            window.location.href = '/dashboard';
+            useNotificationStore.getState().addNotification('Your request to join the workspace was rejected by the host.', 'error');
+            setTimeout(() => { window.location.href = '/dashboard?alert=rejected'; }, 1000);
           }
         }
         else if (destination === 'waitlist') {
-          // host needs to refresh participants
           fetchRoomMembers();
         }
         else if (destination === 'roles') {
           fetchRoomMembers();
           if (body.targetUserId === user?.id) {
-            alert(`Your role has been changed to ${body.role}`);
+            useNotificationStore.getState().addNotification(`Your role has been changed to ${body.role}`, 'info');
           }
         }
         else if (destination === 'kick') {
           if (body === user?.id) {
-            alert("You have been kicked from the workspace.");
-            window.location.href = '/dashboard';
+            useNotificationStore.getState().addNotification("You have been kicked from the workspace.", 'error');
+            setTimeout(() => { window.location.href = '/dashboard?alert=kicked'; }, 1500);
           } else {
             fetchRoomMembers();
           }
@@ -88,11 +89,24 @@ export const useWebSocket = (roomId) => {
         else if (destination === 'host_transfer') {
           fetchRoomMembers();
           if (body === user?.id) {
-            alert("You have been granted HOST authority.");
+            useNotificationStore.getState().addNotification("You have been granted HOST authority.", 'success');
           }
         }
-        else if (destination === 'members.join' || destination === 'members.leave') {
+        else if (destination === 'members.join') {
           fetchRoomMembers();
+          useNotificationStore.getState().addNotification("A new member joined the workspace.", 'info');
+        }
+        else if (destination === 'members.leave') {
+          fetchRoomMembers();
+          useNotificationStore.getState().addNotification("A member left the workspace.", 'warning');
+        }
+        else if (destination === 'end' && body === 'ROOM_ENDED_BY_HOST') {
+          useNotificationStore.getState().addNotification("The host has ended this workspace.", 'error');
+          setTimeout(() => { window.location.href = '/dashboard'; }, 1000);
+        }
+        else if (destination === 'time.extended') {
+          useRoomStore.getState().setExpiresAt(body);
+          useNotificationStore.getState().addNotification("Session time was extended by the host!", 'success');
         }
       } catch (err) {
         console.error('Error parsing WS message', err);

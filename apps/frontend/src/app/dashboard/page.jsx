@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Plus, LogOut, Code, Crown } from 'lucide-react';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Plus, LogOut, Code, Crown, AlertTriangle } from 'lucide-react';
 import { useUserStore } from '../../store/userStore';
 import CreateRoomModal from '../../components/room/CreateRoomModal';
 import api from '../../lib/api';
+import { useNotificationStore } from '../../store/notificationStore';
 
-export default function DashboardPage() {
+function DashboardContent() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [joinRole, setJoinRole] = useState('VIEWER');
@@ -16,13 +17,36 @@ export default function DashboardPage() {
 
   const router = useRouter();
   const { user, logout, restoreSession, isAuthenticated } = useUserStore();
+  const searchParams = useSearchParams();
 
   const [isMounted, setIsMounted] = useState(false);
+  const [alertModalConfig, setAlertModalConfig] = useState({ isOpen: false, title: '', message: '' });
 
   useEffect(() => {
     setIsMounted(true);
     restoreSession();
   }, [restoreSession]);
+
+  useEffect(() => {
+    if (isMounted) {
+      const alertParam = searchParams.get('alert');
+      if (alertParam === 'kicked') {
+        setAlertModalConfig({
+          isOpen: true,
+          title: 'You were kicked',
+          message: 'The host has removed you from the workspace.'
+        });
+        router.replace('/dashboard');
+      } else if (alertParam === 'rejected') {
+        setAlertModalConfig({
+          isOpen: true,
+          title: 'Join Request Rejected',
+          message: 'Your request to join the workspace was rejected by the host.'
+        });
+        router.replace('/dashboard');
+      }
+    }
+  }, [isMounted, searchParams, router]);
 
   useEffect(() => {
     if (isMounted && !isAuthenticated) {
@@ -49,8 +73,14 @@ export default function DashboardPage() {
       await api.post(`/rooms/${joinCode}/join`, { role: joinRole });
       router.push(`/room/${joinCode}`);
     } catch (err) {
-      console.error('Failed to join room', err);
-      router.push(`/room/${joinCode}`);
+      if (!err.response || err.response.status >= 500) {
+        console.error('Failed to join room', err);
+      }
+      let errorMsg = "An error occurred while joining the room.";
+      if (err.response?.data) {
+        errorMsg = typeof err.response.data === 'string' ? err.response.data : (err.response.data.message || err.response.data.error || "Cannot join room. It might be full.");
+      }
+      useNotificationStore.getState().addNotification(errorMsg, 'error');
     } finally {
       setLoadingJoin(false);
     }
@@ -214,6 +244,33 @@ export default function DashboardPage() {
       </main>
 
       <CreateRoomModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
+
+      {/* Alert Modal */}
+      {alertModalConfig.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-card w-full max-w-sm rounded-2xl border border-border shadow-2xl p-6 relative flex flex-col items-center text-center">
+            <div className="w-12 h-12 rounded-full bg-danger/10 text-danger flex items-center justify-center mb-4">
+              <AlertTriangle size={24} />
+            </div>
+            <h2 className="text-xl font-bold text-white mb-2">{alertModalConfig.title}</h2>
+            <p className="text-sm text-muted-foreground mb-6">{alertModalConfig.message}</p>
+            <button
+              onClick={() => setAlertModalConfig({ isOpen: false, title: '', message: '' })}
+              className="w-full py-2.5 bg-background border border-border text-white rounded-xl text-sm font-bold hover:bg-muted transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0A0A0F] flex items-center justify-center"><div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div></div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }

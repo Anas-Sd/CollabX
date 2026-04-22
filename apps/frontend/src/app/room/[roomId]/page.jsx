@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Play, Copy, Check, TerminalSquare, ChevronDown } from 'lucide-react';
+import { Play, Copy, Check, TerminalSquare, ChevronDown, Clock, Sparkles } from 'lucide-react';
 import { useRoomStore } from '../../../store/roomStore';
 import { useUserStore } from '../../../store/userStore';
 import { useWebSocket } from '../../../hooks/useWebSocket';
@@ -9,12 +9,13 @@ import CodeEditor from '../../../components/editor/CodeEditor';
 import OutputPanel from '../../../components/editor/OutputPanel';
 import Sidebar from '../../../components/room/Sidebar';
 import api from '../../../lib/api';
+import { useNotificationStore } from '../../../store/notificationStore';
 
 export default function RoomPage() {
   const { roomId } = useParams();
   const router = useRouter();
   const { user, isAuthenticated, restoreSession } = useUserStore();
-  const { roomName, setRoomInfo, language, setLanguage, testCases, setParticipants } = useRoomStore();
+  const { roomName, expiresAt, setRoomInfo, language, setLanguage, testCases, participants, setParticipants } = useRoomStore();
   const [copied, setCopied] = useState(false);
   const [activeSidebarTab, setActiveSidebarTab] = useState('USERS');
   const [showOutputPanel, setShowOutputPanel] = useState(true);
@@ -23,6 +24,13 @@ export default function RoomPage() {
   const wsHook = useWebSocket(roomId);
 
   const [isMounted, setIsMounted] = useState(false);
+  const joinedRef = useRef(false);
+  const hasWarnedRef = useRef(false);
+  
+  const [timeLeft, setTimeLeft] = useState(null);
+  const [extending, setExtending] = useState(false);
+
+  const isPro = user?.subscriptionType === 'PRO';
 
   useEffect(() => {
     setIsMounted(true);
@@ -43,7 +51,7 @@ export default function RoomPage() {
     const fetchRoomData = async () => {
       try {
         const res = await api.post(`/rooms/${roomId}/join`, { role: 'VIEWER' });
-        setRoomInfo(res.data.id || roomId, res.data.name);
+        setRoomInfo(res.data.id || roomId, res.data.name, res.data.expiresAt);
         if (res.data.members) {
           setParticipants(res.data.members);
         }
@@ -56,8 +64,26 @@ export default function RoomPage() {
         if (res.data.chats) {
           useRoomStore.getState().setChatMessages(res.data.chats);
         }
+
+        const savedUnread = localStorage.getItem(`unread_${res.data.id || roomId}`);
+        if (savedUnread) {
+          useRoomStore.getState().setUnreadChatCount(parseInt(savedUnread, 10));
+        }
+        
+        if (!joinedRef.current) {
+          useNotificationStore.getState().addNotification('Successfully joined workspace!', 'success');
+          joinedRef.current = true;
+        }
       } catch (err) {
-        console.error("Failed to join/fetch room data", err);
+        if (!err.response || err.response.status >= 500) {
+          console.error("Failed to join/fetch room data", err);
+        }
+        let errorMsg = "An error occurred while joining the workspace.";
+        if (err.response?.data) {
+          errorMsg = typeof err.response.data === 'string' ? err.response.data : (err.response.data.message || err.response.data.error || "Cannot join workspace. It may be full.");
+        }
+        useNotificationStore.getState().addNotification(errorMsg, 'error');
+        router.push('/dashboard');
       }
     };
 
@@ -104,6 +130,51 @@ export default function RoomPage() {
     document.removeEventListener('mouseup', handleMouseUp);
   };
 
+  useEffect(() => {
+    if (!expiresAt) {
+      setTimeLeft(null);
+      return;
+    }
+    
+    const calculateTimeLeft = () => {
+      const now = new Date();
+      const expiration = new Date(expiresAt);
+      const diffInSeconds = Math.floor((expiration - now) / 1000);
+      return diffInSeconds;
+    };
+
+    const updateTimer = () => {
+      const currentRemaining = calculateTimeLeft();
+      setTimeLeft(currentRemaining);
+
+      if (currentRemaining <= 0) {
+        useNotificationStore.getState().addNotification('Session has expired.', 'error');
+        router.push('/dashboard');
+      } else if (currentRemaining === 300 && !hasWarnedRef.current) {
+        useNotificationStore.getState().addNotification('Warning: Session will expire in 5 minutes!', 'warning');
+        hasWarnedRef.current = true;
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [expiresAt, router]);
+
+  const handleExtend = async () => {
+    if (extending) return;
+    setExtending(true);
+    try {
+      await api.post(`/rooms/${roomId}/extend?extraMinutes=30`);
+      // WebSocket will broadcast time.extended to update expiresAt
+    } catch (err) {
+      console.error(err);
+      useNotificationStore.getState().addNotification('Failed to extend session.', 'error');
+    } finally {
+      setExtending(false);
+    }
+  };
+
   if (!isMounted || !user) return <div className="min-h-screen bg-background flex items-center justify-center text-white">Loading...</div>;
 
   if (isPending) {
@@ -144,12 +215,33 @@ export default function RoomPage() {
             <span className="text-[10px] font-bold text-success tracking-widest uppercase">SYNC</span>
           </div>
 
-          <div className="flex items-center gap-2 text-danger border border-danger/30 bg-danger/10 px-3 py-1.5 rounded-full text-[10px] font-mono font-bold">
-            Ends: 00:29:02
-          </div>
+          {timeLeft !== null && timeLeft > 0 && (
+            <div className={`flex items-center gap-2 border px-3 py-1.5 rounded-full text-[10px] font-mono font-bold transition-colors ${
+              timeLeft <= 300 ? 'text-danger border-danger/30 bg-danger/10 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.3)]' : 'text-primary border-primary/30 bg-primary/10'
+            }`}>
+              <Clock size={12} />
+              Ends: {Math.floor(timeLeft / 3600).toString().padStart(2, '0')}:{Math.floor((timeLeft % 3600) / 60).toString().padStart(2, '0')}:{(timeLeft % 60).toString().padStart(2, '0')}
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-4">
+          
+          {timeLeft !== null && timeLeft <= 900 && isHost && (
+            <button 
+              onClick={handleExtend}
+              disabled={extending || !isPro}
+              title={!isPro ? "PRO Subscription Required" : ""}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
+                isPro 
+                ? 'bg-gradient-to-r from-yellow-500/20 to-amber-600/20 text-yellow-500 border border-yellow-500/30 hover:bg-yellow-500/30 hover:scale-105 active:scale-95 shadow-[0_0_15px_-3px_rgba(234,179,8,0.3)]' 
+                : 'bg-background/50 border border-border/50 text-muted-foreground cursor-not-allowed'
+              } ${extending && isPro ? 'opacity-50' : ''}`}
+            >
+              <Sparkles size={12} className={extending ? "animate-spin" : ""} />
+              {extending ? 'Extending...' : '+30 Min'}
+            </button>
+          )}
 
           {/* Premium Custom Dropdown */}
           <div className="relative">

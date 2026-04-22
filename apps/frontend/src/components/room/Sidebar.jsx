@@ -11,6 +11,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab }) {
   const { user } = useUserStore();
   const { participants, removeParticipant, updateParticipantRole, chatMessages, unreadChatCount, resetUnreadChat } = useRoomStore();
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [isMyMicMuted, setIsMyMicMuted] = useState(false);
 
   const chatEndRef = useRef(null);
 
@@ -28,11 +29,22 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab }) {
   }, [activeTab, wsHook]);
 
   const [transferHostModalOpen, setTransferHostModalOpen] = useState(false);
+  const [confirmModalConfig, setConfirmModalConfig] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: '',
+    hideCancel: false,
+    onConfirm: () => {}
+  });
 
+  const openConfirm = (title, message, confirmText, onConfirm, hideCancel = false) => {
+    setConfirmModalConfig({ isOpen: true, title, message, confirmText, hideCancel, onConfirm });
+  };
   const currentUserParticipant = participants.find(p => p.id === user?.id);
   const isHost = currentUserParticipant?.role === 'HOST';
 
-  const activeParticipants = participants.filter(p => p.status !== 'PENDING' && p.status !== 'KICKED' && p.status !== 'LEFT');
+  const activeParticipants = participants.filter(p => !['PENDING', 'KICKED', 'LEFT', 'REJECTED'].includes(p.status));
   const pendingParticipants = participants.filter(p => p.status === 'PENDING');
   const otherParticipants = activeParticipants.filter(p => p.id !== user?.id);
 
@@ -178,22 +190,42 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab }) {
           <>
             <div className="p-4 flex gap-2">
               {isHost ? (
-                <button
-                  onClick={() => {
-                    if (activeParticipants.length > 1) {
-                      setTransferHostModalOpen(true);
-                    } else {
-                      api.post(`/rooms/${roomId}/end`).then(() => router.push('/dashboard'));
-                    }
-                  }}
-                  className="flex-1 py-2 bg-danger/10 text-danger border border-danger/20 rounded-lg text-sm font-bold hover:bg-danger/20 transition-colors"
-                >
-                  End Room
-                </button>
+                <div className="flex flex-col gap-2 w-full">
+                  <button
+                    onClick={() => {
+                      openConfirm(
+                        "End Workspace", 
+                        "Are you sure you want to end this workspace? This will forcefully disconnect all users and delete the session.",
+                        "End Workspace",
+                        () => api.post(`/rooms/${roomId}/end`).then(() => router.push('/dashboard'))
+                      );
+                    }}
+                    className="w-full py-2 bg-danger/10 text-danger border border-danger/20 rounded-lg text-sm font-bold hover:bg-danger/20 transition-colors"
+                  >
+                    End Room
+                  </button>
+                  <button
+                    onClick={() => openConfirm(
+                      "Host Transfer Required",
+                      "You are the host. Please transfer host privileges to another member before leaving.",
+                      "Got it",
+                      () => setConfirmModalConfig(prev => ({ ...prev, isOpen: false })),
+                      true
+                    )}
+                    className="w-full py-2 bg-background border border-border text-white rounded-lg text-sm font-bold hover:bg-muted transition-colors"
+                  >
+                    Leave Room
+                  </button>
+                </div>
               ) : (
                 <button
-                  onClick={() => api.delete(`/rooms/${roomId}/leave`).then(() => router.push('/dashboard'))}
-                  className="flex-1 py-2 bg-background border border-border text-white rounded-lg text-sm font-bold hover:bg-muted transition-colors"
+                  onClick={() => openConfirm(
+                    "Leave Workspace",
+                    "Are you sure you want to leave this workspace? You will need an access code to rejoin.",
+                    "Leave Workspace",
+                    () => api.delete(`/rooms/${roomId}/leave`).then(() => router.push('/dashboard'))
+                  )}
+                  className="w-full py-2 bg-background border border-border text-white rounded-lg text-sm font-bold hover:bg-muted transition-colors"
                 >
                   Leave Room
                 </button>
@@ -229,11 +261,16 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab }) {
 
                     <div className="flex items-center gap-2">
                       {isMe && (
-                        p.isMuted ? (
-                          <MicOff size={16} className="text-danger" />
-                        ) : (
-                          <Mic size={16} className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                        )
+                        <button 
+                          onClick={() => setIsMyMicMuted(!isMyMicMuted)}
+                          className="p-1 hover:bg-background rounded transition-colors cursor-pointer"
+                        >
+                          {isMyMicMuted ? (
+                            <MicOff size={16} className="text-danger" />
+                          ) : (
+                            <Mic size={16} className="text-muted-foreground hover:text-white transition-colors" />
+                          )}
+                        </button>
                       )}
 
                       {!isMe && isHost && (
@@ -357,7 +394,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab }) {
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {chatMessages.map((msg, idx) => {
-                const isMe = msg.userId === user?.id;
+                const isMe = msg.userId === user?.id || (!msg.userId && msg.userName === user?.name);
                 return (
                   <div key={idx} className={`flex flex-col items-start`}>
                     <span className="text-[10px] text-muted-foreground mb-1 px-1">
@@ -387,6 +424,38 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab }) {
           </div>
         )}
       </div>
+      {/* Generic Confirmation Modal */}
+      {confirmModalConfig.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-card w-full max-w-sm rounded-2xl border border-border shadow-2xl p-6 relative">
+            <h2 className="text-xl font-bold text-white mb-2">{confirmModalConfig.title}</h2>
+            <p className="text-sm text-muted-foreground mb-6">{confirmModalConfig.message}</p>
+            <div className="flex justify-end gap-3">
+              {!confirmModalConfig.hideCancel && (
+                <button
+                  onClick={() => setConfirmModalConfig({ ...confirmModalConfig, isOpen: false })}
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-white hover:bg-background transition-colors"
+                >
+                  Cancel
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  confirmModalConfig.onConfirm();
+                  if (!confirmModalConfig.hideCancel) {
+                    setConfirmModalConfig({ ...confirmModalConfig, isOpen: false });
+                  }
+                }}
+                className={`px-4 py-2 text-white rounded-lg text-sm font-bold shadow-sm transition-colors ${
+                  confirmModalConfig.hideCancel ? 'bg-primary hover:bg-primary/90' : 'bg-danger hover:bg-danger/90 shadow-[0_0_15px_rgba(255,76,76,0.3)]'
+                }`}
+              >
+                {confirmModalConfig.confirmText}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

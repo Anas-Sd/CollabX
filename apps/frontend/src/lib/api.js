@@ -2,6 +2,7 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080/api/v1',
+  timeout: 15000, // 15 seconds timeout to prevent indefinite hangs
   headers: {
     'Content-Type': 'application/json',
   },
@@ -24,10 +25,19 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle 401 Unauthorized
+// Response interceptor to handle 401 Unauthorized and Timeouts
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Handle Timeouts
+    if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
+      error.response = { 
+        ...error.response, 
+        status: 408, 
+        data: { message: 'The server took too long to respond. Please check your connection and try again.' } 
+      };
+    }
+
     if (error.response?.status === 401 && typeof window !== 'undefined') {
       localStorage.removeItem('token');
       localStorage.removeItem('user');

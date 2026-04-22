@@ -3,6 +3,7 @@ import { create } from 'zustand';
 export const useRoomStore = create((set, get) => ({
   roomId: null,
   roomName: 'Workspace',
+  expiresAt: null,
   code: '',
   language: 'java',
   testCases: [],
@@ -16,7 +17,8 @@ export const useRoomStore = create((set, get) => ({
 
   setActiveOutputTab: (tab) => set({ activeOutputTab: tab }),
 
-  setRoomInfo: (id, name) => set({ roomId: id, roomName: name }),
+  setRoomInfo: (id, name, expiresAt = null) => set({ roomId: id, roomName: name, expiresAt }),
+  setExpiresAt: (expiresAt) => set({ expiresAt }),
 
   setCode: (code) => set({ code }),
   setLanguage: (language) => set({ language }),
@@ -35,8 +37,16 @@ export const useRoomStore = create((set, get) => ({
 
   addChatMessage: (msg) => set((state) => ({ chatMessages: [...state.chatMessages, msg] })),
   setChatMessages: (chatMessages) => set({ chatMessages }),
-  incrementUnreadChat: () => set((state) => ({ unreadChatCount: state.unreadChatCount + 1 })),
-  resetUnreadChat: () => set({ unreadChatCount: 0 }),
+  incrementUnreadChat: () => set((state) => {
+    const newCount = state.unreadChatCount + 1;
+    if (state.roomId) localStorage.setItem(`unread_${state.roomId}`, newCount);
+    return { unreadChatCount: newCount };
+  }),
+  resetUnreadChat: () => set((state) => {
+    if (state.roomId) localStorage.removeItem(`unread_${state.roomId}`);
+    return { unreadChatCount: 0 };
+  }),
+  setUnreadChatCount: (count) => set({ unreadChatCount: count }),
 
   setCursors: (cursors) => set({ cursors }),
   updateCursor: (userId, pos) => set((state) => ({
@@ -57,6 +67,7 @@ export const useRoomStore = create((set, get) => ({
   resetRoom: () => set({
     roomId: null,
     roomName: 'Workspace',
+    expiresAt: null,
     code: '',
     language: 'java',
     testCases: [],
