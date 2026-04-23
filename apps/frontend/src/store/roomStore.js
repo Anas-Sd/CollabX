@@ -17,6 +17,7 @@ export const useRoomStore = create((set, get) => ({
   cursors: {},
   isExecuting: false,
   executingUser: null,
+  executionProgress: null,
   sessionEndedReason: null,
   roleChangeAlert: null,
   hostTransferAlert: null,
@@ -30,9 +31,9 @@ export const useRoomStore = create((set, get) => ({
   setRoomInfo: (id, name, expiresAt = null) => set({ roomId: id, roomName: name, expiresAt }),
   setExpiresAt: (expiresAt) => set({ expiresAt }),
 
-  setCode: (code) => set((state) => ({ 
-    code, 
-    languageCache: { ...state.languageCache, [state.language]: code } 
+  setCode: (code) => set((state) => ({
+    code,
+    languageCache: { ...state.languageCache, [state.language]: code }
   })),
   setLanguage: (language) => set({ language }),
   setLanguageCache: (cache) => set({ languageCache: cache }),
@@ -81,6 +82,7 @@ export const useRoomStore = create((set, get) => ({
 
   setOutput: (output) => set({ output }),
   setIsExecuting: (isExecuting, executingUser = null) => set({ isExecuting, executingUser }),
+  setExecutionProgress: (progress) => set({ executionProgress: progress }),
 
   resetRoom: () => set({
     roomId: null,
@@ -99,6 +101,7 @@ export const useRoomStore = create((set, get) => ({
     cursors: {},
     isExecuting: false,
     executingUser: null,
+    executionProgress: null,
     sessionEndedReason: null,
     roleChangeAlert: null,
     hostTransferAlert: null,

@@ -5,8 +5,10 @@ import com.codecollab.model.User;
 import com.codecollab.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
+import com.codecollab.websocket.RoomSocketHandler;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -19,11 +21,16 @@ import java.util.Base64;
 import java.nio.charset.StandardCharsets;
 
 @Service
-@RequiredArgsConstructor
 public class ExecutionService {
 
     private final UserRepository userRepository;
+    private final RoomSocketHandler roomSocketHandler;
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    public ExecutionService(UserRepository userRepository, @Lazy RoomSocketHandler roomSocketHandler) {
+        this.userRepository = userRepository;
+        this.roomSocketHandler = roomSocketHandler;
+    }
 
     @Value("${judge0.api-url}")
     private String judge0Url;
@@ -48,6 +55,12 @@ public class ExecutionService {
         userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        if (roomId != null) {
+            Map<String, Object> progress = new java.util.HashMap<>();
+            progress.put("stage", "COMPILING");
+            roomSocketHandler.broadcastToRoom(roomId, "execution.progress", progress);
+        }
+
         return executeCodeInternal(code, language, stdin);
     }
 
@@ -55,39 +68,42 @@ public class ExecutionService {
         userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Utilize a dedicated ThreadPool to prevent starving the default JVM ForkJoinPool on heavy concurrency
-        java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newFixedThreadPool(5);
+        java.util.List<com.codecollab.dto.response.TestResultResponse> results = new java.util.ArrayList<>();
+        
         try {
-            java.util.List<java.util.concurrent.CompletableFuture<com.codecollab.dto.response.TestResultResponse>> futures = request.getTestCases().stream()
-                    .map(testCase -> java.util.concurrent.CompletableFuture.supplyAsync(() -> {
-                        ExecutionResult execResult = executeCodeInternal(request.getCode(), request.getLanguage(), testCase.getInput());
-                        
-                        String actualOut = execResult.getOutput() != null ? execResult.getOutput().trim() : "";
-                        if (execResult.getExitCode() != 0) {
-                           actualOut = execResult.getError() != null ? execResult.getError().trim() : "Execution Error";
-                        }
-                        
-                        String expectedOut = testCase.getExpectedOutput() != null ? testCase.getExpectedOutput().trim() : "";
-                        
-                        // Normalize outputs by removing carriage returns (\r) to fix CRLF vs LF mismatches
-                        String actualNormalized = actualOut.replace("\r", "");
-                        String expectedNormalized = expectedOut.replace("\r", "");
-                        
-                        boolean passed = execResult.getExitCode() == 0 && actualNormalized.equals(expectedNormalized);
-                        
-                        return com.codecollab.dto.response.TestResultResponse.builder()
-                                .input(testCase.getInput())
-                                .expectedOutput(expectedOut)
-                                .actualOutput(actualOut)
-                                .passed(passed)
-                                .executionTimeMs(execResult.getExecutionTimeMs())
-                                .build();
-                    }, executor))
-                    .toList();
+            int totalTests = request.getTestCases().size();
+            for (int i = 0; i < totalTests; i++) {
+                com.codecollab.dto.request.TestCaseRequest testCase = request.getTestCases().get(i);
+                
+                // Broadcast exact test case running state
+                if (request.getRoomId() != null) {
+                    Map<String, Object> progress = new java.util.HashMap<>();
+                    progress.put("stage", "RUNNING_TEST");
+                    progress.put("current", i + 1);
+                    progress.put("total", totalTests);
+                    roomSocketHandler.broadcastToRoom(request.getRoomId(), "execution.progress", progress);
+                }
 
-            java.util.List<com.codecollab.dto.response.TestResultResponse> results = futures.stream()
-                    .map(java.util.concurrent.CompletableFuture::join)
-                    .toList();
+                ExecutionResult execResult = executeCodeInternal(request.getCode(), request.getLanguage(), testCase.getInput());
+                
+                String actualOut = execResult.getOutput() != null ? execResult.getOutput().trim() : "";
+                if (execResult.getExitCode() != 0) {
+                   actualOut = execResult.getError() != null ? execResult.getError().trim() : "Execution Error";
+                }
+                
+                String expectedOut = testCase.getExpectedOutput() != null ? testCase.getExpectedOutput().trim() : "";
+                String actualNormalized = actualOut.replace("\r", "");
+                String expectedNormalized = expectedOut.replace("\r", "");
+                boolean passed = execResult.getExitCode() == 0 && actualNormalized.equals(expectedNormalized);
+                
+                results.add(com.codecollab.dto.response.TestResultResponse.builder()
+                        .input(testCase.getInput())
+                        .expectedOutput(expectedOut)
+                        .actualOutput(actualOut)
+                        .passed(passed)
+                        .executionTimeMs(execResult.getExecutionTimeMs())
+                        .build());
+            }
 
             boolean allPassed = results.stream().allMatch(com.codecollab.dto.response.TestResultResponse::isPassed);
 
@@ -95,8 +111,8 @@ public class ExecutionService {
                     .results(results)
                     .allPassed(allPassed)
                     .build();
-        } finally {
-            executor.shutdown();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to run test cases", e);
         }
     }
 

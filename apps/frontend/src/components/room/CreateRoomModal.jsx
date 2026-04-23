@@ -49,14 +49,14 @@ export default function CreateRoomModal({ isOpen, onClose }) {
       };
 
       if (duration === 'CUSTOM') {
-         if (customDuration < 5 || customDuration > 240) {
-             useNotificationStore.getState().addNotification('Custom duration must be between 5 and 240 minutes.', 'warning');
-             setLoading(false);
-             return;
-         }
-         payload.durationMinutes = parseInt(customDuration, 10);
+        if (customDuration < 5 || customDuration > 240) {
+          useNotificationStore.getState().addNotification('Custom duration must be between 5 and 240 minutes.', 'warning');
+          setLoading(false);
+          return;
+        }
+        payload.durationMinutes = parseInt(customDuration, 10);
       } else {
-         payload.durationMinutes = duration;
+        payload.durationMinutes = duration;
       }
 
       const res = await api.post('/rooms', payload);
@@ -150,8 +150,8 @@ export default function CreateRoomModal({ isOpen, onClose }) {
                     type="button"
                     onClick={() => handleSelectDuration(opt.value, opt.pro)}
                     className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all relative z-10 ${duration === opt.value
-                        ? 'bg-gradient-to-b from-white/10 to-transparent text-white shadow-[0_2px_10px_rgba(0,0,0,0.5)] border border-white/10'
-                        : 'text-muted-foreground hover:text-white hover:bg-white/5 border border-transparent'
+                      ? 'bg-gradient-to-b from-white/10 to-transparent text-white shadow-[0_2px_10px_rgba(0,0,0,0.5)] border border-white/10'
+                      : 'text-muted-foreground hover:text-white hover:bg-white/5 border border-transparent'
                       }`}
                   >
                     {opt.label}
@@ -161,24 +161,24 @@ export default function CreateRoomModal({ isOpen, onClose }) {
               </div>
               {duration === 'CUSTOM' && (
                 <div className="pt-2 animate-in slide-in-from-top-2">
-                   <div className="relative flex items-center bg-black/40 border border-white/10 rounded-xl shadow-inner px-4">
-                     <span className="text-xs text-muted-foreground mr-3">Minutes:</span>
-                     <input
-                       type="text"
-                       value={customDuration}
-                       onChange={(e) => {
-                         const val = e.target.value;
-                         if (val && !/^\d*$/.test(val)) {
-                           useNotificationStore.getState().addNotification('Only numbers are allowed for custom duration.', 'warning');
-                           return;
-                         }
-                         setCustomDuration(val);
-                       }}
-                       className="flex-1 bg-transparent py-3 text-sm text-white focus:outline-none placeholder:text-white/20"
-                       placeholder="e.g. 90"
-                     />
-                     <span className="text-xs text-primary font-bold ml-3">(5 - 240)</span>
-                   </div>
+                  <div className="relative flex items-center bg-black/40 border border-white/10 rounded-xl shadow-inner px-4">
+                    <span className="text-xs text-muted-foreground mr-3">Minutes:</span>
+                    <input
+                      type="text"
+                      value={customDuration}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val && !/^\d*$/.test(val)) {
+                          useNotificationStore.getState().addNotification('Only numbers are allowed for custom duration.', 'warning');
+                          return;
+                        }
+                        setCustomDuration(val);
+                      }}
+                      className="flex-1 bg-transparent py-3 text-sm text-white focus:outline-none placeholder:text-white/20"
+                      placeholder="e.g. 90"
+                    />
+                    <span className="text-xs text-primary font-bold ml-3">(5 - 240)</span>
+                  </div>
                 </div>
               )}
             </div>
@@ -200,8 +200,8 @@ export default function CreateRoomModal({ isOpen, onClose }) {
                     type="button"
                     onClick={() => handleSelectLimit(opt.value, opt.pro)}
                     className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all relative z-10 ${limit === opt.value
-                        ? 'bg-gradient-to-b from-white/10 to-transparent text-white shadow-[0_2px_10px_rgba(0,0,0,0.5)] border border-white/10'
-                        : 'text-muted-foreground hover:text-white hover:bg-white/5 border border-transparent'
+                      ? 'bg-gradient-to-b from-white/10 to-transparent text-white shadow-[0_2px_10px_rgba(0,0,0,0.5)] border border-white/10'
+                      : 'text-muted-foreground hover:text-white hover:bg-white/5 border border-transparent'
                       }`}
                   >
                     {opt.label}

@@ -44,6 +44,21 @@ export default function RoomPage() {
   const [activeSidebarTab, setActiveSidebarTab] = useState('USERS');
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [roomAlert, setRoomAlert] = useState(null);
+  const langMenuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (langMenuRef.current && !langMenuRef.current.contains(event.target)) {
+        setShowLangMenu(false);
+      }
+    };
+    if (showLangMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showLangMenu]);
 
   const wsHook = useWebSocket(roomId);
   const voiceControls = useVoice(roomId, user);
@@ -92,16 +107,16 @@ export default function RoomPage() {
         if (res.data.languageCache) {
           useRoomStore.getState().setLanguageCache(res.data.languageCache);
         }
-        
+
         // Find initial code to display (either current code, cached code for current lang, or default)
         const initialLang = res.data.language || 'java';
         let initialCode = res.data.currentCode;
         if (!initialCode) {
-           initialCode = (res.data.languageCache && res.data.languageCache[initialLang]) 
-                ? res.data.languageCache[initialLang] 
-                : DEFAULT_CODE_TEMPLATES[initialLang];
+          initialCode = (res.data.languageCache && res.data.languageCache[initialLang])
+            ? res.data.languageCache[initialLang]
+            : DEFAULT_CODE_TEMPLATES[initialLang];
         }
-        
+
         useRoomStore.getState().setCode(initialCode);
         if (res.data.testCases) {
           useRoomStore.getState().setTestCases(res.data.testCases);
@@ -145,7 +160,7 @@ export default function RoomPage() {
     const state = useRoomStore.getState();
     const cachedCode = state.languageCache[newLang];
     const newCode = cachedCode || DEFAULT_CODE_TEMPLATES[newLang] || '';
-    
+
     setLanguage(newLang);
     state.setCode(newCode); // Will automatically save into state.languageCache via our roomStore update
     wsHook.sendCodeChange(newCode, newLang);
@@ -207,8 +222,8 @@ export default function RoomPage() {
 
       if (currentRemaining <= 0) {
         localStorage.setItem('dashboardAlert', JSON.stringify({
-            title: "Time Expired",
-            message: "The Workspace Session has reached its maximum preset duration limit and is permanently closed."
+          title: "Time Expired",
+          message: "The Workspace Session has reached its maximum preset duration limit and is permanently closed."
         }));
         window.location.href = '/dashboard';
         if (interval) clearInterval(interval);
@@ -305,7 +320,7 @@ export default function RoomPage() {
           )}
 
           {/* Premium Custom Dropdown */}
-          <div className="relative">
+          <div className="relative" ref={langMenuRef}>
             <button
               onClick={() => isHost && setShowLangMenu(!showLangMenu)}
               disabled={!isHost}
@@ -320,7 +335,6 @@ export default function RoomPage() {
 
             {showLangMenu && (
               <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowLangMenu(false)}></div>
                 <div className="absolute right-0 top-12 w-[140px] bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden py-1">
                   <div className="px-3 py-2 border-b border-border/50 text-[10px] font-bold text-muted-foreground tracking-widest uppercase">
                     Select Language
@@ -351,11 +365,15 @@ export default function RoomPage() {
               useRoomStore.getState().setOutput(null);
               wsHook.sendExecutionStatus('RUNNING', null, executorName);
               const state = useRoomStore.getState();
+              
+              // Brief delay to allow the "is executing..." stage to be visible for a fraction of a second
+              await new Promise(resolve => setTimeout(resolve, 500));
+
               try {
                 // Stage 1: Compilation / Dry-run Check
                 const dryRunInput = state.testCases && state.testCases.length > 0 ? state.testCases[0].input : "";
                 const execRes = await api.post('/execute', { roomId, code: state.code, language: state.language, stdin: dryRunInput });
-                
+
                 // If the code strictly fails to compile, abort and show the global compilation error
                 if (execRes.data.compilationError) {
                   useRoomStore.getState().setOutput(execRes.data);
@@ -366,16 +384,16 @@ export default function RoomPage() {
 
                 // Stage 2: If compilation succeeds, run all test cases (ignoring any dry-run runtime errors)
                 if (state.testCases && state.testCases.length > 0) {
-                   const submitRes = await api.post('/submit', { roomId, code: state.code, language: state.language, testCases: state.testCases });
-                   const finalResult = { type: 'SUBMIT', data: submitRes.data };
-                   useRoomStore.getState().setOutput(finalResult);
-                   useRoomStore.getState().setIsExecuting(false);
-                   wsHook.sendExecutionResult(finalResult);
+                  const submitRes = await api.post('/submit', { roomId, code: state.code, language: state.language, testCases: state.testCases });
+                  const finalResult = { type: 'SUBMIT', data: submitRes.data };
+                  useRoomStore.getState().setOutput(finalResult);
+                  useRoomStore.getState().setIsExecuting(false);
+                  wsHook.sendExecutionResult(finalResult);
                 } else {
-                   // If there are no test cases, the dry-run execution result is our final output
-                   useRoomStore.getState().setOutput(execRes.data);
-                   useRoomStore.getState().setIsExecuting(false);
-                   wsHook.sendExecutionResult(execRes.data);
+                  // If there are no test cases, the dry-run execution result is our final output
+                  useRoomStore.getState().setOutput(execRes.data);
+                  useRoomStore.getState().setIsExecuting(false);
+                  wsHook.sendExecutionResult(execRes.data);
                 }
               } catch (err) {
                 const errorResult = { error: err.response?.data?.message || err.message };

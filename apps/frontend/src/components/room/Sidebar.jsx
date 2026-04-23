@@ -12,8 +12,22 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
   const { user } = useUserStore();
   const { participants, removeParticipant, updateParticipantRole, chatMessages, unreadChatCount, resetUnreadChat } = useRoomStore();
   const [openMenuId, setOpenMenuId] = useState(null);
-
+  const menuRef = useRef(null);
   const chatEndRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setOpenMenuId(null);
+      }
+    };
+    if (openMenuId !== null) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openMenuId]);
 
   useEffect(() => {
     if (activeTab === 'CHAT' && chatEndRef.current) {
@@ -202,7 +216,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
                 const showMenu = openMenuId === p.id;
 
                 return (
-                  <div key={p.id} className="flex items-center justify-between group relative">
+                  <div key={p.id} ref={showMenu ? menuRef : null} className="flex items-center justify-between group relative">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-sm relative">
                         {p.name.charAt(0).toUpperCase()}

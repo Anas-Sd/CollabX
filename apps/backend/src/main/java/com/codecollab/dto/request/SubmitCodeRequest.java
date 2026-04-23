@@ -8,6 +8,8 @@ import java.util.List;
 @Data
 public class SubmitCodeRequest {
     @NotBlank
+    private String roomId;
+    @NotBlank
     private String code;
     @NotBlank
     private String language;

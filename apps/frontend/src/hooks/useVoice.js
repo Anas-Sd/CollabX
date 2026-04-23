@@ -15,18 +15,18 @@ export const useVoice = (roomId, user) => {
       try {
         // Hit the secure Next.js Backend node relay instead of Java to utilize the isolated NPM crypto hashing
         const tokenResponse = await fetch('/api/agora/token', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ roomId, userId: user.id })
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ roomId, userId: user.id })
         });
-        
+
         const resData = await tokenResponse.json();
         const token = resData.token;
         const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID?.trim();
 
         console.log('Agora Init Check:', { actualAppId: appId, tokenLength: token?.length });
         if (appId !== '38e24f8afa2042e19f63e62bd63d9a63') {
-           alert('Next.js is STILL caching your old App ID! It is currently passing: ' + appId + '. Please delete the .next folder and run npm run dev again.');
+          alert('Next.js is STILL caching your old App ID! It is currently passing: ' + appId + '. Please delete the .next folder and run npm run dev again.');
         }
 
         if (!appId || !token) {
@@ -46,7 +46,7 @@ export const useVoice = (roomId, user) => {
         });
 
         if (!mounted) return;
-        
+
         // Use string user ID because we built the token using buildTokenWithUserAccount
         await client.join(appId, roomId, token, user.id);
 
@@ -58,7 +58,7 @@ export const useVoice = (roomId, user) => {
         const localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
         await localAudioTrack.setMuted(true); // Default to muted
         localAudioTrackRef.current = localAudioTrack;
-        
+
         if (mounted) {
           await client.publish([localAudioTrack]);
         } else {

@@ -11,6 +11,7 @@ export const useWebSocket = (roomId) => {
 
   const connect = useCallback(() => {
     if (!user || !roomId) return;
+    if (ws.current && (ws.current.readyState === WebSocket.CONNECTING || ws.current.readyState === WebSocket.OPEN)) return;
 
     const token = localStorage.getItem('token');
     const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8080';
@@ -53,10 +54,15 @@ export const useWebSocket = (roomId) => {
           if (body.status === 'RUNNING') {
             state.setActiveOutputTab('OUTPUT');
             state.setShowOutputPanel(true);
+            state.setOutput(null);
+            state.setExecutionProgress(null);
           }
           if (body.output) {
             state.setOutput(body.output);
           }
+        }
+        else if (destination === 'execution.progress') {
+          useRoomStore.getState().setExecutionProgress(body);
         }
         else if (destination === 'execution.sync') {
           const state = useRoomStore.getState();
