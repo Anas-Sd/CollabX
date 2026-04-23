@@ -100,9 +100,20 @@ export const useWebSocket = (roomId) => {
           fetchRoomMembers();
           useNotificationStore.getState().addNotification("A member left the workspace.", 'warning');
         }
+        else if (destination === 'voice') {
+          useRoomStore.getState().updateParticipantMute(body.targetUserId, body.isMuted);
+          if (body.targetUserId === user?.id) {
+            useNotificationStore.getState().addNotification(
+              body.isMuted ? "The host has muted your microphone." : "The host has unmuted your microphone.",
+              body.isMuted ? 'warning' : 'success'
+            );
+          }
+        }
         else if (destination === 'end' && body === 'ROOM_ENDED_BY_HOST') {
-          useNotificationStore.getState().addNotification("The host has ended this workspace.", 'error');
-          setTimeout(() => { window.location.href = '/dashboard'; }, 1000);
+          useRoomStore.getState().setSessionEndedReason({
+            title: "Workspace Terminated",
+            message: "The Host has forcefully closed this Workspace for all members."
+          });
         }
         else if (destination === 'time.extended') {
           useRoomStore.getState().setExpiresAt(body);

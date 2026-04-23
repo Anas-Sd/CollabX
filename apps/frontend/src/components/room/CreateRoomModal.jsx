@@ -8,6 +8,7 @@ import { useNotificationStore } from '../../store/notificationStore';
 export default function CreateRoomModal({ isOpen, onClose }) {
   const [name, setName] = useState('');
   const [duration, setDuration] = useState(30);
+  const [customDuration, setCustomDuration] = useState(60);
   const [limit, setLimit] = useState(2);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -35,13 +36,28 @@ export default function CreateRoomModal({ isOpen, onClose }) {
 
   const handleCreate = async (e) => {
     e.preventDefault();
+    if (!name.trim()) {
+      useNotificationStore.getState().addNotification('You need to enter a Workspace name.', 'warning');
+      return;
+    }
+
     setLoading(true);
     try {
       const payload = {
-        name: name || 'Untitled Workspace',
+        name: name.trim(),
         maxMembers: limit
       };
-      if (duration !== 'CUSTOM') payload.durationMinutes = duration;
+
+      if (duration === 'CUSTOM') {
+         if (customDuration < 5 || customDuration > 240) {
+             useNotificationStore.getState().addNotification('Custom duration must be between 5 and 240 minutes.', 'warning');
+             setLoading(false);
+             return;
+         }
+         payload.durationMinutes = parseInt(customDuration, 10);
+      } else {
+         payload.durationMinutes = duration;
+      }
 
       const res = await api.post('/rooms', payload);
       const roomId = res.data.id || res.data.roomId;
@@ -104,14 +120,14 @@ export default function CreateRoomModal({ isOpen, onClose }) {
             {/* Workspace Name */}
             <div className="space-y-2.5">
               <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
-                Workspace Name
+                Workspace Name <span className="text-danger">*</span>
               </label>
               <div className="relative group">
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. System Design Interview"
+                  placeholder="e.g. Production Hotfix & Review"
                   className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white placeholder:text-white/20 focus:border-primary/50 focus:bg-black/60 focus:outline-none transition-all shadow-inner group-hover:border-white/20"
                 />
               </div>
@@ -143,6 +159,28 @@ export default function CreateRoomModal({ isOpen, onClose }) {
                   </button>
                 ))}
               </div>
+              {duration === 'CUSTOM' && (
+                <div className="pt-2 animate-in slide-in-from-top-2">
+                   <div className="relative flex items-center bg-black/40 border border-white/10 rounded-xl shadow-inner px-4">
+                     <span className="text-xs text-muted-foreground mr-3">Minutes:</span>
+                     <input
+                       type="text"
+                       value={customDuration}
+                       onChange={(e) => {
+                         const val = e.target.value;
+                         if (val && !/^\d*$/.test(val)) {
+                           useNotificationStore.getState().addNotification('Only numbers are allowed for custom duration.', 'warning');
+                           return;
+                         }
+                         setCustomDuration(val);
+                       }}
+                       className="flex-1 bg-transparent py-3 text-sm text-white focus:outline-none placeholder:text-white/20"
+                       placeholder="e.g. 90"
+                     />
+                     <span className="text-xs text-primary font-bold ml-3">(5 - 240)</span>
+                   </div>
+                </div>
+              )}
             </div>
 
             {/* Participant Limit */}

@@ -6,12 +6,11 @@ import { useRoomStore } from '../../store/roomStore';
 import { Users, MessageSquare, UserPlus, Shield, MicOff, Mic, MoreVertical, LogOut } from 'lucide-react';
 import api from '../../lib/api';
 
-export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab }) {
+export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voiceControls }) {
   const router = useRouter();
   const { user } = useUserStore();
   const { participants, removeParticipant, updateParticipantRole, chatMessages, unreadChatCount, resetUnreadChat } = useRoomStore();
   const [openMenuId, setOpenMenuId] = useState(null);
-  const [isMyMicMuted, setIsMyMicMuted] = useState(false);
 
   const chatEndRef = useRef(null);
 
@@ -26,7 +25,8 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab }) {
     if (wsHook && wsHook.fetchRoomMembers) {
       wsHook.fetchRoomMembers();
     }
-  }, [activeTab, wsHook]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   const [transferHostModalOpen, setTransferHostModalOpen] = useState(false);
   const [confirmModalConfig, setConfirmModalConfig] = useState({
@@ -260,17 +260,19 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab }) {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {isMe && (
+                      {isMe ? (
                         <button
-                          onClick={() => setIsMyMicMuted(!isMyMicMuted)}
+                          onClick={voiceControls?.toggleMic}
                           className="p-1 hover:bg-background rounded transition-colors cursor-pointer"
                         >
-                          {isMyMicMuted ? (
+                          {voiceControls?.isMicMuted ? (
                             <MicOff size={16} className="text-danger" />
                           ) : (
                             <Mic size={16} className="text-muted-foreground hover:text-white transition-colors" />
                           )}
                         </button>
+                      ) : (
+                        p.isMuted && <MicOff size={14} className="text-danger/70" />
                       )}
 
                       {!isMe && isHost && (

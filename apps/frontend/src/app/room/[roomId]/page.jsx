@@ -5,6 +5,7 @@ import { Play, Copy, Check, TerminalSquare, ChevronDown, Clock, Sparkles } from 
 import { useRoomStore } from '../../../store/roomStore';
 import { useUserStore } from '../../../store/userStore';
 import { useWebSocket } from '../../../hooks/useWebSocket';
+import { useVoice } from '../../../hooks/useVoice';
 import CodeEditor from '../../../components/editor/CodeEditor';
 import OutputPanel from '../../../components/editor/OutputPanel';
 import Sidebar from '../../../components/room/Sidebar';
@@ -15,13 +16,14 @@ export default function RoomPage() {
   const { roomId } = useParams();
   const router = useRouter();
   const { user, isAuthenticated, restoreSession } = useUserStore();
-  const { roomName, expiresAt, setRoomInfo, language, setLanguage, testCases, participants, setParticipants } = useRoomStore();
+  const { roomName, expiresAt, setRoomInfo, language, setLanguage, testCases, participants, setParticipants, sessionEndedReason } = useRoomStore();
   const [copied, setCopied] = useState(false);
   const [activeSidebarTab, setActiveSidebarTab] = useState('USERS');
   const [showOutputPanel, setShowOutputPanel] = useState(true);
   const [showLangMenu, setShowLangMenu] = useState(false);
 
   const wsHook = useWebSocket(roomId);
+  const voiceControls = useVoice(roomId, user);
 
   const [isMounted, setIsMounted] = useState(false);
   const joinedRef = useRef(false);
@@ -106,6 +108,13 @@ export default function RoomPage() {
   const isPending = currentUserParticipant?.status === 'PENDING';
   const isHost = currentUserParticipant?.role === 'HOST';
 
+  // Force mute if backend indicates host revoked voice permission
+  useEffect(() => {
+    if (currentUserParticipant?.isMuted) {
+      voiceControls.forceMute();
+    }
+  }, [currentUserParticipant?.isMuted]);
+
   const [outputPanelHeight, setOutputPanelHeight] = useState(35);
   const containerRef = useRef(null);
 
@@ -148,8 +157,11 @@ export default function RoomPage() {
       setTimeLeft(currentRemaining);
 
       if (currentRemaining <= 0) {
-        useNotificationStore.getState().addNotification('Session has expired.', 'error');
-        router.push('/dashboard');
+        useRoomStore.getState().setSessionEndedReason({
+            title: "Time Expired",
+            message: "The Workspace Session has reached its maximum preset duration limit and is permanently closed."
+        });
+        clearInterval(interval);
       } else if (currentRemaining === 300 && !hasWarnedRef.current) {
         useNotificationStore.getState().addNotification('Warning: Session will expire in 5 minutes!', 'warning');
         hasWarnedRef.current = true;
@@ -168,8 +180,9 @@ export default function RoomPage() {
       await api.post(`/rooms/${roomId}/extend?extraMinutes=30`);
       // WebSocket will broadcast time.extended to update expiresAt
     } catch (err) {
-      console.error(err);
-      useNotificationStore.getState().addNotification('Failed to extend session.', 'error');
+      const errorMsg = err.response?.data?.message || err.message || 'Failed to extend session.';
+      console.error('Extension failed:', errorMsg);
+      useNotificationStore.getState().addNotification(errorMsg, 'error');
     } finally {
       setExtending(false);
     }
@@ -191,6 +204,30 @@ export default function RoomPage() {
   }
 
   const languages = ['java', 'python', 'cpp', 'c', 'javascript', 'sql'];
+
+  if (sessionEndedReason) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+        <div className="relative w-full max-w-md transform rounded-3xl bg-[#0a0a0f] border border-white/10 shadow-2xl overflow-hidden p-8 text-center animate-in zoom-in-95 fade-in duration-300">
+          <div className="w-16 h-16 mx-auto bg-danger/20 text-danger rounded-full flex items-center justify-center mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">{sessionEndedReason.title}</h2>
+          <p className="text-muted-foreground mb-8">{sessionEndedReason.message}</p>
+          <button
+            onClick={() => {
+                useRoomStore.getState().setSessionEndedReason(null);
+                router.push('/dashboard');
+            }}
+            className="w-full py-3.5 rounded-xl text-sm font-bold bg-primary text-white hover:bg-primary/90 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          >
+            Return to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen w-screen flex flex-col p-4 gap-4 overflow-hidden bg-[#0A0A0F]">
@@ -322,6 +359,7 @@ export default function RoomPage() {
           wsHook={wsHook}
           activeTab={activeSidebarTab}
           setActiveTab={setActiveSidebarTab}
+          voiceControls={voiceControls}
         />
 
         {/* Editor Area */}

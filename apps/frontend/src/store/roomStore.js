@@ -14,8 +14,10 @@ export const useRoomStore = create((set, get) => ({
   unreadChatCount: 0,
   cursors: {},
   isExecuting: false,
+  sessionEndedReason: null,
 
   setActiveOutputTab: (tab) => set({ activeOutputTab: tab }),
+  setSessionEndedReason: (reason) => set({ sessionEndedReason: reason }),
 
   setRoomInfo: (id, name, expiresAt = null) => set({ roomId: id, roomName: name, expiresAt }),
   setExpiresAt: (expiresAt) => set({ expiresAt }),
@@ -33,6 +35,10 @@ export const useRoomStore = create((set, get) => ({
 
   updateParticipantRole: (userId, role) => set((state) => ({
     participants: state.participants.map(p => p.id === userId ? { ...p, role } : p)
+  })),
+
+  updateParticipantMute: (userId, isMuted) => set((state) => ({
+    participants: state.participants.map(p => p.id === userId ? { ...p, isMuted } : p)
   })),
 
   addChatMessage: (msg) => set((state) => ({ chatMessages: [...state.chatMessages, msg] })),

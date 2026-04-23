@@ -1,9 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
-import AgoraRTC from 'agora-rtc-sdk-ng';
 import api from '../lib/api';
 
 export const useVoice = (roomId, user) => {
-  const [isMicMuted, setIsMicMuted] = useState(false);
+  const [isMicMuted, setIsMicMuted] = useState(true);
   const clientRef = useRef(null);
   const localAudioTrackRef = useRef(null);
 
@@ -14,16 +13,28 @@ export const useVoice = (roomId, user) => {
 
     const initAgora = async () => {
       try {
-        // Fetch Agora token from our backend
-        const res = await api.get(`/rooms/${roomId}/agora-token`);
-        const token = res.data.token;
-        const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID;
+        // Hit the secure Next.js Backend node relay instead of Java to utilize the isolated NPM crypto hashing
+        const tokenResponse = await fetch('/api/agora/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ roomId, userId: user.id })
+        });
+        
+        const resData = await tokenResponse.json();
+        const token = resData.token;
+        const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID?.trim();
+
+        console.log('Agora Init Check:', { actualAppId: appId, tokenLength: token?.length });
+        if (appId !== '38e24f8afa2042e19f63e62bd63d9a63') {
+           alert('Next.js is STILL caching your old App ID! It is currently passing: ' + appId + '. Please delete the .next folder and run npm run dev again.');
+        }
 
         if (!appId || !token) {
           console.warn('Agora credentials missing. Voice chat disabled.');
           return;
         }
 
+        const AgoraRTC = (await import('agora-rtc-sdk-ng')).default;
         const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
         clientRef.current = client;
 
@@ -34,15 +45,29 @@ export const useVoice = (roomId, user) => {
           }
         });
 
-        // Use user ID hash or raw string if supported by Agora configuration
+        if (!mounted) return;
+        
+        // Use string user ID because we built the token using buildTokenWithUserAccount
         await client.join(appId, roomId, token, user.id);
 
+        if (!mounted) {
+          await client.leave();
+          return;
+        }
+
         const localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+        await localAudioTrack.setMuted(true); // Default to muted
         localAudioTrackRef.current = localAudioTrack;
-        await client.publish([localAudioTrack]);
+        
+        if (mounted) {
+          await client.publish([localAudioTrack]);
+        } else {
+          localAudioTrack.close();
+          await client.leave();
+        }
 
       } catch (err) {
-        console.error('Agora Init Error', err);
+        if (mounted) console.error('Agora Init Error', err);
       }
     };
 
@@ -59,24 +84,24 @@ export const useVoice = (roomId, user) => {
     };
   }, [roomId, user]);
 
-  const toggleMic = () => {
+  const toggleMic = async () => {
     if (localAudioTrackRef.current) {
-      const currentMuted = !isMicMuted;
-      localAudioTrackRef.current.setEnabled(!currentMuted);
-      setIsMicMuted(currentMuted);
+      const newMutedState = !isMicMuted;
+      await localAudioTrackRef.current.setMuted(newMutedState);
+      setIsMicMuted(newMutedState);
     }
   };
 
-  const forceMute = () => {
+  const forceMute = async () => {
     if (localAudioTrackRef.current) {
-      localAudioTrackRef.current.setEnabled(false);
+      await localAudioTrackRef.current.setMuted(true);
       setIsMicMuted(true);
     }
   };
 
-  const forceUnmute = () => {
+  const forceUnmute = async () => {
     if (localAudioTrackRef.current) {
-      localAudioTrackRef.current.setEnabled(true);
+      await localAudioTrackRef.current.setMuted(false);
       setIsMicMuted(false);
     }
   };
