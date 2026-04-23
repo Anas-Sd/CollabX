@@ -29,21 +29,26 @@ function DashboardContent() {
 
   useEffect(() => {
     if (isMounted) {
-      const alertParam = searchParams.get('alert');
-      if (alertParam === 'kicked') {
-        setAlertModalConfig({
-          isOpen: true,
-          title: 'You were kicked',
-          message: 'The host has removed you from the workspace.'
-        });
-        router.replace('/dashboard');
-      } else if (alertParam === 'rejected') {
-        setAlertModalConfig({
-          isOpen: true,
-          title: 'Join Request Rejected',
-          message: 'Your request to join the workspace was rejected by the host.'
-        });
-        router.replace('/dashboard');
+      const savedAlert = localStorage.getItem('dashboardAlert');
+      if (savedAlert) {
+        setAlertModalConfig({ ...JSON.parse(savedAlert), isOpen: true });
+      } else {
+        const alertParam = searchParams.get('alert');
+        if (alertParam === 'kicked') {
+          setAlertModalConfig({
+            isOpen: true,
+            title: 'You were kicked',
+            message: 'The host has removed you from the workspace.'
+          });
+          router.replace('/dashboard');
+        } else if (alertParam === 'rejected') {
+          setAlertModalConfig({
+            isOpen: true,
+            title: 'Join Request Rejected',
+            message: 'Your request to join the workspace was rejected by the host.'
+          });
+          router.replace('/dashboard');
+        }
       }
     }
   }, [isMounted, searchParams, router]);
@@ -135,7 +140,10 @@ function DashboardContent() {
             <h2 className="text-xl font-bold text-white mb-2">Launch Workspace</h2>
             <p className="text-sm text-muted-foreground mb-8 flex-grow">Instantly launch a robust real-time shared IDE container.</p>
             <button
-              onClick={() => setIsCreateModalOpen(true)}
+              onClick={() => {
+                router.refresh();
+                setIsCreateModalOpen(true);
+              }}
               className="w-full py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
             >
               Initialize Session &rarr;
@@ -151,6 +159,7 @@ function DashboardContent() {
               <input
                 type="text"
                 value={joinCode}
+                onClick={() => router.refresh()}
                 onChange={(e) => setJoinCode(e.target.value)}
                 placeholder="A1B2C3D4"
                 className="w-full bg-background border border-border rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary mb-4 font-mono text-center tracking-widest uppercase"
@@ -255,7 +264,10 @@ function DashboardContent() {
             <h2 className="text-xl font-bold text-white mb-2">{alertModalConfig.title}</h2>
             <p className="text-sm text-muted-foreground mb-6">{alertModalConfig.message}</p>
             <button
-              onClick={() => setAlertModalConfig({ isOpen: false, title: '', message: '' })}
+              onClick={() => {
+                setAlertModalConfig({ isOpen: false, title: '', message: '' });
+                localStorage.removeItem('dashboardAlert');
+              }}
               className="w-full py-2.5 bg-background border border-border text-white rounded-xl text-sm font-bold hover:bg-muted transition-colors"
             >
               Close

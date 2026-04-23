@@ -14,4 +14,5 @@ public class ExecutionResult {
     private String error;
     private int exitCode;
     private long executionTimeMs;
+    private boolean compilationError;
 }

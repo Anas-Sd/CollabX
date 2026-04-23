@@ -68,7 +68,12 @@ public class ExecutionService {
                         }
                         
                         String expectedOut = testCase.getExpectedOutput() != null ? testCase.getExpectedOutput().trim() : "";
-                        boolean passed = execResult.getExitCode() == 0 && actualOut.equals(expectedOut);
+                        
+                        // Normalize outputs by removing carriage returns (\r) to fix CRLF vs LF mismatches
+                        String actualNormalized = actualOut.replace("\r", "");
+                        String expectedNormalized = expectedOut.replace("\r", "");
+                        
+                        boolean passed = execResult.getExitCode() == 0 && actualNormalized.equals(expectedNormalized);
                         
                         return com.codecollab.dto.response.TestResultResponse.builder()
                                 .input(testCase.getInput())
@@ -103,6 +108,7 @@ public class ExecutionService {
                     .error("Unsupported language: " + language)
                     .exitCode(1)
                     .executionTimeMs(0)
+                    .compilationError(false)
                     .build();
         }
 
@@ -159,6 +165,7 @@ public class ExecutionService {
                             .error("")
                             .exitCode(0)
                             .executionTimeMs(executionTime)
+                            .compilationError(false)
                             .build();
                 } else {
                     String errorMsg = stderr.isEmpty() ? compileOutput : stderr;
@@ -168,6 +175,7 @@ public class ExecutionService {
                             .error(errorMsg)
                             .exitCode(1)
                             .executionTimeMs(executionTime)
+                            .compilationError(statusId == 6)
                             .build();
                 }
             } else {
@@ -176,6 +184,7 @@ public class ExecutionService {
                         .error("Judge0 API Error: HTTP " + response.statusCode() + " - " + response.body())
                         .exitCode(1)
                         .executionTimeMs(executionTime)
+                        .compilationError(false)
                         .build();
             }
 
@@ -185,6 +194,7 @@ public class ExecutionService {
                     .error("System connection error: " + e.getMessage())
                     .exitCode(1)
                     .executionTimeMs(0)
+                    .compilationError(false)
                     .build();
         }
     }

@@ -12,15 +12,38 @@ import Sidebar from '../../../components/room/Sidebar';
 import api from '../../../lib/api';
 import { useNotificationStore } from '../../../store/notificationStore';
 
+const DEFAULT_CODE_TEMPLATES = {
+  java: `public class Main {
+    public static void main(String[] args) {
+        System.out.println("Hello, World!");
+    }
+}`,
+  python: `print("Hello, World!")`,
+  cpp: `#include <iostream>
+
+int main() {
+    std::cout << "Hello, World!" << std::endl;
+    return 0;
+}`,
+  c: `#include <stdio.h>
+
+int main() {
+    printf("Hello, World!\\n");
+    return 0;
+}`,
+  javascript: `console.log("Hello, World!");`,
+  sql: `-- Write your SQL query here
+SELECT 'Hello, World!' AS message;`
+};
 export default function RoomPage() {
   const { roomId } = useParams();
   const router = useRouter();
   const { user, isAuthenticated, restoreSession } = useUserStore();
-  const { roomName, expiresAt, setRoomInfo, language, setLanguage, testCases, participants, setParticipants, sessionEndedReason, roleChangeAlert, hostTransferAlert } = useRoomStore();
+  const { roomName, expiresAt, setRoomInfo, language, setLanguage, testCases, participants, setParticipants, sessionEndedReason, roleChangeAlert, hostTransferAlert, isExecuting, showOutputPanel, setShowOutputPanel } = useRoomStore();
   const [copied, setCopied] = useState(false);
   const [activeSidebarTab, setActiveSidebarTab] = useState('USERS');
-  const [showOutputPanel, setShowOutputPanel] = useState(true);
   const [showLangMenu, setShowLangMenu] = useState(false);
+  const [roomAlert, setRoomAlert] = useState(null);
 
   const wsHook = useWebSocket(roomId);
   const voiceControls = useVoice(roomId, user);
@@ -40,6 +63,15 @@ export default function RoomPage() {
   }, [restoreSession]);
 
   useEffect(() => {
+    if (isMounted) {
+      const savedAlert = localStorage.getItem('roomAlert');
+      if (savedAlert) {
+        setRoomAlert(JSON.parse(savedAlert));
+      }
+    }
+  }, [isMounted]);
+
+  useEffect(() => {
     // Reset room state so old data from a previous session doesn't persist
     useRoomStore.getState().resetRoom();
 
@@ -57,9 +89,20 @@ export default function RoomPage() {
         if (res.data.members) {
           setParticipants(res.data.members);
         }
-        if (res.data.currentCode) {
-          useRoomStore.getState().setCode(res.data.currentCode);
+        if (res.data.languageCache) {
+          useRoomStore.getState().setLanguageCache(res.data.languageCache);
         }
+        
+        // Find initial code to display (either current code, cached code for current lang, or default)
+        const initialLang = res.data.language || 'java';
+        let initialCode = res.data.currentCode;
+        if (!initialCode) {
+           initialCode = (res.data.languageCache && res.data.languageCache[initialLang]) 
+                ? res.data.languageCache[initialLang] 
+                : DEFAULT_CODE_TEMPLATES[initialLang];
+        }
+        
+        useRoomStore.getState().setCode(initialCode);
         if (res.data.testCases) {
           useRoomStore.getState().setTestCases(res.data.testCases);
         }
@@ -99,8 +142,13 @@ export default function RoomPage() {
   };
 
   const handleLanguageChange = (newLang) => {
+    const state = useRoomStore.getState();
+    const cachedCode = state.languageCache[newLang];
+    const newCode = cachedCode || DEFAULT_CODE_TEMPLATES[newLang] || '';
+    
     setLanguage(newLang);
-    wsHook.sendCodeChange(useRoomStore.getState().code, newLang);
+    state.setCode(newCode); // Will automatically save into state.languageCache via our roomStore update
+    wsHook.sendCodeChange(newCode, newLang);
     setShowLangMenu(false);
   };
 
@@ -115,7 +163,7 @@ export default function RoomPage() {
     }
   }, [currentUserParticipant?.isMuted]);
 
-  const [outputPanelHeight, setOutputPanelHeight] = useState(35);
+  const [outputPanelHeight, setOutputPanelHeight] = useState(45);
   const containerRef = useRef(null);
 
   const handleMouseDown = (e) => {
@@ -158,10 +206,11 @@ export default function RoomPage() {
       setTimeLeft(currentRemaining);
 
       if (currentRemaining <= 0) {
-        useRoomStore.getState().setSessionEndedReason({
+        localStorage.setItem('dashboardAlert', JSON.stringify({
             title: "Time Expired",
             message: "The Workspace Session has reached its maximum preset duration limit and is permanently closed."
-        });
+        }));
+        window.location.href = '/dashboard';
         if (interval) clearInterval(interval);
       } else if (currentRemaining === 300 && !hasWarnedRef.current) {
         useNotificationStore.getState().addNotification('Warning: Session will expire in 5 minutes!', 'warning');
@@ -205,30 +254,6 @@ export default function RoomPage() {
   }
 
   const languages = ['java', 'python', 'cpp', 'c', 'javascript', 'sql'];
-
-  if (sessionEndedReason) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
-        <div className="relative w-full max-w-md transform rounded-3xl bg-[#0a0a0f] border border-white/10 shadow-2xl overflow-hidden p-8 text-center animate-in zoom-in-95 fade-in duration-300">
-          <div className="w-16 h-16 mx-auto bg-danger/20 text-danger rounded-full flex items-center justify-center mb-6">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-          </div>
-          <h2 className="text-2xl font-bold text-white mb-2">{sessionEndedReason.title}</h2>
-          <p className="text-muted-foreground mb-8">{sessionEndedReason.message}</p>
-          <button
-            onClick={() => {
-                useRoomStore.getState().setSessionEndedReason(null);
-                router.push('/dashboard');
-            }}
-            className="w-full py-3.5 rounded-xl text-sm font-bold bg-primary text-white hover:bg-primary/90 transition-all hover:scale-[1.02] active:scale-[0.98]"
-          >
-            Return to Dashboard
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="h-screen w-screen flex flex-col p-4 gap-4 overflow-hidden bg-[#0A0A0F]">
@@ -318,25 +343,56 @@ export default function RoomPage() {
 
           <button
             onClick={async () => {
-              wsHook.sendExecutionStatus('RUNNING');
+              if (isExecuting) return;
+              const executorName = currentUserParticipant?.name || user?.name || "Someone";
+              useRoomStore.getState().setIsExecuting(true, executorName);
+              useRoomStore.getState().setActiveOutputTab('OUTPUT');
+              useRoomStore.getState().setShowOutputPanel(true);
+              useRoomStore.getState().setOutput(null);
+              wsHook.sendExecutionStatus('RUNNING', null, executorName);
               const state = useRoomStore.getState();
               try {
-                const execRes = await api.post('/execute', { roomId, code: state.code, language: state.language, testCases: [] });
-                if (execRes.data.error) {
+                // Stage 1: Compilation / Dry-run Check
+                const dryRunInput = state.testCases && state.testCases.length > 0 ? state.testCases[0].input : "";
+                const execRes = await api.post('/execute', { roomId, code: state.code, language: state.language, stdin: dryRunInput });
+                
+                // If the code strictly fails to compile, abort and show the global compilation error
+                if (execRes.data.compilationError) {
+                  useRoomStore.getState().setOutput(execRes.data);
+                  useRoomStore.getState().setIsExecuting(false);
                   wsHook.sendExecutionResult(execRes.data);
                   return;
                 }
-                const submitRes = await api.post('/submit', { roomId, code: state.code, language: state.language, testCases: state.testCases });
-                wsHook.sendExecutionResult({ type: 'SUBMIT', data: submitRes.data });
+
+                // Stage 2: If compilation succeeds, run all test cases (ignoring any dry-run runtime errors)
+                if (state.testCases && state.testCases.length > 0) {
+                   const submitRes = await api.post('/submit', { roomId, code: state.code, language: state.language, testCases: state.testCases });
+                   const finalResult = { type: 'SUBMIT', data: submitRes.data };
+                   useRoomStore.getState().setOutput(finalResult);
+                   useRoomStore.getState().setIsExecuting(false);
+                   wsHook.sendExecutionResult(finalResult);
+                } else {
+                   // If there are no test cases, the dry-run execution result is our final output
+                   useRoomStore.getState().setOutput(execRes.data);
+                   useRoomStore.getState().setIsExecuting(false);
+                   wsHook.sendExecutionResult(execRes.data);
+                }
               } catch (err) {
-                wsHook.sendExecutionResult({ error: err.response?.data?.message || err.message });
+                const errorResult = { error: err.response?.data?.message || err.message };
+                useRoomStore.getState().setOutput(errorResult);
+                useRoomStore.getState().setIsExecuting(false);
+                wsHook.sendExecutionResult(errorResult);
               }
             }}
-            disabled={currentUserParticipant?.role === 'VIEWER' || testCases.length === 0}
+            disabled={currentUserParticipant?.role === 'VIEWER' || testCases.length === 0 || isExecuting}
             title={currentUserParticipant?.role === 'VIEWER' ? "Viewers cannot submit code" : ""}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${currentUserParticipant?.role === 'VIEWER' || testCases.length === 0 ? 'bg-success/5 border border-success/10 text-success/50 cursor-not-allowed' : 'bg-success/10 border border-success/30 text-success hover:bg-success hover:text-black hover:shadow-success/20'}`}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${currentUserParticipant?.role === 'VIEWER' || testCases.length === 0 || isExecuting ? 'bg-success/5 border border-success/10 text-success/50 cursor-not-allowed' : 'bg-success/10 border border-success/30 text-success hover:bg-success hover:text-black hover:shadow-success/20'}`}
           >
-            <Check size={16} /> Execute Code (Tests: {testCases.length})
+            {isExecuting ? (
+              <><span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></span> Executing...</>
+            ) : (
+              <><Check size={16} /> Execute Code (Tests: {testCases.length})</>
+            )}
           </button>
 
           <div className="h-8 w-px bg-border mx-1"></div>
@@ -431,6 +487,29 @@ export default function RoomPage() {
               className="w-full py-3 rounded-xl text-sm font-bold bg-[#F5A623] text-black hover:bg-[#F5A623]/90 transition-colors"
             >
               Assume Control
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Room Alert Modal */}
+      {roomAlert && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+          <div className="relative w-full max-w-sm transform rounded-3xl bg-[#0a0a0f] border border-white/10 shadow-2xl p-6 text-center animate-in zoom-in-95 fade-in duration-200">
+            <div className="w-14 h-14 mx-auto bg-success/20 text-success rounded-full flex items-center justify-center mb-4">
+              <Check size={28} />
+            </div>
+            <h2 className="text-xl font-bold text-white mb-2">{roomAlert.title}</h2>
+            <p className="text-sm text-muted-foreground mb-6">{roomAlert.message}</p>
+            <button
+              onClick={() => {
+                setRoomAlert(null);
+                localStorage.removeItem('roomAlert');
+              }}
+              className="w-full py-3 rounded-xl text-sm font-bold bg-success text-black hover:bg-success/90 transition-colors"
+            >
+              Okay, got it
             </button>
           </div>
         </div>

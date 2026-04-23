@@ -1,230 +1,346 @@
-import { useState } from 'react';
-import { useRoomStore } from '../../store/roomStore';
-import { useUserStore } from '../../store/userStore';
-import { Plus, X, Play } from 'lucide-react';
-import api from '../../lib/api';
+import { useState, useEffect, useMemo } from "react";
+import { Copy, Terminal, CheckCircle, XCircle, Plus, Trash2, Edit2, X, Loader2 } from "lucide-react";
+import { useRoomStore } from "../../store/roomStore";
+import { useUserStore } from "../../store/userStore";
 
 export default function OutputPanel({ wsHook }) {
-  const { testCases, addTestCase, setTestCases, output, isExecuting, language, code, roomId, activeOutputTab, setActiveOutputTab } = useRoomStore();
+  const { 
+    testCases, setTestCases, 
+    output, isExecuting, 
+    language, activeOutputTab, setActiveOutputTab 
+  } = useRoomStore();
+  
   const { user } = useUserStore();
-  const [newInput, setNewInput] = useState('');
-  const [newExpected, setNewExpected] = useState('');
+  const currentUserParticipant = useRoomStore(state => state.participants.find(p => p.id === user?.id));
+  const isViewer = currentUserParticipant?.role === 'VIEWER';
+
+  const [newInput, setNewInput] = useState("");
+  const [newExpected, setNewExpected] = useState("");
+  const [editingIndex, setEditingIndex] = useState(null);
+
+  useEffect(() => {
+    if (language === 'sql' && activeOutputTab !== 'OUTPUT') {
+       setActiveOutputTab('OUTPUT');
+    }
+  }, [language, activeOutputTab, setActiveOutputTab]);
 
   const handleAddTestCase = () => {
-    if (!newInput && !newExpected) return;
-    const updatedTests = [...testCases, { input: newInput, expectedOutput: newExpected }];
-    setTestCases(updatedTests);
-    wsHook.sendTestCasesSync(updatedTests);
-    setNewInput('');
-    setNewExpected('');
+    if (!newExpected.trim()) return; 
+    
+    let updated;
+    if (editingIndex !== null) {
+      updated = [...testCases];
+      updated[editingIndex] = { input: newInput, expectedOutput: newExpected };
+      setEditingIndex(null);
+    } else {
+      updated = [...testCases, { input: newInput, expectedOutput: newExpected }];
+    }
+    
+    setTestCases(updated);
+    wsHook.sendTestCasesSync(updated);
+    setNewInput("");
+    setNewExpected("");
   };
 
-  const handleRemoveTestCase = (index) => {
-    const updatedTests = testCases.filter((_, i) => i !== index);
-    setTestCases(updatedTests);
-    wsHook.sendTestCasesSync(updatedTests);
-  };
+  const removeTestCase = (index) => {
+    const updated = [...testCases];
+    updated.splice(index, 1);
+    setTestCases(updated);
+    wsHook.sendTestCasesSync(updated);
 
-  const handleExecute = async () => {
-    setActiveOutputTab('OUTPUT');
-    wsHook.sendExecutionStatus('RUNNING');
-    try {
-      const res = await api.post('/execute', {
-        roomId,
-        code,
-        language,
-        testCases
-      });
-      // The backend should return execution result or test case results
-      wsHook.sendExecutionResult(res.data);
-    } catch (err) {
-      wsHook.sendExecutionResult({
-        error: err.response?.data?.message || 'Execution failed'
-      });
+    if (editingIndex === index) {
+      setEditingIndex(null);
+      setNewInput("");
+      setNewExpected("");
+    } else if (editingIndex > index) {
+      setEditingIndex(editingIndex - 1);
     }
   };
 
   const handleEditTestCase = (index) => {
-    const tc = testCases[index];
-    setNewInput(tc.input);
-    setNewExpected(tc.expectedOutput);
-    handleRemoveTestCase(index);
+    setEditingIndex(index);
+    setNewInput(testCases[index].input || "");
+    setNewExpected(testCases[index].expectedOutput || "");
   };
 
-  const handleRemoveAllTestCases = () => {
+  const handleRemoveAll = () => {
     setTestCases([]);
     wsHook.sendTestCasesSync([]);
+    setEditingIndex(null);
+    setNewInput("");
+    setNewExpected("");
   };
 
-  const currentUserParticipant = useRoomStore((state) => state.participants.find(p => p.id === user?.id));
-  const isViewer = currentUserParticipant?.role === 'VIEWER';
+  // Loading animation state
+  const [loadingStageIndex, setLoadingStageIndex] = useState(0);
+  const [loadingComplete, setLoadingComplete] = useState(true);
+  
+  const loadingStages = useMemo(() => {
+    const stages = [
+      `${useRoomStore.getState().executingUser || 'Someone'} has started execution`,
+      "Compiling..."
+    ];
+    if (output && output.compilationError) return stages;
+    if (testCases.length > 0) {
+      testCases.forEach((_, i) => {
+        stages.push(`Running Test Case ${i + 1}...`);
+      });
+    }
+    return stages;
+  }, [useRoomStore.getState().executingUser, testCases.length, output]);
+
+  useEffect(() => {
+    if (isExecuting) {
+      setLoadingStageIndex(0);
+      setLoadingComplete(false);
+    }
+  }, [isExecuting]);
+
+  useEffect(() => {
+    if (!loadingComplete) {
+      if (isExecuting) {
+        const timer = setTimeout(() => {
+          if (loadingStageIndex < loadingStages.length - 1) {
+            setLoadingStageIndex(prev => prev + 1);
+          }
+        }, 600);
+        return () => clearTimeout(timer);
+      } else {
+        if (loadingStageIndex < loadingStages.length - 1) {
+          const fastTimer = setTimeout(() => {
+            setLoadingStageIndex(prev => prev + 1);
+          }, 150);
+          return () => clearTimeout(fastTimer);
+        } else {
+          const finishTimer = setTimeout(() => {
+            setLoadingComplete(true);
+          }, 200);
+          return () => clearTimeout(finishTimer);
+        }
+      }
+    }
+  }, [loadingComplete, loadingStageIndex, isExecuting, loadingStages.length]);
+
+  // Derive variables for the UI
+  const testResults = output?.type === 'SUBMIT' ? output.data?.results : null;
 
   return (
-    <div className="h-full flex flex-col bg-card border-t border-border">
-      {/* Panel Header */}
-      <div className="flex items-center justify-between px-4 h-12 border-b border-border bg-background/50">
-        <div className="flex items-center gap-4 h-full">
-          <button
-            onClick={() => setActiveOutputTab('TEST_CASES')}
-            className={`h-full text-xs font-bold tracking-wider ${activeOutputTab === 'TEST_CASES' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-white'}`}
+    <div className="h-full flex flex-col border-t border-border bg-[#0A0A0F]">
+      <div className="flex items-center justify-between px-4 py-2 bg-surface/50 border-b border-[#1E1E2E]">
+        <div className="flex space-x-4">
+          {language !== 'sql' && (
+            <button 
+              onClick={() => setActiveOutputTab("TEST_CASES")}
+              className={`text-xs font-semibold uppercase tracking-wider pb-1 border-b-2 transition-colors ${activeOutputTab === "TEST_CASES" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-white"}`}
+            >
+              Test Cases ({testCases.length})
+            </button>
+          )}
+          <button 
+            onClick={() => setActiveOutputTab("OUTPUT")}
+            className={`text-xs font-semibold uppercase tracking-wider pb-1 border-b-2 transition-colors ${activeOutputTab === "OUTPUT" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-white"}`}
           >
-            TEST CASES ({testCases.length})
-          </button>
-          <button
-            onClick={() => setActiveOutputTab('OUTPUT')}
-            className={`h-full text-xs font-bold tracking-wider ${activeOutputTab === 'OUTPUT' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground hover:text-white'}`}
-          >
-            OUTPUT
+            Output
           </button>
         </div>
-        <button className="text-xs text-muted-foreground hover:text-white">Close Panel</button>
+        <button 
+          onClick={() => useRoomStore.getState().setShowOutputPanel(false)}
+          className="text-muted-foreground hover:text-white transition-colors text-xs"
+        >
+          Close Panel
+        </button>
       </div>
 
-      {/* Panel Content */}
-      <div className="flex-grow overflow-hidden p-4 bg-background">
-        {activeOutputTab === 'TEST_CASES' ? (
-          <div className="flex gap-6 h-full">
-            {/* Add Test Case Form (Static Left Side) */}
-            <div className={`flex-1 flex flex-col space-y-4 h-full ${isViewer ? 'opacity-60' : ''}`}>
-              <h4 className="text-sm font-bold text-white shrink-0">Add Manual Test Case</h4>
-              <div className="flex gap-4 flex-1 min-h-0">
-                <div className="flex-1 flex flex-col">
-                  <label className="text-xs text-muted-foreground block mb-1">Standard Input</label>
-                  <textarea
-                    value={newInput}
-                    onChange={(e) => setNewInput(e.target.value)}
-                    disabled={isViewer}
-                    className="flex-1 w-full bg-card border border-border rounded-lg p-3 text-sm text-white focus:outline-none focus:border-primary resize-none font-mono disabled:cursor-not-allowed"
-                    placeholder="e.g. 1&#10;2&#10;3"
-                  />
+      <div className="flex-1 overflow-y-auto p-4">
+        {activeOutputTab === "OUTPUT" && (
+          <div className="font-mono text-sm h-full w-full">
+            {!loadingComplete ? (
+                <div className="flex flex-col items-center justify-center h-full gap-4 text-primary">
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                    <pre className="text-[#E8E8F0] font-bold animate-pulse">{loadingStages[loadingStageIndex]}</pre>
                 </div>
-                <div className="flex-1 flex flex-col">
-                  <label className="text-xs text-muted-foreground block mb-1">Expected Output</label>
-                  <textarea
-                    value={newExpected}
-                    onChange={(e) => setNewExpected(e.target.value)}
-                    disabled={isViewer}
-                    className="flex-1 w-full bg-card border border-border rounded-lg p-3 text-sm text-white focus:outline-none focus:border-primary resize-none font-mono disabled:cursor-not-allowed"
-                    placeholder="Expected result..."
-                  />
-                </div>
-              </div>
-              <button
-                onClick={handleAddTestCase}
-                disabled={isViewer}
-                title={isViewer ? "Viewers cannot add test cases" : ""}
-                className="w-full py-2 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 rounded-lg text-sm font-bold transition-colors flex items-center justify-center gap-2 disabled:cursor-not-allowed shrink-0"
-              >
-                <Plus size={16} /> Add Test Case
-              </button>
-            </div>
-
-            {/* Configured Test Cases List (Scrollable Right Side) */}
-            <div className="flex-1 bg-card border border-border rounded-lg p-4 flex flex-col h-full overflow-hidden">
-              <div className="flex justify-between items-center mb-4 shrink-0">
-                <h4 className="text-sm font-bold text-white">Configured Test Cases ({testCases.length})</h4>
-                {testCases.length > 0 && !isViewer && (
-                  <button
-                    onClick={handleRemoveAllTestCases}
-                    className="text-xs text-danger hover:underline font-bold"
-                  >
-                    Remove All
-                  </button>
-                )}
-              </div>
-
-              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3">
-                {testCases.length === 0 ? (
-                  <div className="h-full flex items-center justify-center text-sm text-muted-foreground italic">
-                    No custom test cases configured yet.
+            ) : output?.compilationError ? (
+              <pre className="text-[#FF4C4C] whitespace-pre-wrap">{output.error}</pre>
+            ) : output?.error ? (
+              <pre className="text-[#FF4C4C] whitespace-pre-wrap">{output.error}</pre>
+            ) : (testResults && testResults.length > 0) ? (
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-6 bg-[#111118] border border-border px-4 py-3 rounded-lg shrink-0 shadow-sm">
+                  <div className="flex flex-col">
+                    <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider mb-0.5">Total Tests</span>
+                    <span className="text-white font-bold text-base leading-none">{testResults.length}</span>
                   </div>
-                ) : (
-                  testCases.map((tc, idx) => (
-                    <div key={idx} className="bg-background border border-border p-3 rounded-xl group relative">
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded uppercase tracking-widest">
-                          Test Case {idx + 1}
-                        </span>
-                        <div className={`flex gap-2 transition-opacity ${isViewer ? 'opacity-50 cursor-not-allowed' : 'opacity-0 group-hover:opacity-100'}`}>
-                          <button
-                            onClick={() => handleEditTestCase(idx)}
-                            disabled={isViewer}
-                            className="text-muted-foreground hover:text-white"
-                            title="Edit"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg>
-                          </button>
-                          <button
-                            onClick={() => handleRemoveTestCase(idx)}
-                            disabled={isViewer}
-                            className="text-danger hover:text-danger/80"
-                            title="Remove"
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      </div>
+                  <div className="w-px h-6 bg-[#1E1E2E]"></div>
+                  <div className="flex flex-col">
+                    <span className="text-success tracking-wider text-[10px] uppercase font-bold mb-0.5">Passed</span>
+                    <span className="text-success font-bold text-base leading-none inline-flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5" />{testResults.filter(r => r.passed).length}</span>
+                  </div>
+                  <div className="w-px h-6 bg-[#1E1E2E]"></div>
+                  <div className="flex flex-col">
+                    <span className="text-danger tracking-wider text-[10px] uppercase font-bold mb-0.5">Failed</span>
+                    <span className="text-danger font-bold text-base leading-none inline-flex items-center gap-1.5"><XCircle className="w-3.5 h-3.5" />{testResults.filter(r => !r.passed).length}</span>
+                  </div>
+                </div>
 
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <span className="text-[10px] text-muted-foreground uppercase tracking-widest block mb-1">Input</span>
-                          <div className="bg-card border border-border/50 rounded p-2 text-xs font-mono text-white whitespace-pre-wrap break-words">
-                            {tc.input || <span className="text-muted-foreground italic">empty</span>}
-                          </div>
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-muted-foreground uppercase tracking-widest block mb-1">Expected Output</span>
-                          <div className="bg-card border border-border/50 rounded p-2 text-xs font-mono text-white whitespace-pre-wrap break-words">
-                            {tc.expectedOutput || <span className="text-muted-foreground italic">empty</span>}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="h-full">
-            {isExecuting ? (
-              <div className="flex items-center justify-center h-full text-primary gap-2">
-                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-primary"></div>
-                Executing code on secure container...
-              </div>
-            ) : !output ? (
-              <div className="flex items-center justify-center h-full text-muted-foreground text-sm italic">
-                Run your code to see the output here.
-              </div>
-            ) : (
-              <div className="font-mono text-sm">
-                {output.error ? (
-                  <div className="text-danger whitespace-pre-wrap">{output.error}</div>
-                ) : output.type === 'SUBMIT' && output.data ? (
-                  <div className="space-y-4">
-                    <div className="text-lg font-bold">
-                      Submission Result: {output.data.allPassed ? <span className="text-success">ALL PASSED</span> : <span className="text-danger">FAILED</span>}
-                    </div>
-                    {output.data.results?.map((res, i) => (
-                      <div key={i} className={`p-3 border rounded ${res.passed ? 'border-success/30 bg-success/5' : 'border-danger/30 bg-danger/5'}`}>
-                        <div><strong>Test {i + 1}:</strong> {res.passed ? 'Passed' : 'Failed'} ({res.executionTimeMs}ms)</div>
-                        {res.input && <div className="mt-1 text-muted-foreground text-xs">Input: {res.input}</div>}
-                        {!res.passed && (
-                          <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                            <div className="p-2 bg-background rounded"><strong>Expected:</strong><br />{res.expectedOutput}</div>
-                            <div className="p-2 bg-background rounded"><strong>Actual:</strong><br />{res.actualOutput}</div>
-                          </div>
-                        )}
-                      </div>
+                <table className="w-full text-left bg-surface border border-border shadow-sm rounded-lg overflow-hidden">
+                  <thead className="bg-[#111118]">
+                    <tr>
+                      <th className="p-3 text-xs font-semibold text-[#6B6B80] border-b border-border w-[12%]">Test Case</th>
+                      <th className="p-3 text-xs font-semibold text-[#6B6B80] border-b border-border w-[22%]">Input</th>
+                      <th className="p-3 text-xs font-semibold text-[#6B6B80] border-b border-border w-[22%]">Expected</th>
+                      <th className="p-3 text-xs font-semibold text-[#6B6B80] border-b border-border w-[24%]">Actual</th>
+                      <th className="p-3 text-xs font-semibold text-[#6B6B80] border-b border-border w-[10%]">Time</th>
+                      <th className="p-3 text-xs font-semibold text-[#6B6B80] border-b border-border w-[10%]">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-[#0A0A0F]">
+                    {testResults.map((tr, i) => (
+                      <tr key={i} className="hover:bg-[#1E1E2E] transition-colors border-b border-border/50 last:border-0 text-sm">
+                        <td className="p-3">
+                          <span className="text-muted-foreground text-[11px] font-bold tracking-wider">Test {i + 1}</span>
+                        </td>
+                        <td className="p-3 text-white font-mono text-xs whitespace-pre-wrap">{tr.input || "None"}</td>
+                        <td className="p-3 text-white font-mono text-xs whitespace-pre-wrap">{tr.expectedOutput || "None"}</td>
+                        <td className="p-3 text-white font-mono text-xs overflow-x-auto max-w-[200px] whitespace-pre-wrap">{tr.actualOutput || "None"}</td>
+                        <td className="p-3 text-white text-xs">{tr.executionTimeMs}ms</td>
+                        <td className="p-3">
+                          {tr.passed ? (
+                            <span className="inline-flex items-center gap-1 text-success text-[10px] font-semibold bg-success/10 px-2 py-1 rounded">
+                              <CheckCircle className="w-3 h-3" /> PASS
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-danger text-[10px] font-semibold bg-danger/10 px-2 py-1 rounded">
+                              <XCircle className="w-3 h-3" /> FAIL
+                            </span>
+                          )}
+                        </td>
+                      </tr>
                     ))}
-                  </div>
-                ) : (
-                  <div className="text-success whitespace-pre-wrap">{output.output || JSON.stringify(output, null, 2)}</div>
-                )}
+                  </tbody>
+                </table>
               </div>
+            ) : output ? (
+              <pre className="text-[#E8E8F0] whitespace-pre-wrap">{output.output || JSON.stringify(output, null, 2)}</pre>
+            ) : (
+              <span className="text-muted-foreground text-xs italic">Submit your code to see execution results...</span>
             )}
           </div>
         )}
+
+        {activeOutputTab === "TEST_CASES" && (
+          <div className="w-full flex gap-4 items-start relative">
+            {/* Form Section */}
+            <div className="flex-1 flex flex-col space-y-3 pb-2 sticky top-0 z-10">
+               <div className="flex items-center justify-between">
+                 <h3 className="text-sm font-semibold text-white">Add Manual Test Case</h3>
+               </div>
+               
+               {/* Two inputs side by side to save massive vertical space */}
+                <div className="flex gap-4">
+                 <div className="flex-1 space-y-1">
+                   <label className="text-xs text-muted-foreground block">
+                     {language === 'sql' ? "Database Schema Script (SQL)" : "Standard Input"}
+                   </label>
+                   <textarea 
+                      value={newInput}
+                      onChange={(e) => setNewInput(e.target.value)}
+                      disabled={isViewer}
+                      placeholder={language === 'sql' ? "CREATE TABLE users(id INT);\nINSERT INTO users VALUES(1);" : "e.g. 1\n2\n3"}
+                      className="w-full bg-[#111118] border border-border rounded p-2 text-xs text-white font-mono focus:outline-none focus:border-primary h-[72px] resize-none disabled:opacity-50"
+                   />
+                 </div>
+                 <div className="flex-1 space-y-1">
+                   <label className="text-xs text-muted-foreground block">
+                     {language === 'sql' ? "Expected Query Tabulation" : "Expected Output"}
+                   </label>
+                   <textarea 
+                      value={newExpected}
+                      onChange={(e) => setNewExpected(e.target.value)}
+                      disabled={isViewer}
+                      placeholder="Expected result..."
+                      className="w-full bg-[#111118] border border-border rounded p-2 text-xs text-white font-mono focus:outline-none focus:border-primary h-[72px] resize-none disabled:opacity-50"
+                   />
+                 </div>
+               </div>
+               
+               <button 
+                 onClick={handleAddTestCase}
+                 disabled={!newExpected.trim() || isViewer}
+                 title={isViewer ? "Viewers cannot modify test cases." : (editingIndex !== null ? "Update Test Case" : "Add Test Case")}
+                 className="w-full flex items-center justify-center gap-2 py-2 bg-primary/10 text-primary border border-primary/20 rounded hover:bg-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs font-semibold shrink-0"
+               >
+                 {editingIndex !== null ? (
+                   <><Edit2 className="w-4 h-4"/> Update Test Case</>
+                 ) : (
+                   <><Plus className="w-4 h-4"/> Add Test Case</>
+                 )}
+               </button>
+               {editingIndex !== null && (
+                 <button 
+                   onClick={() => {
+                     setEditingIndex(null);
+                     setNewInput("");
+                     setNewExpected("");
+                   }}
+                   className="w-full flex items-center justify-center gap-2 py-1.5 bg-[#1E1E2E] text-muted-foreground hover:text-white rounded transition-colors text-[10px] font-semibold shrink-0 mt-1"
+                 >
+                   <X className="w-3 h-3"/> Cancel Edit
+                 </button>
+               )}
+            </div>
+
+            {/* List Section */}
+            <div className="flex-1 bg-[#111118] rounded border border-border p-3 flex flex-col min-h-[160px]">
+                <div className="flex justify-between items-center mb-2 border-b border-border pb-1">
+                  <h3 className="text-sm font-semibold text-white">Configured Test Cases ({testCases.length})</h3>
+                  {testCases.length > 0 && !isViewer && (
+                    <button 
+                      onClick={handleRemoveAll}
+                      className="text-[10px] font-semibold text-danger hover:underline bg-danger/10 px-2 py-0.5 rounded"
+                    >
+                      Remove All
+                    </button>
+                  )}
+                </div>
+                {testCases.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic flex-1">No custom test cases configured yet.</p>
+                ) : (
+                  <div className="space-y-2 overflow-y-auto flex-1 pr-2 custom-scrollbar">
+                     {testCases.map((tc, idx) => (
+                        <div key={idx} className="relative group bg-[#0A0A0F] border border-border p-3 rounded flex flex-col gap-2">
+                           <div className="flex justify-between items-center w-full">
+                              <span className="inline-flex items-center text-[10px] uppercase font-bold tracking-wider text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded shadow-sm">
+                                Test Case {idx + 1}
+                              </span>
+                              {!isViewer && (
+                                <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button onClick={() => handleEditTestCase(idx)} title="Edit" className="text-muted-foreground hover:text-success p-1 rounded hover:bg-[#1E1E2E] transition-colors">
+                                     <Edit2 className="w-3.5 h-3.5"/>
+                                  </button>
+                                  <button onClick={() => removeTestCase(idx)} title="Delete" className="text-muted-foreground hover:text-danger p-1 rounded hover:bg-[#1E1E2E] transition-colors">
+                                     <Trash2 className="w-3.5 h-3.5"/>
+                                  </button>
+                                </div>
+                              )}
+                           </div>
+                           <div className="overflow-hidden flex gap-4 w-full mt-1">
+                              <div className="flex-1 bg-[#111118] p-2 rounded border border-border/50">
+                                <p className="text-[9px] uppercase font-bold text-muted-foreground mb-1 tracking-wider">{language === 'sql' ? "Schema:" : "Input:"}</p>
+                                <pre className="text-[11px] text-[#E8E8F0] font-mono whitespace-pre-wrap break-all overflow-y-auto max-h-24">{tc.input || "<none>"}</pre>
+                              </div>
+                              <div className="flex-1 bg-[#111118] p-2 rounded border border-border/50">
+                                <p className="text-[9px] uppercase font-bold text-muted-foreground mb-1 tracking-wider">{language === 'sql' ? "Expected TSV:" : "Expected Output:"}</p>
+                                <pre className="text-[11px] text-[#E8E8F0] font-mono whitespace-pre-wrap break-all overflow-y-auto max-h-24">{tc.expectedOutput}</pre>
+                              </div>
+                           </div>
+                        </div>
+                     ))}
+                  </div>
+                )}
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

@@ -29,44 +29,49 @@ export const useWebSocket = (roomId) => {
         const { destination, body } = data;
 
         if (destination === 'code.change') {
-          if (body.code !== undefined && body.code !== roomStore.code) {
-            roomStore.setCode(body.code);
+          const state = useRoomStore.getState();
+          if (body.language && body.language !== state.language) {
+            state.setLanguage(body.language);
           }
-          if (body.language && body.language !== roomStore.language) {
-            roomStore.setLanguage(body.language);
+          if (body.code !== undefined && body.code !== state.code) {
+            state.setCode(body.code);
           }
         }
         else if (destination === 'chat') {
-          roomStore.addChatMessage(body);
-          roomStore.incrementUnreadChat();
+          useRoomStore.getState().addChatMessage(body);
+          useRoomStore.getState().incrementUnreadChat();
         }
         else if (destination === 'cursor') {
-          roomStore.updateCursor(body.userId, { line: body.line, column: body.column, userName: body.userName, color: body.color });
+          useRoomStore.getState().updateCursor(body.userId, { line: body.line, column: body.column, userName: body.userName, color: body.color });
         }
         else if (destination === 'testcases.sync') {
-          roomStore.setTestCases(body);
+          useRoomStore.getState().setTestCases(body);
         }
         else if (destination === 'execution.status') {
-          roomStore.setIsExecuting(body.status === 'RUNNING');
+          const state = useRoomStore.getState();
+          state.setIsExecuting(body.status === 'RUNNING', body.executorName);
           if (body.status === 'RUNNING') {
-            roomStore.setActiveOutputTab('OUTPUT');
+            state.setActiveOutputTab('OUTPUT');
+            state.setShowOutputPanel(true);
           }
           if (body.output) {
-            roomStore.setOutput(body.output);
+            state.setOutput(body.output);
           }
         }
         else if (destination === 'execution.sync') {
-          roomStore.setOutput(body);
-          roomStore.setIsExecuting(false);
-          roomStore.setActiveOutputTab('OUTPUT');
+          const state = useRoomStore.getState();
+          state.setOutput(body);
+          state.setIsExecuting(false);
+          state.setActiveOutputTab('OUTPUT');
+          state.setShowOutputPanel(true);
         }
         else if (destination === 'waitlist.status') {
           if (body === 'ACCEPTED') {
-            useNotificationStore.getState().addNotification('Your join request was approved!', 'success');
+            localStorage.setItem('roomAlert', JSON.stringify({ title: 'Join Approved', message: 'The host has approved your request. Welcome to the workspace!' }));
             setTimeout(() => window.location.reload(), 1000);
           } else {
-            useNotificationStore.getState().addNotification('Your request to join the workspace was rejected by the host.', 'error');
-            setTimeout(() => { window.location.href = '/dashboard?alert=rejected'; }, 1000);
+            localStorage.setItem('dashboardAlert', JSON.stringify({ title: 'Access Denied', message: 'Your request to join the workspace was rejected by the host.' }));
+            setTimeout(() => { window.location.href = '/dashboard'; }, 1000);
           }
         }
         else if (destination === 'waitlist') {
@@ -82,8 +87,8 @@ export const useWebSocket = (roomId) => {
         }
         else if (destination === 'kick') {
           if (body === user?.id) {
-            useNotificationStore.getState().addNotification("You have been kicked from the workspace.", 'error');
-            setTimeout(() => { window.location.href = '/dashboard?alert=kicked'; }, 1500);
+            localStorage.setItem('dashboardAlert', JSON.stringify({ title: 'You were kicked', message: 'The host has removed you from the workspace.' }));
+            setTimeout(() => { window.location.href = '/dashboard'; }, 1500);
           } else {
             fetchRoomMembers();
           }
@@ -112,10 +117,11 @@ export const useWebSocket = (roomId) => {
           }
         }
         else if (destination === 'end' && body === 'ROOM_ENDED_BY_HOST') {
-          useRoomStore.getState().setSessionEndedReason({
+          localStorage.setItem('dashboardAlert', JSON.stringify({
             title: "Workspace Terminated",
             message: "The Host has forcefully closed this Workspace for all members."
-          });
+          }));
+          setTimeout(() => { window.location.href = '/dashboard'; }, 1000);
         }
         else if (destination === 'time.extended') {
           useRoomStore.getState().setExpiresAt(body);
@@ -180,8 +186,8 @@ export const useWebSocket = (roomId) => {
     sendAction('TEST_CASES_SYNC', testCases);
   };
 
-  const sendExecutionStatus = (status, output = null) => {
-    sendAction('EXECUTION_STATUS_SYNC', { status, output });
+  const sendExecutionStatus = (status, output = null, executorName = null) => {
+    sendAction('EXECUTION_STATUS_SYNC', { status, output, executorName });
   };
 
   const sendExecutionResult = (result) => {

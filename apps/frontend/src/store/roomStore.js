@@ -6,19 +6,23 @@ export const useRoomStore = create((set, get) => ({
   expiresAt: null,
   code: '',
   language: 'java',
+  languageCache: {},
   testCases: [],
   output: null,
   activeOutputTab: 'TEST_CASES',
+  showOutputPanel: true,
   participants: [],
   chatMessages: [],
   unreadChatCount: 0,
   cursors: {},
   isExecuting: false,
+  executingUser: null,
   sessionEndedReason: null,
   roleChangeAlert: null,
   hostTransferAlert: null,
 
   setActiveOutputTab: (tab) => set({ activeOutputTab: tab }),
+  setShowOutputPanel: (show) => set({ showOutputPanel: show }),
   setSessionEndedReason: (reason) => set({ sessionEndedReason: reason }),
   setRoleChangeAlert: (alert) => set({ roleChangeAlert: alert }),
   setHostTransferAlert: (alert) => set({ hostTransferAlert: alert }),
@@ -26,8 +30,12 @@ export const useRoomStore = create((set, get) => ({
   setRoomInfo: (id, name, expiresAt = null) => set({ roomId: id, roomName: name, expiresAt }),
   setExpiresAt: (expiresAt) => set({ expiresAt }),
 
-  setCode: (code) => set({ code }),
+  setCode: (code) => set((state) => ({ 
+    code, 
+    languageCache: { ...state.languageCache, [state.language]: code } 
+  })),
   setLanguage: (language) => set({ language }),
+  setLanguageCache: (cache) => set({ languageCache: cache }),
 
   setParticipants: (participants) => set({ participants }),
   addParticipant: (participant) => set((state) => ({
@@ -72,7 +80,7 @@ export const useRoomStore = create((set, get) => ({
   addTestCase: (tc) => set((state) => ({ testCases: [...state.testCases, tc] })),
 
   setOutput: (output) => set({ output }),
-  setIsExecuting: (isExecuting) => set({ isExecuting }),
+  setIsExecuting: (isExecuting, executingUser = null) => set({ isExecuting, executingUser }),
 
   resetRoom: () => set({
     roomId: null,
@@ -80,14 +88,17 @@ export const useRoomStore = create((set, get) => ({
     expiresAt: null,
     code: '',
     language: 'java',
+    languageCache: {},
     testCases: [],
     output: null,
     activeOutputTab: 'TEST_CASES',
+    showOutputPanel: true,
     participants: [],
     chatMessages: [],
     unreadChatCount: 0,
     cursors: {},
     isExecuting: false,
+    executingUser: null,
     sessionEndedReason: null,
     roleChangeAlert: null,
     hostTransferAlert: null,
