@@ -75,7 +75,9 @@ export const useWebSocket = (roomId) => {
         else if (destination === 'roles') {
           fetchRoomMembers();
           if (body.targetUserId === user?.id) {
-            useNotificationStore.getState().addNotification(`Your role has been changed to ${body.role}`, 'info');
+            useRoomStore.getState().setRoleChangeAlert({
+              role: body.role
+            });
           }
         }
         else if (destination === 'kick') {
@@ -89,7 +91,7 @@ export const useWebSocket = (roomId) => {
         else if (destination === 'host_transfer') {
           fetchRoomMembers();
           if (body === user?.id) {
-            useNotificationStore.getState().addNotification("You have been granted HOST authority.", 'success');
+            useRoomStore.getState().setHostTransferAlert(true);
           }
         }
         else if (destination === 'members.join') {

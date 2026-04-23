@@ -15,9 +15,13 @@ export const useRoomStore = create((set, get) => ({
   cursors: {},
   isExecuting: false,
   sessionEndedReason: null,
+  roleChangeAlert: null,
+  hostTransferAlert: null,
 
   setActiveOutputTab: (tab) => set({ activeOutputTab: tab }),
   setSessionEndedReason: (reason) => set({ sessionEndedReason: reason }),
+  setRoleChangeAlert: (alert) => set({ roleChangeAlert: alert }),
+  setHostTransferAlert: (alert) => set({ hostTransferAlert: alert }),
 
   setRoomInfo: (id, name, expiresAt = null) => set({ roomId: id, roomName: name, expiresAt }),
   setExpiresAt: (expiresAt) => set({ expiresAt }),
@@ -84,5 +88,8 @@ export const useRoomStore = create((set, get) => ({
     unreadChatCount: 0,
     cursors: {},
     isExecuting: false,
+    sessionEndedReason: null,
+    roleChangeAlert: null,
+    hostTransferAlert: null,
   }),
 }));

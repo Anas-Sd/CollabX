@@ -5,6 +5,7 @@ import { useUserStore } from '../../store/userStore';
 import { useRoomStore } from '../../store/roomStore';
 import { Users, MessageSquare, UserPlus, Shield, MicOff, Mic, MoreVertical, LogOut } from 'lucide-react';
 import api from '../../lib/api';
+import { useNotificationStore } from '../../store/notificationStore';
 
 export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voiceControls }) {
   const router = useRouter();
@@ -28,7 +29,6 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
-  const [transferHostModalOpen, setTransferHostModalOpen] = useState(false);
   const [confirmModalConfig, setConfirmModalConfig] = useState({
     isOpen: false,
     title: '',
@@ -88,7 +88,6 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
   const handleTransferHost = async (newHostId) => {
     try {
       await api.post(`/rooms/${roomId}/transfer-host`, { newHostId });
-      setTransferHostModalOpen(false);
       setOpenMenuId(null);
     } catch (err) {
       console.error('Failed to transfer host', err);
@@ -103,48 +102,6 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
 
   return (
     <>
-      {/* Transfer Host Modal */}
-      {transferHostModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-card w-full max-w-md rounded-2xl border border-border shadow-2xl p-6 relative">
-            <h2 className="text-xl font-bold text-white mb-4">Transfer Host Authority</h2>
-            <p className="text-sm text-muted-foreground mb-6">Select a participant to transfer your host privileges to. You will become an Editor.</p>
-            <div className="space-y-2 mb-6 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-              {otherParticipants.length === 0 ? (
-                <p className="text-sm text-danger italic">No other participants available to transfer to.</p>
-              ) : (
-                otherParticipants.map(p => (
-                  <button
-                    key={p.id}
-                    onClick={() => handleTransferHost(p.id)}
-                    className="w-full flex items-center justify-between p-3 rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 transition-colors cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-sm">
-                        {p.name.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="flex flex-col items-start">
-                        <span className="text-white font-bold text-sm">{p.name}</span>
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-widest">{p.role}</span>
-                      </div>
-                    </div>
-                    <span className="text-xs text-primary bg-primary/10 px-3 py-1 rounded-full font-bold border border-primary/20">Select</span>
-                  </button>
-                ))
-              )}
-            </div>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setTransferHostModalOpen(false)}
-                className="px-5 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-white transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Icon Navigation Slim Bar Island */}
       <div className="w-16 h-full flex flex-col items-center py-4 bg-card rounded-2xl border border-border shadow-sm gap-6 relative shrink-0">
         <button
@@ -262,8 +219,14 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
                     <div className="flex items-center gap-2">
                       {isMe ? (
                         <button
-                          onClick={voiceControls?.toggleMic}
-                          className="p-1 hover:bg-background rounded transition-colors cursor-pointer"
+                          onClick={() => {
+                            if (p.isMuted) {
+                              useNotificationStore.getState().addNotification('The host has muted your microphone.', 'error');
+                            } else {
+                              voiceControls?.toggleMic();
+                            }
+                          }}
+                          className={`p-1 rounded transition-colors ${p.isMuted ? 'cursor-not-allowed opacity-50' : 'hover:bg-background cursor-pointer'}`}
                         >
                           {voiceControls?.isMicMuted ? (
                             <MicOff size={16} className="text-danger" />
@@ -316,12 +279,13 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
                         </button>
                         <button
                           onClick={() => {
-                            if (p.role === 'EDITOR') {
-                              setTransferHostModalOpen(true);
-                              setOpenMenuId(null);
-                            } else {
-                              alert('User must be an EDITOR to become HOST');
-                            }
+                            setOpenMenuId(null);
+                            openConfirm(
+                              "Transfer Host Authority",
+                              `Are you sure you want to transfer Host authority to ${p.name}? You will be demoted to an Editor.`,
+                              "Transfer Host",
+                              () => handleTransferHost(p.id)
+                            );
                           }}
                           className="w-full text-left px-3 py-2 text-sm text-primary hover:bg-primary/10 transition-colors"
                         >

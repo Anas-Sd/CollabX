@@ -16,7 +16,7 @@ export default function RoomPage() {
   const { roomId } = useParams();
   const router = useRouter();
   const { user, isAuthenticated, restoreSession } = useUserStore();
-  const { roomName, expiresAt, setRoomInfo, language, setLanguage, testCases, participants, setParticipants, sessionEndedReason } = useRoomStore();
+  const { roomName, expiresAt, setRoomInfo, language, setLanguage, testCases, participants, setParticipants, sessionEndedReason, roleChangeAlert, hostTransferAlert } = useRoomStore();
   const [copied, setCopied] = useState(false);
   const [activeSidebarTab, setActiveSidebarTab] = useState('USERS');
   const [showOutputPanel, setShowOutputPanel] = useState(true);
@@ -152,6 +152,7 @@ export default function RoomPage() {
       return diffInSeconds;
     };
 
+    let interval;
     const updateTimer = () => {
       const currentRemaining = calculateTimeLeft();
       setTimeLeft(currentRemaining);
@@ -161,7 +162,7 @@ export default function RoomPage() {
             title: "Time Expired",
             message: "The Workspace Session has reached its maximum preset duration limit and is permanently closed."
         });
-        clearInterval(interval);
+        if (interval) clearInterval(interval);
       } else if (currentRemaining === 300 && !hasWarnedRef.current) {
         useNotificationStore.getState().addNotification('Warning: Session will expire in 5 minutes!', 'warning');
         hasWarnedRef.current = true;
@@ -169,7 +170,7 @@ export default function RoomPage() {
     };
 
     updateTimer();
-    const interval = setInterval(updateTimer, 1000);
+    interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
   }, [expiresAt, router]);
 
@@ -390,6 +391,50 @@ export default function RoomPage() {
           )}
         </div>
       </div>
+
+      {/* Role Change Modal */}
+      {roleChangeAlert && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+          <div className="relative w-full max-w-sm transform rounded-3xl bg-[#0a0a0f] border border-white/10 shadow-2xl p-6 text-center animate-in zoom-in-95 fade-in duration-200">
+            <div className="w-14 h-14 mx-auto bg-primary/20 text-primary rounded-full flex items-center justify-center mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>
+            </div>
+            <h2 className="text-xl font-bold text-white mb-2">Role Updated</h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              The Host has changed your role to <strong className="text-white uppercase tracking-wider">{roleChangeAlert.role}</strong>.
+            </p>
+            <button
+              onClick={() => useRoomStore.getState().setRoleChangeAlert(null)}
+              className="w-full py-3 rounded-xl text-sm font-bold bg-primary text-white hover:bg-primary/90 transition-colors"
+            >
+              Okay, got it
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Host Transfer Modal */}
+      {hostTransferAlert && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+          <div className="relative w-full max-w-sm transform rounded-3xl bg-[#0a0a0f] border border-white/10 shadow-2xl p-6 text-center animate-in zoom-in-95 fade-in duration-200">
+            <div className="w-14 h-14 mx-auto bg-[#F5A623]/20 text-[#F5A623] rounded-full flex items-center justify-center mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            </div>
+            <h2 className="text-xl font-bold text-white mb-2">You are now the Host</h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              The previous Host has transferred their authority to you. You now have full administrative control over this workspace.
+            </p>
+            <button
+              onClick={() => useRoomStore.getState().setHostTransferAlert(false)}
+              className="w-full py-3 rounded-xl text-sm font-bold bg-[#F5A623] text-black hover:bg-[#F5A623]/90 transition-colors"
+            >
+              Assume Control
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
