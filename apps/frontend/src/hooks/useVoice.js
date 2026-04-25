@@ -35,6 +35,12 @@ export const useVoice = (roomId, user) => {
         }
 
         const AgoraRTC = (await import('agora-rtc-sdk-ng')).default;
+        
+        // Disable internal Agora console logs (4 = NONE)
+        AgoraRTC.setLogLevel(4);
+        // Prevent Agora from sending telemetry to statscollector endpoints (stops Adblocker blocked errors)
+        AgoraRTC.disableLogUpload();
+
         const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
         clientRef.current = client;
 
