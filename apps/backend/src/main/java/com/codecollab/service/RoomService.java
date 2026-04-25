@@ -23,6 +23,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import com.codecollab.websocket.RoomSocketHandler;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.security.SecureRandom;
 import java.util.List;
@@ -167,7 +169,12 @@ public class RoomService {
                 exist.setRole("EDITOR".equalsIgnoreCase(requestedRole) ? "EDITOR" : "VIEWER");
                 roomMemberRepository.save(exist);
                 logActivity(room, user, "Requested to rejoin as " + ("EDITOR".equalsIgnoreCase(requestedRole) ? "EDITOR" : "VIEWER"));
-                roomSocketHandler.broadcastToRoom(room.getId().toString(), "waitlist", "UPDATE");
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        roomSocketHandler.broadcastToRoom(room.getId().toString(), "waitlist", "UPDATE");
+                    }
+                });
             }
         } else {
             long activeCount = existingMembers.stream()
@@ -186,7 +193,12 @@ public class RoomService {
             existingMembers.add(newMember);
             
             logActivity(room, user, "Requested to join as " + ("EDITOR".equalsIgnoreCase(requestedRole) ? "EDITOR" : "VIEWER"));
-            roomSocketHandler.broadcastToRoom(room.getId().toString(), "waitlist", "UPDATE");
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    roomSocketHandler.broadcastToRoom(room.getId().toString(), "waitlist", "UPDATE");
+                }
+            });
         }
 
         return mapToRoomResponse(room, existingMembers);
@@ -206,7 +218,12 @@ public class RoomService {
         roomMemberRepository.save(member);
         
         logActivity(room, user, "Left the room");
-        roomSocketHandler.broadcastToRoom(roomId, "members.leave", user.getId().toString());
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                roomSocketHandler.broadcastToRoom(roomId, "members.leave", user.getId().toString());
+            }
+        });
 
         // Output room closure if host left (optional implementation)
         if (room.getHost().getId().equals(user.getId())) {
@@ -363,7 +380,12 @@ public class RoomService {
         com.codecollab.dto.request.RoleUpdateWS payload = new com.codecollab.dto.request.RoleUpdateWS();
         payload.setTargetUserId(targetUserId);
         payload.setRole(newRole);
-        roomSocketHandler.broadcastToRoom(roomId, "roles", payload);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                roomSocketHandler.broadcastToRoom(roomId, "roles", payload);
+            }
+        });
     }
 
     @Transactional
@@ -383,7 +405,12 @@ public class RoomService {
         roomMemberRepository.save(member);
         
         logActivity(room, requester, "Kicked " + targetUser.getName());
-        roomSocketHandler.broadcastToRoom(roomId, "kick", targetUserId);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                roomSocketHandler.broadcastToRoom(roomId, "kick", targetUserId);
+            }
+        });
     }
 
     @Transactional
@@ -412,7 +439,12 @@ public class RoomService {
 
         logActivity(room, requester, "Transferred Host to " + newHostUser.getName());
 
-        roomSocketHandler.broadcastToRoom(roomId, "host_transfer", newHostId);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                roomSocketHandler.broadcastToRoom(roomId, "host_transfer", newHostId);
+            }
+        });
     }
 
     @Transactional
@@ -462,13 +494,24 @@ public class RoomService {
                     .joinedAt(member.getJoinedAt())
                     .build();
             logActivity(room, requester, "Accepted " + targetUser.getName());
-            roomSocketHandler.broadcastToRoom(room.getId().toString(), "members.join", broadcastMember);
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    roomSocketHandler.broadcastToRoom(room.getId().toString(), "members.join", broadcastMember);
+                    roomSocketHandler.broadcastToUser(room.getId().toString(), userId, "waitlist.status", "ACCEPTED");
+                }
+            });
         } else {
             member.setStatus("REJECTED");
             roomMemberRepository.save(member);
             logActivity(room, requester, "Rejected " + targetUser.getName());
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    roomSocketHandler.broadcastToUser(room.getId().toString(), userId, "waitlist.status", "REJECTED");
+                }
+            });
         }
-        roomSocketHandler.broadcastToUser(room.getId().toString(), userId, "waitlist.status", accept ? "ACCEPTED" : "REJECTED");
     }
 
     public List<com.codecollab.dto.response.VoicePermissionResponse> getVoicePermissions(String roomId) {

@@ -155,6 +155,9 @@ public class RoomSocketHandler extends TextWebSocketHandler {
                 case "EXECUTION_STATUS_SYNC":
                     broadcastToRoomFilterSender(roomId, session.getId(), "execution.status", payloadNode);
                     break;
+                case "FORCE_REFRESH":
+                    broadcastToRoom(roomId, "refresh.all", "REFRESH");
+                    break;
                 default:
                     log.warn("Unknown action received: {}", action);
             }

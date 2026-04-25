@@ -81,11 +81,11 @@ export const useWebSocket = (roomId) => {
           }
         }
         else if (destination === 'waitlist') {
-          fetchRoomMembers();
+          setTimeout(fetchRoomMembers, 500);
         }
         else if (destination === 'roles') {
-          fetchRoomMembers();
-          if (body.targetUserId === user?.id) {
+          setTimeout(fetchRoomMembers, 500);
+          if (body?.targetUserId === user?.id) {
             useRoomStore.getState().setRoleChangeAlert({
               role: body.role
             });
@@ -96,22 +96,25 @@ export const useWebSocket = (roomId) => {
             localStorage.setItem('dashboardAlert', JSON.stringify({ title: 'You were kicked', message: 'The host has removed you from the workspace.' }));
             setTimeout(() => { window.location.href = '/dashboard'; }, 1500);
           } else {
-            fetchRoomMembers();
+            setTimeout(fetchRoomMembers, 500);
           }
         }
         else if (destination === 'host_transfer') {
-          fetchRoomMembers();
+          setTimeout(fetchRoomMembers, 500);
           if (body === user?.id) {
             useRoomStore.getState().setHostTransferAlert(true);
           }
         }
         else if (destination === 'members.join') {
-          fetchRoomMembers();
+          setTimeout(fetchRoomMembers, 500);
           useNotificationStore.getState().addNotification("A new member joined the workspace.", 'info');
         }
         else if (destination === 'members.leave') {
-          fetchRoomMembers();
+          setTimeout(fetchRoomMembers, 500);
           useNotificationStore.getState().addNotification("A member left the workspace.", 'warning');
+        }
+        else if (destination === 'refresh.all') {
+          setTimeout(fetchRoomMembers, 500);
         }
         else if (destination === 'voice') {
           useRoomStore.getState().updateParticipantMute(body.targetUserId, body.isMuted);
@@ -156,7 +159,7 @@ export const useWebSocket = (roomId) => {
 
   const fetchRoomMembers = async () => {
     try {
-      const res = await api.get(`/rooms/${roomId}`);
+      const res = await api.get(`/rooms/${roomId}?t=${new Date().getTime()}`);
       if (res.data && res.data.members) {
         useRoomStore.getState().setParticipants(res.data.members);
       }
@@ -200,6 +203,10 @@ export const useWebSocket = (roomId) => {
     sendAction('EXECUTION_SYNC', result);
   };
 
+  const triggerGlobalRefresh = () => {
+    sendAction('FORCE_REFRESH', {});
+  };
+
   return {
     sendCodeChange,
     sendCursorMove,
@@ -207,6 +214,7 @@ export const useWebSocket = (roomId) => {
     sendTestCasesSync,
     sendExecutionStatus,
     sendExecutionResult,
+    triggerGlobalRefresh,
     fetchRoomMembers
   };
 };

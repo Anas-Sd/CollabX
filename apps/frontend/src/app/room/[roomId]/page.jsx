@@ -524,6 +524,9 @@ export default function RoomPage() {
               onClick={() => {
                 setRoomAlert(null);
                 localStorage.removeItem('roomAlert');
+                if (wsHook && wsHook.triggerGlobalRefresh) {
+                  wsHook.triggerGlobalRefresh();
+                }
               }}
               className="w-full py-3 rounded-xl text-sm font-bold bg-success text-black hover:bg-success/90 transition-colors"
             >
