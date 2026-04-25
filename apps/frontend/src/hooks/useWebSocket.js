@@ -42,6 +42,10 @@ export const useWebSocket = (roomId) => {
           useRoomStore.getState().addChatMessage(body);
           useRoomStore.getState().incrementUnreadChat();
         }
+        else if (destination === 'logs') {
+          useRoomStore.getState().addLog(body);
+          useNotificationStore.getState().addNotification('DEBUG: Log received via WebSocket: ' + body.action, 'success');
+        }
         else if (destination === 'cursor') {
           useRoomStore.getState().updateCursor(body.userId, { line: body.line, column: body.column, userName: body.userName, color: body.color });
         }
@@ -207,6 +211,10 @@ export const useWebSocket = (roomId) => {
     sendAction('FORCE_REFRESH', {});
   };
 
+  const sendActionTrigger = (type) => {
+    sendAction('ACTION_TRIGGER', { userId: user?.id, type });
+  };
+
   return {
     sendCodeChange,
     sendCursorMove,
@@ -215,6 +223,7 @@ export const useWebSocket = (roomId) => {
     sendExecutionStatus,
     sendExecutionResult,
     triggerGlobalRefresh,
+    sendActionTrigger,
     fetchRoomMembers
   };
 };

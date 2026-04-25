@@ -13,6 +13,7 @@ export const useRoomStore = create((set, get) => ({
   showOutputPanel: true,
   participants: [],
   chatMessages: [],
+  logs: [],
   unreadChatCount: 0,
   cursors: {},
   isExecuting: false,
@@ -56,6 +57,10 @@ export const useRoomStore = create((set, get) => ({
 
   addChatMessage: (msg) => set((state) => ({ chatMessages: [...state.chatMessages, msg] })),
   setChatMessages: (chatMessages) => set({ chatMessages }),
+  
+  setLogs: (logs) => set({ logs }),
+  addLog: (log) => set((state) => ({ logs: [...state.logs, log] })),
+  
   incrementUnreadChat: () => set((state) => {
     const newCount = state.unreadChatCount + 1;
     if (state.roomId) localStorage.setItem(`unread_${state.roomId}`, newCount);
@@ -97,6 +102,7 @@ export const useRoomStore = create((set, get) => ({
     showOutputPanel: true,
     participants: [],
     chatMessages: [],
+    logs: [],
     unreadChatCount: 0,
     cursors: {},
     isExecuting: false,

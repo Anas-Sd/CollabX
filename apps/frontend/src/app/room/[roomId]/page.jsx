@@ -124,6 +124,9 @@ export default function RoomPage() {
         if (res.data.chats) {
           useRoomStore.getState().setChatMessages(res.data.chats);
         }
+        if (res.data.logs) {
+          useRoomStore.getState().setLogs(res.data.logs);
+        }
 
         const savedUnread = localStorage.getItem(`unread_${res.data.id || roomId}`);
         if (savedUnread) {
@@ -364,6 +367,9 @@ export default function RoomPage() {
               useRoomStore.getState().setShowOutputPanel(true);
               useRoomStore.getState().setOutput(null);
               wsHook.sendExecutionStatus('RUNNING', null, executorName);
+              if (wsHook.sendActionTrigger) {
+                 wsHook.sendActionTrigger('RUN_START');
+              }
               const state = useRoomStore.getState();
               
               // Brief delay to allow the "is executing..." stage to be visible for a fraction of a second
@@ -389,11 +395,13 @@ export default function RoomPage() {
                   useRoomStore.getState().setOutput(finalResult);
                   useRoomStore.getState().setIsExecuting(false);
                   wsHook.sendExecutionResult(finalResult);
+                  if (wsHook.sendActionTrigger) wsHook.sendActionTrigger('SUBMIT_END');
                 } else {
                   // If there are no test cases, the dry-run execution result is our final output
                   useRoomStore.getState().setOutput(execRes.data);
                   useRoomStore.getState().setIsExecuting(false);
                   wsHook.sendExecutionResult(execRes.data);
+                  if (wsHook.sendActionTrigger) wsHook.sendActionTrigger('SUBMIT_END');
                 }
               } catch (err) {
                 const errorResult = { error: err.response?.data?.message || err.message };

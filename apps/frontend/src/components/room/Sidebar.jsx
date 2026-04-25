@@ -6,6 +6,7 @@ import { useRoomStore } from '../../store/roomStore';
 import { Users, MessageSquare, UserPlus, Shield, MicOff, Mic, MoreVertical, LogOut } from 'lucide-react';
 import api from '../../lib/api';
 import { useNotificationStore } from '../../store/notificationStore';
+import LogsPanel from '../../../components/collaboration/LogsPanel';
 
 export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voiceControls }) {
   const router = useRouter();
@@ -114,18 +115,33 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
     }
   }, [activeTab, resetUnreadChat, unreadChatCount]);
 
+  const handleTabClick = async (tab) => {
+    setActiveTab(tab);
+    try {
+      const res = await api.get(`/rooms/${roomId}`);
+      if (res.data) {
+        const store = useRoomStore.getState();
+        if (res.data.participants) store.setParticipants(res.data.participants);
+        if (res.data.logs) store.setLogs(res.data.logs);
+        if (res.data.chats) store.setChatMessages(res.data.chats);
+      }
+    } catch (err) {
+      console.error('Failed to sync room state on tab switch', err);
+    }
+  };
+
   return (
     <>
       {/* Icon Navigation Slim Bar Island */}
       <div className="w-16 h-full flex flex-col items-center py-4 bg-card rounded-2xl border border-border shadow-sm gap-6 relative shrink-0">
         <button
-          onClick={() => setActiveTab('USERS')}
+          onClick={() => handleTabClick('USERS')}
           className={`p-3 rounded-xl transition-colors cursor-pointer ${activeTab === 'USERS' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-white hover:bg-background relative'}`}
         >
           <Users size={20} />
         </button>
         <button
-          onClick={() => setActiveTab('CHAT')}
+          onClick={() => handleTabClick('CHAT')}
           className={`p-3 rounded-xl transition-colors relative cursor-pointer ${activeTab === 'CHAT' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-white hover:bg-background'}`}
         >
           <MessageSquare size={20} />
@@ -137,7 +153,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
         </button>
         {isHost && (
           <button
-            onClick={() => setActiveTab('WAITLIST')}
+            onClick={() => handleTabClick('WAITLIST')}
             className={`p-3 rounded-xl transition-colors relative cursor-pointer ${activeTab === 'WAITLIST' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-white hover:bg-background'}`}
           >
             <UserPlus size={20} />
@@ -149,7 +165,11 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
           </button>
         )}
         {isHost && (
-          <button className="p-3 rounded-xl text-muted-foreground hover:text-white hover:bg-background transition-colors cursor-pointer">
+          <button
+            onClick={() => handleTabClick('LOGS')}
+            className={`p-3 rounded-xl transition-colors relative cursor-pointer ${activeTab === 'LOGS' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-white hover:bg-background'}`}
+            title="Security Logs"
+          >
             <Shield size={20} />
           </button>
         )}
@@ -401,6 +421,12 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
                 }}
               />
             </div>
+          </div>
+        )}
+        
+        {activeTab === 'LOGS' && isHost && (
+          <div className="flex flex-col h-full overflow-hidden">
+             <LogsPanel />
           </div>
         )}
       </div>

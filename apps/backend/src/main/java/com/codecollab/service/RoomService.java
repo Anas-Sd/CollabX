@@ -49,6 +49,7 @@ public class RoomService {
     private final SecureRandom random = new SecureRandom();
 
     public void logActivity(Room room, User user, String action) {
+        System.out.println("LOG ACTIVITY CALLED FOR ACTION: " + action);
         RoomLog log = RoomLog.builder()
                 .room(room)
                 .user(user)
@@ -63,7 +64,23 @@ public class RoomService {
                 .action(action)
                 .timestamp(java.time.LocalDateTime.now())
                 .build();
-        roomSocketHandler.broadcastToRoom(room.getId().toString(), "logs", res);
+                
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    try {
+                        System.out.println("BROADCASTING LOG VIA WS AFTER COMMIT: " + res.getAction());
+                        roomSocketHandler.broadcastToRoom(room.getId().toString(), "logs", res);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        } else {
+            System.out.println("BROADCASTING LOG VIA WS IMMEDIATELY: " + res.getAction());
+            roomSocketHandler.broadcastToRoom(room.getId().toString(), "logs", res);
+        }
     }
 
     @Transactional
