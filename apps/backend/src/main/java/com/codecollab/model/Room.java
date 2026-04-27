@@ -40,6 +40,9 @@ public class Room {
     @Column(name = "current_code", columnDefinition = "TEXT")
     private String currentCode;
 
+    @Column(name = "current_language")
+    private String currentLanguage;
+
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
 

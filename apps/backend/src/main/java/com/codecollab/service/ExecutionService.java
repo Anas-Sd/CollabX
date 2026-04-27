@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Base64;
 import java.nio.charset.StandardCharsets;
+import java.io.File;
 
 @Service
 public class ExecutionService {
@@ -61,6 +62,10 @@ public class ExecutionService {
             roomSocketHandler.broadcastToRoom(roomId, "execution.progress", progress);
         }
 
+        if ("sql".equalsIgnoreCase(language) && roomId != null) {
+            return executeSqlLocal(code, roomId);
+        }
+
         return executeCodeInternal(code, language, stdin);
     }
 
@@ -84,7 +89,17 @@ public class ExecutionService {
                     roomSocketHandler.broadcastToRoom(request.getRoomId(), "execution.progress", progress);
                 }
 
-                ExecutionResult execResult = executeCodeInternal(request.getCode(), request.getLanguage(), testCase.getInput());
+                ExecutionResult execResult;
+                if ("sql".equalsIgnoreCase(request.getLanguage()) && request.getRoomId() != null) {
+                    // For submitting tests in SQL, execute the schema/query along with the test input if provided
+                    String combinedCode = request.getCode();
+                    if (testCase.getInput() != null && !testCase.getInput().trim().isEmpty()) {
+                         combinedCode = testCase.getInput() + "\n" + combinedCode;
+                    }
+                    execResult = executeSqlLocal(combinedCode, request.getRoomId());
+                } else {
+                    execResult = executeCodeInternal(request.getCode(), request.getLanguage(), testCase.getInput());
+                }
                 
                 String actualOut = execResult.getOutput() != null ? execResult.getOutput().trim() : "";
                 if (execResult.getExitCode() != 0) {
@@ -113,6 +128,105 @@ public class ExecutionService {
                     .build();
         } catch (Exception e) {
             throw new RuntimeException("Failed to run test cases", e);
+        }
+    }
+
+    private String preprocessSql(String code) {
+        if (code == null) return "";
+        // Inject missing semicolons before major SQL keywords to support multi-line execution
+        String processed = code.replaceAll("(?i)([^;\\s])(\\s*)\\n(\\s*(?:SELECT|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|WITH|TRUNCATE|REPLACE)\\b)", "$1;$2\n$3");
+        if (!processed.trim().isEmpty() && !processed.trim().endsWith(";")) {
+            processed += ";";
+        }
+        return processed;
+    }
+
+    private ExecutionResult executeSqlLocal(String code, String roomId) {
+        long startTime = System.currentTimeMillis();
+        
+        // Ensure data directory exists
+        File dataDir = new File("./data/rooms");
+        if (!dataDir.exists()) dataDir.mkdirs();
+        
+        String dbUrl = "jdbc:h2:file:./data/rooms/room_" + roomId + ";MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH";
+        StringBuilder output = new StringBuilder();
+        
+        try (java.sql.Connection conn = java.sql.DriverManager.getConnection(dbUrl, "sa", "");
+             java.sql.Statement stmt = conn.createStatement()) {
+            
+            String preprocessedCode = preprocessSql(code);
+            String[] statements = preprocessedCode.split("(?<=;)");
+            
+            for (String sql : statements) {
+                if (sql.trim().isEmpty()) continue;
+                
+                boolean hasResultSet = stmt.execute(sql.trim());
+                
+                while (hasResultSet || stmt.getUpdateCount() != -1) {
+                    if (hasResultSet) {
+                        try (java.sql.ResultSet rs = stmt.getResultSet()) {
+                            java.sql.ResultSetMetaData metaData = rs.getMetaData();
+                            int columnCount = metaData.getColumnCount();
+                            
+                            // Print headers
+                            for (int j = 1; j <= columnCount; j++) {
+                                output.append(metaData.getColumnName(j));
+                                if (j < columnCount) output.append("\t| ");
+                            }
+                            output.append("\n");
+                            for (int j = 0; j < columnCount * 12; j++) output.append("-");
+                            output.append("\n");
+                            
+                            // Print rows
+                            while (rs.next()) {
+                                for (int j = 1; j <= columnCount; j++) {
+                                    String val = rs.getString(j);
+                                    output.append(val != null ? val : "NULL");
+                                    if (j < columnCount) output.append("\t| ");
+                                }
+                                output.append("\n");
+                            }
+                            output.append("\n");
+                        }
+                    } else {
+                        int updateCount = stmt.getUpdateCount();
+                        if (updateCount >= 0) {
+                            String lower = sql.toLowerCase().trim();
+                            if (lower.startsWith("create table")) {
+                                output.append("Table created successfully.\n");
+                            } else if (lower.startsWith("insert")) {
+                                output.append(updateCount).append(" row(s) inserted successfully.\n");
+                            } else if (lower.startsWith("update")) {
+                                output.append(updateCount).append(" row(s) updated successfully.\n");
+                            } else if (lower.startsWith("delete")) {
+                                output.append(updateCount).append(" row(s) deleted successfully.\n");
+                            } else if (lower.startsWith("drop table")) {
+                                output.append("Table dropped successfully.\n");
+                            } else {
+                                output.append("Executed successfully (").append(updateCount).append(" row(s) affected).\n");
+                            }
+                        }
+                    }
+                    hasResultSet = stmt.getMoreResults();
+                }
+            }
+            
+            return ExecutionResult.builder()
+                    .output(output.toString().trim())
+                    .error("")
+                    .exitCode(0)
+                    .executionTimeMs(System.currentTimeMillis() - startTime)
+                    .compilationError(false)
+                    .build();
+            
+        } catch (Exception e) {
+            return ExecutionResult.builder()
+                    .output("")
+                    .error("SQL Error: " + e.getMessage())
+                    .exitCode(1)
+                    .executionTimeMs(System.currentTimeMillis() - startTime)
+                    .compilationError(false)
+                    .build();
         }
     }
 

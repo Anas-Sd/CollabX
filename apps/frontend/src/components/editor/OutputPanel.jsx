@@ -185,7 +185,9 @@ export default function OutputPanel({ wsHook }) {
                 </table>
               </div>
             ) : output ? (
-              <pre className="text-[#E8E8F0] whitespace-pre-wrap">{output.output || JSON.stringify(output, null, 2)}</pre>
+              <pre className="text-[#E8E8F0] whitespace-pre-wrap">
+                {output.output ? output.output : (output.exitCode === 0 ? "Execution completed successfully with no output." : JSON.stringify(output, null, 2))}
+              </pre>
             ) : (
               <span className="text-muted-foreground text-xs italic">Submit your code to see execution results...</span>
             )}

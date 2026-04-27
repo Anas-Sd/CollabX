@@ -39,6 +39,19 @@ export default function CodeEditor({ wsHook }) {
       const position = e.position;
       wsHook.sendCursorMove(position.lineNumber, position.column, user?.name || 'Anonymous', '#6C63FF');
     });
+
+    // Handle text selection for SQL execution
+    editor.onDidChangeCursorSelection((e) => {
+      const selection = e.selection;
+      const selectedText = editor.getModel().getValueInRange(selection);
+      
+      // Get everything from line 1, col 1 up to the start of the selection
+      const precedingRange = new monacoRef.current.Range(1, 1, selection.startLineNumber, selection.startColumn);
+      const precedingText = editor.getModel().getValueInRange(precedingRange);
+
+      useRoomStore.getState().setSelectedCode(selectedText);
+      useRoomStore.getState().setPrecedingCode(precedingText);
+    });
   };
 
   const handleEditorChange = (value) => {

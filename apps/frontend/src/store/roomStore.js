@@ -36,6 +36,10 @@ export const useRoomStore = create((set, get) => ({
     code,
     languageCache: { ...state.languageCache, [state.language]: code }
   })),
+  selectedCode: '',
+  setSelectedCode: (code) => set({ selectedCode: code }),
+  precedingCode: '',
+  setPrecedingCode: (code) => set({ precedingCode: code }),
   setLanguage: (language) => set({ language }),
   setLanguageCache: (cache) => set({ languageCache: cache }),
 

@@ -39,12 +39,23 @@ export default function RoomPage() {
   const { roomId } = useParams();
   const router = useRouter();
   const { user, isAuthenticated, restoreSession } = useUserStore();
-  const { roomName, expiresAt, setRoomInfo, language, setLanguage, testCases, participants, setParticipants, sessionEndedReason, roleChangeAlert, hostTransferAlert, isExecuting, showOutputPanel, setShowOutputPanel } = useRoomStore();
+  const { roomName, expiresAt, setRoomInfo, language, setLanguage, testCases, participants, setParticipants, sessionEndedReason, roleChangeAlert, hostTransferAlert, isExecuting, showOutputPanel, setShowOutputPanel, selectedCode } = useRoomStore();
   const [copied, setCopied] = useState(false);
   const [activeSidebarTab, setActiveSidebarTab] = useState('USERS');
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [roomAlert, setRoomAlert] = useState(null);
   const langMenuRef = useRef(null);
+
+  const preprocessSql = (sqlCode) => {
+    if (!sqlCode) return "";
+    // Add semicolons before lines starting with SQL keywords if missing
+    let processed = sqlCode.replace(/([^;\s])(\s*)\n(\s*(?:SELECT|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|WITH|TRUNCATE|REPLACE)\b)/gi, '$1;$2\n$3');
+    // Also ensure the very last statement has a semicolon
+    if (processed.trim() && !processed.trim().endsWith(';')) {
+        processed += ';';
+    }
+    return processed;
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -109,7 +120,7 @@ export default function RoomPage() {
         }
 
         // Find initial code to display (either current code, cached code for current lang, or default)
-        const initialLang = res.data.language || 'java';
+        const initialLang = res.data.currentLanguage || 'java';
         let initialCode = res.data.currentCode;
         if (!initialCode) {
           initialCode = (res.data.languageCache && res.data.languageCache[initialLang])
@@ -117,6 +128,7 @@ export default function RoomPage() {
             : DEFAULT_CODE_TEMPLATES[initialLang];
         }
 
+        useRoomStore.getState().setLanguage(initialLang);
         useRoomStore.getState().setCode(initialCode);
         if (res.data.testCases) {
           useRoomStore.getState().setTestCases(res.data.testCases);
@@ -256,6 +268,142 @@ export default function RoomPage() {
     }
   };
 
+  const handleExecuteSelected = async () => {
+    const state = useRoomStore.getState();
+    if (state.isExecuting || !state.selectedCode || state.selectedCode.trim() === '') return;
+    const executorName = currentUserParticipant?.name || user?.name || "Someone";
+    state.setIsExecuting(true, executorName);
+    state.setActiveOutputTab('OUTPUT');
+    state.setShowOutputPanel(true);
+    state.setOutput(null);
+    wsHook.sendExecutionStatus('RUNNING', null, executorName);
+    if (wsHook.sendActionTrigger) wsHook.sendActionTrigger('RUN_START');
+    
+    await new Promise(resolve => setTimeout(resolve, 500));
+    try {
+      const execRes = await api.post('/execute', { roomId, code: state.selectedCode, language: state.language, stdin: '' });
+      useRoomStore.getState().setOutput(execRes.data);
+      useRoomStore.getState().setIsExecuting(false);
+      wsHook.sendExecutionResult(execRes.data);
+      if (wsHook.sendActionTrigger) wsHook.sendActionTrigger('SUBMIT_END');
+    } catch (err) {
+      const errorResult = { error: err.response?.data?.message || err.message };
+      useRoomStore.getState().setOutput(errorResult);
+      useRoomStore.getState().setIsExecuting(false);
+      wsHook.sendExecutionResult(errorResult);
+    }
+  };
+
+  const handleExecuteAll = async () => {
+    const state = useRoomStore.getState();
+    if (state.isExecuting) return;
+    const executorName = currentUserParticipant?.name || user?.name || "Someone";
+    state.setIsExecuting(true, executorName);
+    state.setActiveOutputTab('OUTPUT');
+    state.setShowOutputPanel(true);
+    state.setOutput(null);
+    wsHook.sendExecutionStatus('RUNNING', null, executorName);
+    if (wsHook.sendActionTrigger) wsHook.sendActionTrigger('RUN_START');
+    
+    await new Promise(resolve => setTimeout(resolve, 500));
+    try {
+      const execRes = await api.post('/execute', { roomId, code: state.code, language: state.language, stdin: '' });
+      useRoomStore.getState().setOutput(execRes.data);
+      useRoomStore.getState().setIsExecuting(false);
+      wsHook.sendExecutionResult(execRes.data);
+      if (wsHook.sendActionTrigger) wsHook.sendActionTrigger('SUBMIT_END');
+    } catch (err) {
+      const errorResult = { error: err.response?.data?.message || err.message };
+      useRoomStore.getState().setOutput(errorResult);
+      useRoomStore.getState().setIsExecuting(false);
+      wsHook.sendExecutionResult(errorResult);
+    }
+  };
+
+  const handleRunCode = async () => {
+    const state = useRoomStore.getState();
+    if (state.isExecuting || currentUserParticipant?.role === 'VIEWER' || state.testCases.length === 0) return;
+    const executorName = currentUserParticipant?.name || user?.name || "Someone";
+    state.setIsExecuting(true, executorName);
+    state.setActiveOutputTab('OUTPUT');
+    state.setShowOutputPanel(true);
+    state.setOutput(null);
+    wsHook.sendExecutionStatus('RUNNING', null, executorName);
+    if (wsHook.sendActionTrigger) wsHook.sendActionTrigger('RUN_START');
+    
+    await new Promise(resolve => setTimeout(resolve, 500));
+    try {
+      const dryRunInput = state.testCases && state.testCases.length > 0 ? state.testCases[0].input : "";
+      const execRes = await api.post('/execute', { roomId, code: state.code, language: state.language, stdin: dryRunInput });
+
+      if (execRes.data.compilationError) {
+        useRoomStore.getState().setOutput(execRes.data);
+        useRoomStore.getState().setIsExecuting(false);
+        wsHook.sendExecutionResult(execRes.data);
+        return;
+      }
+
+      if (state.testCases && state.testCases.length > 0) {
+        const submitRes = await api.post('/submit', { roomId, code: state.code, language: state.language, testCases: state.testCases });
+        const finalResult = { type: 'SUBMIT', data: submitRes.data };
+        useRoomStore.getState().setOutput(finalResult);
+        useRoomStore.getState().setIsExecuting(false);
+        wsHook.sendExecutionResult(finalResult);
+        if (wsHook.sendActionTrigger) wsHook.sendActionTrigger('SUBMIT_END');
+      } else {
+        useRoomStore.getState().setOutput(execRes.data);
+        useRoomStore.getState().setIsExecuting(false);
+        wsHook.sendExecutionResult(execRes.data);
+        if (wsHook.sendActionTrigger) wsHook.sendActionTrigger('SUBMIT_END');
+      }
+    } catch (err) {
+      const errorResult = { error: err.response?.data?.message || err.message };
+      useRoomStore.getState().setOutput(errorResult);
+      useRoomStore.getState().setIsExecuting(false);
+      wsHook.sendExecutionResult(errorResult);
+    }
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'Enter') {
+        const state = useRoomStore.getState();
+        if (state.language === 'sql') {
+          e.preventDefault();
+          e.stopPropagation();
+          if (!state.selectedCode || state.selectedCode.trim() === '') {
+            useNotificationStore.getState().addNotification('Please select SQL text to execute!', 'warning');
+            return;
+          }
+          if (currentUserParticipant?.role === 'HOST' || currentUserParticipant?.role === 'EDITOR') {
+            handleExecuteSelected();
+          }
+        }
+      } else if (e.ctrlKey && !e.shiftKey && e.key === 'Enter') {
+        const state = useRoomStore.getState();
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (state.language === 'sql') {
+          if (currentUserParticipant?.role === 'HOST' || currentUserParticipant?.role === 'EDITOR') {
+            handleExecuteAll();
+          }
+        } else {
+          if (state.testCases.length === 0) {
+            useNotificationStore.getState().addNotification('No test cases available to execute!', 'warning');
+            return;
+          }
+          if (currentUserParticipant?.role !== 'VIEWER') {
+            handleRunCode();
+          }
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown, true);
+    return () => document.removeEventListener('keydown', handleKeyDown, true);
+  }, [currentUserParticipant?.role, roomId]);
+
   if (!isMounted || !user) return <div className="min-h-screen bg-background flex items-center justify-center text-white">Loading...</div>;
 
   if (isPending) {
@@ -358,60 +506,38 @@ export default function RoomPage() {
             )}
           </div>
 
+          {language === 'sql' && (currentUserParticipant?.role === 'HOST' || currentUserParticipant?.role === 'EDITOR') ? (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleExecuteSelected}
+                disabled={isExecuting || !selectedCode || selectedCode.trim() === ''}
+                title={!selectedCode || selectedCode.trim() === '' ? "Select text to execute" : "Execute selected query (Ctrl+Shift+Enter)"}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${isExecuting || !selectedCode || selectedCode.trim() === '' ? 'bg-success/5 border border-success/10 text-success/50 cursor-not-allowed' : 'bg-success/10 border border-success/30 text-success hover:bg-success hover:text-black hover:shadow-success/20'}`}
+              >
+                {isExecuting ? (
+                  <><span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></span> Executing...</>
+                ) : (
+                  <><Check size={16} /> Execute Selected</>
+                )}
+              </button>
+              <button
+                onClick={handleExecuteAll}
+                disabled={isExecuting}
+                title="Execute All (Ctrl+Enter)"
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${isExecuting ? 'bg-success/5 border border-success/10 text-success/50 cursor-not-allowed' : 'bg-success/10 border border-success/30 text-success hover:bg-success hover:text-black hover:shadow-success/20'}`}
+              >
+                {isExecuting ? (
+                  <><span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></span> Executing...</>
+                ) : (
+                  <><Check size={16} /> Execute All</>
+                )}
+              </button>
+            </div>
+          ) : (
           <button
-            onClick={async () => {
-              if (isExecuting) return;
-              const executorName = currentUserParticipant?.name || user?.name || "Someone";
-              useRoomStore.getState().setIsExecuting(true, executorName);
-              useRoomStore.getState().setActiveOutputTab('OUTPUT');
-              useRoomStore.getState().setShowOutputPanel(true);
-              useRoomStore.getState().setOutput(null);
-              wsHook.sendExecutionStatus('RUNNING', null, executorName);
-              if (wsHook.sendActionTrigger) {
-                 wsHook.sendActionTrigger('RUN_START');
-              }
-              const state = useRoomStore.getState();
-              
-              // Brief delay to allow the "is executing..." stage to be visible for a fraction of a second
-              await new Promise(resolve => setTimeout(resolve, 500));
-
-              try {
-                // Stage 1: Compilation / Dry-run Check
-                const dryRunInput = state.testCases && state.testCases.length > 0 ? state.testCases[0].input : "";
-                const execRes = await api.post('/execute', { roomId, code: state.code, language: state.language, stdin: dryRunInput });
-
-                // If the code strictly fails to compile, abort and show the global compilation error
-                if (execRes.data.compilationError) {
-                  useRoomStore.getState().setOutput(execRes.data);
-                  useRoomStore.getState().setIsExecuting(false);
-                  wsHook.sendExecutionResult(execRes.data);
-                  return;
-                }
-
-                // Stage 2: If compilation succeeds, run all test cases (ignoring any dry-run runtime errors)
-                if (state.testCases && state.testCases.length > 0) {
-                  const submitRes = await api.post('/submit', { roomId, code: state.code, language: state.language, testCases: state.testCases });
-                  const finalResult = { type: 'SUBMIT', data: submitRes.data };
-                  useRoomStore.getState().setOutput(finalResult);
-                  useRoomStore.getState().setIsExecuting(false);
-                  wsHook.sendExecutionResult(finalResult);
-                  if (wsHook.sendActionTrigger) wsHook.sendActionTrigger('SUBMIT_END');
-                } else {
-                  // If there are no test cases, the dry-run execution result is our final output
-                  useRoomStore.getState().setOutput(execRes.data);
-                  useRoomStore.getState().setIsExecuting(false);
-                  wsHook.sendExecutionResult(execRes.data);
-                  if (wsHook.sendActionTrigger) wsHook.sendActionTrigger('SUBMIT_END');
-                }
-              } catch (err) {
-                const errorResult = { error: err.response?.data?.message || err.message };
-                useRoomStore.getState().setOutput(errorResult);
-                useRoomStore.getState().setIsExecuting(false);
-                wsHook.sendExecutionResult(errorResult);
-              }
-            }}
+            onClick={handleRunCode}
             disabled={currentUserParticipant?.role === 'VIEWER' || testCases.length === 0 || isExecuting}
-            title={currentUserParticipant?.role === 'VIEWER' ? "Viewers cannot submit code" : ""}
+            title={currentUserParticipant?.role === 'VIEWER' ? "Viewers cannot submit code" : "Execute Code (Ctrl+Enter)"}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${currentUserParticipant?.role === 'VIEWER' || testCases.length === 0 || isExecuting ? 'bg-success/5 border border-success/10 text-success/50 cursor-not-allowed' : 'bg-success/10 border border-success/30 text-success hover:bg-success hover:text-black hover:shadow-success/20'}`}
           >
             {isExecuting ? (
@@ -420,6 +546,7 @@ export default function RoomPage() {
               <><Check size={16} /> Execute Code (Tests: {testCases.length})</>
             )}
           </button>
+          )}
 
           <div className="h-8 w-px bg-border mx-1"></div>
 

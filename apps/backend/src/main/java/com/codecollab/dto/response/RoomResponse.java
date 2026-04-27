@@ -17,6 +17,7 @@ public class RoomResponse {
     private LocalDateTime createdAt;
     private LocalDateTime expiresAt;
     private String currentCode;
+    private String currentLanguage;
     
     private List<RoomMemberResponse> members;
     private List<com.codecollab.dto.request.ChatPayload> chats;

@@ -246,6 +246,12 @@ public class RoomService {
         if (room.getHost().getId().equals(user.getId())) {
              room.setIsActive(false);
              roomRepository.save(room);
+             
+             // Cleanup persistent SQL data when room ends
+             java.io.File dbFile = new java.io.File("./data/rooms/room_" + roomId + ".mv.db");
+             if (dbFile.exists()) dbFile.delete();
+             java.io.File traceFile = new java.io.File("./data/rooms/room_" + roomId + ".trace.db");
+             if (traceFile.exists()) traceFile.delete();
         }
     }
 
@@ -299,6 +305,9 @@ public class RoomService {
         
         // Update general code tracking
         room.setCurrentCode(sourceCode);
+        if (language != null) {
+            room.setCurrentLanguage(language);
+        }
         roomRepository.save(room);
 
         // Update DB Language specific cache
@@ -594,6 +603,7 @@ public class RoomService {
                 .createdAt(room.getCreatedAt())
                 .expiresAt(room.getExpiresAt())
                 .currentCode(room.getCurrentCode())
+                .currentLanguage(room.getCurrentLanguage())
                 .members(memberResponses)
                 .chats(previousChats)
                 .logs(previousLogs)
