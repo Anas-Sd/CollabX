@@ -191,7 +191,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
                         () => api.post(`/rooms/${roomId}/end`).then(() => router.push('/dashboard'))
                       );
                     }}
-                    className="w-full py-2 bg-danger/10 text-danger border border-danger/20 rounded-lg text-sm font-bold hover:bg-danger/20 transition-colors"
+                    className="w-full cursor-pointer py-2 bg-danger/10 text-danger border border-danger/20 rounded-lg text-sm font-bold hover:bg-danger/20 transition-colors"
                   >
                     End Room
                   </button>
@@ -203,7 +203,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
                       () => setConfirmModalConfig(prev => ({ ...prev, isOpen: false })),
                       true
                     )}
-                    className="w-full py-2 bg-background border border-border text-white rounded-lg text-sm font-bold hover:bg-muted transition-colors"
+                    className="w-full py-2 cursor-pointer bg-background border border-border text-white rounded-lg text-sm font-bold hover:bg-muted transition-colors"
                   >
                     Leave Room
                   </button>

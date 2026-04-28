@@ -52,7 +52,7 @@ export default function RoomPage() {
     let processed = sqlCode.replace(/([^;\s])(\s*)\n(\s*(?:SELECT|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|WITH|TRUNCATE|REPLACE)\b)/gi, '$1;$2\n$3');
     // Also ensure the very last statement has a semicolon
     if (processed.trim() && !processed.trim().endsWith(';')) {
-        processed += ';';
+      processed += ';';
     }
     return processed;
   };
@@ -278,7 +278,7 @@ export default function RoomPage() {
     state.setOutput(null);
     wsHook.sendExecutionStatus('RUNNING', null, executorName);
     if (wsHook.sendActionTrigger) wsHook.sendActionTrigger('RUN_START');
-    
+
     await new Promise(resolve => setTimeout(resolve, 500));
     try {
       const execRes = await api.post('/execute', { roomId, code: state.selectedCode, language: state.language, stdin: '' });
@@ -304,7 +304,7 @@ export default function RoomPage() {
     state.setOutput(null);
     wsHook.sendExecutionStatus('RUNNING', null, executorName);
     if (wsHook.sendActionTrigger) wsHook.sendActionTrigger('RUN_START');
-    
+
     await new Promise(resolve => setTimeout(resolve, 500));
     try {
       const execRes = await api.post('/execute', { roomId, code: state.code, language: state.language, stdin: '' });
@@ -330,7 +330,7 @@ export default function RoomPage() {
     state.setOutput(null);
     wsHook.sendExecutionStatus('RUNNING', null, executorName);
     if (wsHook.sendActionTrigger) wsHook.sendActionTrigger('RUN_START');
-    
+
     await new Promise(resolve => setTimeout(resolve, 500));
     try {
       const dryRunInput = state.testCases && state.testCases.length > 0 ? state.testCases[0].input : "";
@@ -383,7 +383,7 @@ export default function RoomPage() {
         const state = useRoomStore.getState();
         e.preventDefault();
         e.stopPropagation();
-        
+
         if (state.language === 'sql') {
           if (currentUserParticipant?.role === 'HOST' || currentUserParticipant?.role === 'EDITOR') {
             handleExecuteAll();
@@ -408,15 +408,88 @@ export default function RoomPage() {
 
   if (isPending) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center text-white">
-        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-8"></div>
-        <h1 className="text-3xl font-bold mb-4">Waiting for Approval</h1>
-        <p className="text-muted-foreground text-lg text-center max-w-md">
-          You have requested to join workspace <strong>{roomId}</strong>.<br />
-          Please wait for the host to let you in.
-        </p>
+  <div className="min-h-screen bg-background flex items-center justify-center px-4">
+    <div className="bg-card shadow-2xl rounded-2xl p-8 max-w-md w-full text-center border border-border relative overflow-hidden">
+      
+      {/* subtle background glow */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
+
+      {/* Loader */}
+      <div className="flex justify-center mb-6 relative">
+        
+        {/* Outer glow */}
+        <div className="absolute w-24 h-24 rounded-full bg-primary/20 blur-2xl animate-pulse"></div>
+
+        {/* Gradient spinning ring */}
+        <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-primary via-primary/60 to-transparent animate-spin">
+          <div className="w-full h-full bg-card rounded-full"></div>
+        </div>
+
+        {/* Inner soft pulse */}
+        {/* <div className="absolute w-8 h-8 rounded-full bg-primary/30 animate-ping"></div> */}
+
       </div>
-    );
+
+      {/* Title */}
+      <h1 className="text-2xl sm:text-3xl font-semibold mb-2">
+        Waiting for Approval
+      </h1>
+
+      {/* Animated dots */}
+      <p className="text-muted-foreground text-sm mb-6">
+        Please wait while the host reviews your request
+        <span className="inline-flex ml-1">
+          <span className="animate-bounce [animation-delay:-0.3s]">.</span>
+          <span className="animate-bounce [animation-delay:-0.15s]">.</span>
+          <span className="animate-bounce">.</span>
+        </span>
+      </p>
+
+      {/* Room Details */}
+      <div className="relative bg-muted/40 rounded-xl p-5 text-left space-y-4 border border-border overflow-hidden">
+        
+        {/* shimmer */}
+        <div className="absolute inset-[-20px] bg-gradient-to-r from-transparent via-white/5 to-transparent animate-[shimmer_2s_infinite]" />
+
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground relative">
+          Room Details
+        </h2>
+
+        <div className="flex items-center justify-between relative">
+          <span className="text-muted-foreground text-sm">Room Name</span>
+          <span className="font-medium text-secondary animate-pulse">
+            {roomName}
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between relative">
+          <span className="text-muted-foreground text-sm">Room ID</span>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-secondary animate-pulse">
+              {roomId}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between relative">
+          <span className="text-muted-foreground text-sm">Role</span>
+          <span className="font-medium text-secondary text-sm animate-pulse">
+            {currentUserParticipant?.role}
+          </span>
+        </div>
+
+      </div>
+      <div>
+        <button 
+        onClick={async () => {
+            await api.delete(`/rooms/${roomId}/leave`).catch(console.error);
+            router.push("/dashboard");
+          }}
+        className='bg-red-500 mt-5 hover:bg-red-600 brightness-75 active:brightness-90 transition-all duration-200 text-white py-3 cursor-pointer px-4 rounded-xl w-full font-medium'>Cancel Request</button>
+      </div>            
+    </div>
+  </div>
+);
   }
 
   const languages = ['java', 'python', 'cpp', 'c', 'javascript', 'sql'];
@@ -431,7 +504,7 @@ export default function RoomPage() {
             <span className="text-sm font-bold text-white leading-tight">{roomName || 'Untitled Workspace'}</span>
             <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-mono mt-0.5">
               <span className="bg-background px-1.5 rounded border border-border">{roomId}</span>
-              <button onClick={handleCopyLink} className="hover:text-white transition-colors">
+              <button onClick={handleCopyLink} className="hover:text-white hover:cursor-pointer transition-colors">
                 {copied ? <Check size={12} className="text-success" /> : <Copy size={12} />}
               </button>
             </div>
@@ -460,7 +533,7 @@ export default function RoomPage() {
               onClick={handleExtend}
               disabled={extending || !isPro}
               title={!isPro ? "PRO Subscription Required" : ""}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${isPro
+              className={`flex items-center cursor-pointer gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${isPro
                 ? 'bg-gradient-to-r from-yellow-500/20 to-amber-600/20 text-yellow-500 border border-yellow-500/30 hover:bg-yellow-500/30 hover:scale-105 active:scale-95 shadow-[0_0_15px_-3px_rgba(234,179,8,0.3)]'
                 : 'bg-background/50 border border-border/50 text-muted-foreground cursor-not-allowed'
                 } ${extending && isPro ? 'opacity-50' : ''}`}
@@ -487,14 +560,14 @@ export default function RoomPage() {
             {showLangMenu && (
               <>
                 <div className="absolute right-0 top-12 w-[140px] bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden py-1">
-                  <div className="px-3 py-2 border-b border-border/50 text-[10px] font-bold text-muted-foreground tracking-widest uppercase">
+                  <div className="px-2 py-2 border-b border-border/50 text-[10px] font-bold text-muted-foreground tracking-widest uppercase">
                     Select Language
                   </div>
                   {languages.map(lang => (
                     <button
                       key={lang}
                       onClick={() => handleLanguageChange(lang)}
-                      className={`w-full text-left px-4 py-2.5 text-xs font-bold uppercase transition-colors
+                      className={`w-full text-left hover:cursor-pointer px-4 py-2.5 text-xs font-bold uppercase transition-colors
                         ${language === lang ? 'bg-primary/20 text-primary border-l-2 border-primary' : 'text-white hover:bg-primary/10 hover:text-primary border-l-2 border-transparent'}
                       `}
                     >
@@ -534,18 +607,18 @@ export default function RoomPage() {
               </button>
             </div>
           ) : (
-          <button
-            onClick={handleRunCode}
-            disabled={currentUserParticipant?.role === 'VIEWER' || testCases.length === 0 || isExecuting}
-            title={currentUserParticipant?.role === 'VIEWER' ? "Viewers cannot submit code" : "Execute Code (Ctrl+Enter)"}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${currentUserParticipant?.role === 'VIEWER' || testCases.length === 0 || isExecuting ? 'bg-success/5 border border-success/10 text-success/50 cursor-not-allowed' : 'bg-success/10 border border-success/30 text-success hover:bg-success hover:text-black hover:shadow-success/20'}`}
-          >
-            {isExecuting ? (
-              <><span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></span> Executing...</>
-            ) : (
-              <><Check size={16} /> Execute Code (Tests: {testCases.length})</>
-            )}
-          </button>
+            <button
+              onClick={handleRunCode}
+              disabled={currentUserParticipant?.role === 'VIEWER' || testCases.length === 0 || isExecuting}
+              title={currentUserParticipant?.role === 'VIEWER' ? "Viewers cannot submit code" : "Execute Code (Ctrl+Enter)"}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${currentUserParticipant?.role === 'VIEWER' || testCases.length === 0 || isExecuting ? 'bg-success/5 border border-success/10 text-success/50 cursor-not-allowed' : 'bg-success/10 border border-success/30 text-success hover:bg-success hover:text-black hover:shadow-success/20'}`}
+            >
+              {isExecuting ? (
+                <><span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></span> Executing...</>
+              ) : (
+                <><Check size={16} /> Execute Code (Tests: {testCases.length})</>
+              )}
+            </button>
           )}
 
           <div className="h-8 w-px bg-border mx-1"></div>
@@ -553,7 +626,7 @@ export default function RoomPage() {
           <button
             onClick={() => setShowOutputPanel(!showOutputPanel)}
             title="Toggle Output Panel"
-            className={`p-2.5 rounded-xl border transition-all ${showOutputPanel ? 'bg-primary/20 text-primary border-primary/40 shadow-[0_0_15px_rgba(var(--color-primary),0.2)]' : 'bg-background border-border text-muted-foreground hover:text-white hover:border-muted-foreground/30'}`}
+            className={`p-2.5 rounded-xl cursor-pointer border transition-all ${showOutputPanel ? 'bg-primary/20 text-primary border-primary/40 shadow-[0_0_15px_rgba(var(--color-primary),0.2)]' : 'bg-background border-border text-muted-foreground hover:text-white hover:border-muted-foreground/30'}`}
           >
             <TerminalSquare size={18} />
           </button>
