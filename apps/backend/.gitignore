@@ -41,3 +41,6 @@ build/
 # logs
 boot_log.txt
 *.log
+
+# room databases
+data/rooms/

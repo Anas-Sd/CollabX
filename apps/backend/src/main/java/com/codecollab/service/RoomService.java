@@ -275,13 +275,11 @@ public class RoomService {
         logActivity(room, requester, "Permanently ended the Workspace");
         roomSocketHandler.broadcastToRoom(roomId, "end", "ROOM_ENDED_BY_HOST");
 
-        // Clear associated SQL ephemeral Memory frame securely instantly to save server RAM 
-        try (java.sql.Connection conn = java.sql.DriverManager.getConnection("jdbc:h2:mem:" + roomId.replaceAll("[^a-zA-Z0-9]", "_") + ";DB_CLOSE_DELAY=-1", "sa", "");
-             java.sql.Statement stmt = conn.createStatement()) {
-            stmt.execute("SHUTDOWN");
-        } catch (Exception ignored) {
-            // Memory frame likely didn't exist or already expired, perfectly fine to ignore
-        }
+        // Clear associated SQL persistent data securely instantly
+        java.io.File dbFile = new java.io.File("./data/rooms/room_" + roomId + ".mv.db");
+        if (dbFile.exists()) dbFile.delete();
+        java.io.File traceFile = new java.io.File("./data/rooms/room_" + roomId + ".trace.db");
+        if (traceFile.exists()) traceFile.delete();
     }
 
     public List<RoomResponse> getMyRooms(String userEmail) {

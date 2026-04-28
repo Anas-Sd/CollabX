@@ -269,7 +269,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
                           )}
                         </button>
                       ) : (
-                        p.isMuted && <MicOff size={14} className="text-danger/70" />
+                        p.isMuted && isHost && <MicOff size={14} className="text-danger/70" />
                       )}
 
                       {!isMe && isHost && (
