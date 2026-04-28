@@ -57,3 +57,32 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-muted-foreground);
 }
+
+/* Tooltip container */
+.tooltip {
+  @apply relative inline-flex;
+}
+
+/* Tooltip content */
+.tooltip-content {
+  @apply absolute left-1/2 -translate-x-1/2 top-full mt-3 
+         opacity-0 pointer-events-none z-50
+         transition-all duration-200 -translate-y-2;
+}
+
+/* Visible state */
+.tooltip:hover .tooltip-content {
+  @apply opacity-100 translate-y-0;
+}
+
+/* Tooltip box */
+.tooltip-box {
+  @apply bg-black/90 backdrop-blur-sm text-white text-xs 
+         px-3 py-2 rounded-lg shadow-xl whitespace-nowrap;
+}
+
+/* Arrow */
+.tooltip-arrow {
+  @apply w-2 h-2 bg-black rotate-45 absolute left-1/2 
+         -translate-x-1/2 bottom-full -mb-1;
+}

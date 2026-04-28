@@ -216,7 +216,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
                     "Leave Workspace",
                     () => api.delete(`/rooms/${roomId}/leave`).then(() => router.push('/dashboard'))
                   )}
-                  className="w-full py-2 bg-background border border-border text-white rounded-lg text-sm font-bold hover:bg-muted transition-colors"
+                  className="w-full py-2 cursor-pointer bg-background border border-border text-white rounded-lg text-sm font-bold hover:bg-red-500/70 transition-colors"
                 >
                   Leave Room
                 </button>
@@ -275,7 +275,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
                       {!isMe && isHost && (
                         <button
                           onClick={() => setOpenMenuId(showMenu ? null : p.id)}
-                          className="p-1 text-muted-foreground hover:text-white rounded hover:bg-background"
+                          className="p-1 cursor-pointer text-muted-foreground hover:text-white rounded hover:bg-background"
                         >
                           <MoreVertical size={16} />
                         </button>
@@ -290,7 +290,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
                         </div>
                         <button
                           onClick={() => handleRoleChange(p.id, p.role === 'EDITOR' ? 'VIEWER' : 'EDITOR')}
-                          className="w-full text-left px-3 py-2 text-sm text-white hover:bg-primary/10 hover:text-primary transition-colors"
+                          className="w-full cursor-pointer text-left px-3 py-2 text-sm text-white hover:bg-primary/10 hover:text-primary transition-colors"
                         >
                           Set Role to {p.role === 'EDITOR' ? 'Viewer' : 'Editor'}
                         </button>
@@ -307,7 +307,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
                               console.error('Failed to toggle mute', err);
                             }
                           }}
-                          className="w-full text-left px-3 py-2 text-sm text-white hover:bg-primary/10 hover:text-primary transition-colors"
+                          className="w-full cursor-pointer text-left px-3 py-2 text-sm text-white hover:bg-primary/10 hover:text-primary transition-colors"
                         >
                           {p.isMuted ? 'Unmute Microphone' : 'Mute Microphone'}
                         </button>
@@ -321,13 +321,13 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
                               () => handleTransferHost(p.id)
                             );
                           }}
-                          className="w-full text-left px-3 py-2 text-sm text-primary hover:bg-primary/10 transition-colors"
+                          className="w-full cursor-pointer text-left px-3 py-2 text-sm text-white hover:bg-primary/10 hover:text-primary transition-colors"
                         >
                           Transfer Host Authority
                         </button>
                         <button
                           onClick={() => handleKick(p.id)}
-                          className="w-full text-left px-3 py-2 text-sm text-danger hover:bg-danger/10 transition-colors"
+                          className="w-full text-left cursor-pointer px-3 py-2 text-sm text-danger hover:bg-danger/10 transition-colors"
                         >
                           Kick from Workspace
                         </button>
@@ -343,7 +343,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
         {activeTab === 'WAITLIST' && (
           <div className="flex flex-col h-full">
             <div className="px-4 py-4 border-b border-border flex items-center justify-between">
-              <span className="text-xs font-bold text-white tracking-widest uppercase">Waiting Room</span>
+              <span className="text-xs font-bold text-white tracking-widest uppercase flex"><UserPlus className='w-4 h-4 text-primary mr-2'/> Waiting Room</span>
               <span className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px] font-bold">
                 {pendingParticipants.length}
               </span>
@@ -363,19 +363,19 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
                       </div>
                       <div className="flex flex-col">
                         <span className="text-sm font-bold text-white">{p.name}</span>
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Requested to join</span>
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-widest">{currentUserParticipant?.role === "VIEWER" ? "VIEWER" : " " || currentUserParticipant?.role === "EDITOR" ? "EDITOR" : " "}</span>
                       </div>
                     </div>
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleWaitlist(p.id, true)}
-                        className="flex-1 py-1.5 text-xs font-bold bg-success/10 text-success rounded-lg border border-success/20 hover:bg-success/20 transition-colors"
+                        className="flex-1 cursor-pointer py-1.5 text-xs font-bold bg-success/10 text-success rounded-lg border border-success/20 hover:bg-success/20 transition-colors"
                       >
-                        Admit
+                        Accept
                       </button>
                       <button
                         onClick={() => handleWaitlist(p.id, false)}
-                        className="flex-1 py-1.5 text-xs font-bold bg-danger/10 text-danger rounded-lg border border-danger/20 hover:bg-danger/20 transition-colors"
+                        className="flex-1 cursor-pointer py-1.5 text-xs font-bold bg-danger/10 text-danger rounded-lg border border-danger/20 hover:bg-danger/20 transition-colors"
                       >
                         Reject
                       </button>
@@ -390,7 +390,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
         {activeTab === 'CHAT' && (
           <div className="flex flex-col h-full">
             <div className="px-4 py-4 border-b border-border">
-              <span className="text-xs font-bold text-white tracking-widest uppercase">Room Chat</span>
+              <span className="text-xs font-bold text-white tracking-widest uppercase flex"><MessageSquare className='w-4 h-4 mr-2 text-primary'/> Room Chat</span>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {chatMessages.map((msg, idx) => {

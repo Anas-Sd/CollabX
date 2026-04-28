@@ -408,88 +408,88 @@ export default function RoomPage() {
 
   if (isPending) {
     return (
-  <div className="min-h-screen bg-background flex items-center justify-center px-4">
-    <div className="bg-card shadow-2xl rounded-2xl p-8 max-w-md w-full text-center border border-border relative overflow-hidden">
-      
-      {/* subtle background glow */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="bg-card shadow-2xl rounded-2xl p-8 max-w-md w-full text-center border border-border relative overflow-hidden">
 
-      {/* Loader */}
-      <div className="flex justify-center mb-6 relative">
-        
-        {/* Outer glow */}
-        <div className="absolute w-24 h-24 rounded-full bg-primary/20 blur-2xl animate-pulse"></div>
+          {/* subtle background glow */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
 
-        {/* Gradient spinning ring */}
-        <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-primary via-primary/60 to-transparent animate-spin">
-          <div className="w-full h-full bg-card rounded-full"></div>
-        </div>
+          {/* Loader */}
+          <div className="flex justify-center mb-6 relative">
 
-        {/* Inner soft pulse */}
-        {/* <div className="absolute w-8 h-8 rounded-full bg-primary/30 animate-ping"></div> */}
+            {/* Outer glow */}
+            <div className="absolute w-24 h-24 rounded-full bg-primary/10 blur-2xl animate-pulse"></div>
 
-      </div>
+            {/* Gradient spinning ring */}
+            <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-white via-primary/60 to-transparent animate-spin">
+              <div className="w-full h-full bg-card rounded-full"></div>
+            </div>
 
-      {/* Title */}
-      <h1 className="text-2xl sm:text-3xl font-semibold mb-2">
-        Waiting for Approval
-      </h1>
+            {/* Inner soft pulse */}
+            {/* <div className="absolute w-8 h-8 rounded-full bg-primary/30 animate-ping"></div> */}
 
-      {/* Animated dots */}
-      <p className="text-muted-foreground text-sm mb-6">
-        Please wait while the host reviews your request
-        <span className="inline-flex ml-1">
-          <span className="animate-bounce [animation-delay:-0.3s]">.</span>
-          <span className="animate-bounce [animation-delay:-0.15s]">.</span>
-          <span className="animate-bounce">.</span>
-        </span>
-      </p>
+          </div>
 
-      {/* Room Details */}
-      <div className="relative bg-muted/40 rounded-xl p-5 text-left space-y-4 border border-border overflow-hidden">
-        
-        {/* shimmer */}
-        <div className="absolute inset-[-20px] bg-gradient-to-r from-transparent via-white/5 to-transparent animate-[shimmer_2s_infinite]" />
+          {/* Title */}
+          <h1 className="text-2xl sm:text-3xl font-semibold mb-2">
+            Waiting for Approval
+          </h1>
 
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground relative">
-          Room Details
-        </h2>
-
-        <div className="flex items-center justify-between relative">
-          <span className="text-muted-foreground text-sm">Room Name</span>
-          <span className="font-medium text-secondary animate-pulse">
-            {roomName}
-          </span>
-        </div>
-
-        <div className="flex items-center justify-between relative">
-          <span className="text-muted-foreground text-sm">Room ID</span>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-secondary animate-pulse">
-              {roomId}
+          {/* Animated dots */}
+          <p className="text-muted-foreground text-sm mb-6">
+            Please wait while the host reviews your request
+            <span className="inline-flex ml-1">
+              <span className="animate-bounce [animation-delay:-0.3s]">.</span>
+              <span className="animate-bounce [animation-delay:-0.15s]">.</span>
+              <span className="animate-bounce">.</span>
             </span>
+          </p>
+
+          {/* Room Details */}
+          <div className="relative bg-muted/40 rounded-xl p-5 text-left space-y-4 border border-border overflow-hidden">
+
+            {/* shimmer */}
+            <div className="absolute inset-[-20px] bg-gradient-to-r from-transparent via-white/5 to-transparent animate-[shimmer_2s_infinite]" />
+
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground relative">
+              Room Details
+            </h2>
+
+            <div className="flex items-center justify-between relative">
+              <span className="text-muted-foreground text-sm">Room Name</span>
+              <span className="font-medium text-white/60 animate-pulse">
+                {roomName}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between relative">
+              <span className="text-muted-foreground text-sm">Room ID</span>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-white/60 animate-pulse">
+                  {roomId}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between relative">
+              <span className="text-muted-foreground text-sm">Role</span>
+              <span className="font-medium text-white/60 text-sm animate-pulse">
+                {currentUserParticipant?.role}
+              </span>
+            </div>
+
+          </div>
+          <div>
+            <button
+              onClick={async () => {
+                await api.delete(`/rooms/${roomId}/leave`).catch(console.error);
+                router.push("/dashboard");
+              }}
+              className='bg-red-500 mt-5 hover:bg-red-600 brightness-50 hover:brightness-100 active:brightness-125 transition-all duration-200 text-white py-3 cursor-pointer px-4 rounded-xl w-full font-medium'>Cancel Request</button>
           </div>
         </div>
-
-        <div className="flex items-center justify-between relative">
-          <span className="text-muted-foreground text-sm">Role</span>
-          <span className="font-medium text-secondary text-sm animate-pulse">
-            {currentUserParticipant?.role}
-          </span>
-        </div>
-
       </div>
-      <div>
-        <button 
-        onClick={async () => {
-            await api.delete(`/rooms/${roomId}/leave`).catch(console.error);
-            router.push("/dashboard");
-          }}
-        className='bg-red-500 mt-5 hover:bg-red-600 brightness-75 active:brightness-90 transition-all duration-200 text-white py-3 cursor-pointer px-4 rounded-xl w-full font-medium'>Cancel Request</button>
-      </div>            
-    </div>
-  </div>
-);
+    );
   }
 
   const languages = ['java', 'python', 'cpp', 'c', 'javascript', 'sql'];
@@ -581,55 +581,149 @@ export default function RoomPage() {
 
           {language === 'sql' && (currentUserParticipant?.role === 'HOST' || currentUserParticipant?.role === 'EDITOR') ? (
             <div className="flex items-center gap-2">
-              <button
-                onClick={handleExecuteSelected}
-                disabled={isExecuting || !selectedCode || selectedCode.trim() === ''}
-                title={!selectedCode || selectedCode.trim() === '' ? "Select text to execute" : "Execute selected query (Ctrl+Shift+Enter)"}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${isExecuting || !selectedCode || selectedCode.trim() === '' ? 'bg-success/5 border border-success/10 text-success/50 cursor-not-allowed' : 'bg-success/10 border border-success/30 text-success hover:bg-success hover:text-black hover:shadow-success/20'}`}
-              >
-                {isExecuting ? (
-                  <><span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></span> Executing...</>
-                ) : (
-                  <><Check size={16} /> Execute Selected</>
-                )}
-              </button>
-              <button
-                onClick={handleExecuteAll}
-                disabled={isExecuting}
-                title="Execute All (Ctrl+Enter)"
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${isExecuting ? 'bg-success/5 border border-success/10 text-success/50 cursor-not-allowed' : 'bg-success/10 border border-success/30 text-success hover:bg-success hover:text-black hover:shadow-success/20'}`}
-              >
-                {isExecuting ? (
-                  <><span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></span> Executing...</>
-                ) : (
-                  <><Check size={16} /> Execute All</>
-                )}
-              </button>
-            </div>
+
+  {/* Execute Selected */}
+  <div className="tooltip">
+    <button
+      onClick={handleExecuteSelected}
+      disabled={isExecuting || !selectedCode || selectedCode.trim() === ''}
+      className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${
+        isExecuting || !selectedCode || selectedCode.trim() === ''
+          ? 'bg-success/5 border border-success/10 text-success/50 cursor-not-allowed'
+          : 'bg-success/10 border border-success/30 cursor-pointer text-success hover:bg-success hover:text-black hover:shadow-success/20'
+      }`}
+    >
+      {isExecuting ? (
+        <>
+          <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
+          Executing...
+        </>
+      ) : (
+        <>
+          <Check size={16} />
+          Execute Selected
+        </>
+      )}
+    </button>
+
+    <div className="tooltip-content">
+      <div className="tooltip-box">
+        {!selectedCode || selectedCode.trim() === ''
+          ? "Select text to execute"
+          : isExecuting
+          ? "Running your query..."
+          : "Execute selected query (Ctrl + Shift + Enter)"}
+      </div>
+      <div className="tooltip-arrow"></div>
+    </div>
+  </div>
+
+
+  {/* Execute All */}
+  <div className="tooltip">
+    <button
+      onClick={handleExecuteAll}
+      disabled={isExecuting}
+      className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${
+        isExecuting
+          ? 'bg-success/5 border border-success/10 text-success/50 cursor-not-allowed'
+          : 'bg-success/10 cursor-pointer border border-success/30 text-success hover:bg-success hover:text-black hover:shadow-success/20'
+      }`}
+    >
+      {isExecuting ? (
+        <>
+          <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
+          Executing...
+        </>
+      ) : (
+        <>
+          <Check size={16} />
+          Execute All
+        </>
+      )}
+    </button>
+
+    <div className="tooltip-content">
+      <div className="tooltip-box">
+        {isExecuting
+          ? "Execution in progress..."
+          : "Execute all queries (Ctrl + Enter)"}
+      </div>
+      <div className="tooltip-arrow"></div>
+    </div>
+  </div>
+
+</div>
           ) : (
-            <button
-              onClick={handleRunCode}
-              disabled={currentUserParticipant?.role === 'VIEWER' || testCases.length === 0 || isExecuting}
-              title={currentUserParticipant?.role === 'VIEWER' ? "Viewers cannot submit code" : "Execute Code (Ctrl+Enter)"}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${currentUserParticipant?.role === 'VIEWER' || testCases.length === 0 || isExecuting ? 'bg-success/5 border border-success/10 text-success/50 cursor-not-allowed' : 'bg-success/10 border border-success/30 text-success hover:bg-success hover:text-black hover:shadow-success/20'}`}
-            >
-              {isExecuting ? (
-                <><span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></span> Executing...</>
-              ) : (
-                <><Check size={16} /> Execute Code (Tests: {testCases.length})</>
-              )}
-            </button>
+            <div className="relative group w-fit">
+
+              <div className="tooltip">
+
+                <button
+                  onClick={handleRunCode}
+                  disabled={
+                    currentUserParticipant?.role === 'VIEWER' ||
+                    testCases.length === 0 ||
+                    isExecuting
+                  }
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${currentUserParticipant?.role === 'VIEWER' ||
+                      testCases.length === 0 ||
+                      isExecuting
+                      ? 'bg-success/5 border border-success/10 text-success/50 cursor-not-allowed'
+                      : 'bg-success/10 border border-success/30 cursor-pointer text-success hover:bg-success hover:text-black hover:shadow-success/20'
+                    }`}
+                >
+                  {isExecuting ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
+                      Executing...
+                    </>
+                  ) : (
+                    <>
+                      <Check size={16} />
+                      Execute Code (Tests: {testCases.length})
+                    </>
+                  )}
+                </button>
+
+                {/* Tooltip */}
+                <div className="tooltip-content">
+                  <div className="tooltip-box">
+                    {currentUserParticipant?.role === 'VIEWER'
+                      ? "Viewers cannot execute code"
+                      : testCases.length === 0
+                        ? "Add test cases to execute"
+                        : isExecuting
+                          ? "Running your code..."
+                          : "Execute Code (Ctrl + Enter)"}
+                  </div>
+                  <div className="tooltip-arrow"></div>
+                </div>
+
+              </div>
+            </div>
           )}
 
           <div className="h-8 w-px bg-border mx-1"></div>
 
-          <button
-            onClick={() => setShowOutputPanel(!showOutputPanel)}
-            title="Toggle Output Panel"
-            className={`p-2.5 rounded-xl cursor-pointer border transition-all ${showOutputPanel ? 'bg-primary/20 text-primary border-primary/40 shadow-[0_0_15px_rgba(var(--color-primary),0.2)]' : 'bg-background border-border text-muted-foreground hover:text-white hover:border-muted-foreground/30'}`}
-          >
-            <TerminalSquare size={18} />
-          </button>
+          <div className="tooltip">
+            <button
+              onClick={() => setShowOutputPanel(!showOutputPanel)}
+              className={`p-2.5 rounded-xl cursor-pointer border transition-all ${showOutputPanel
+                ? 'bg-primary/20 text-primary border-primary/40 shadow-[0_0_15px_rgba(var(--color-primary),0.2)]'
+                : 'bg-background border-border text-muted-foreground hover:text-white hover:border-muted-foreground/30'
+                }`}
+            >
+              <TerminalSquare size={18} />
+            </button>
+
+            <div className="tooltip-content">
+              <div className="tooltip-box">
+                {showOutputPanel ? "Hide Output Panel" : "Show Output Panel"}
+              </div>
+              <div className="tooltip-arrow"></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -688,7 +782,7 @@ export default function RoomPage() {
             </p>
             <button
               onClick={() => useRoomStore.getState().setRoleChangeAlert(null)}
-              className="w-full py-3 rounded-xl text-sm font-bold bg-primary text-white hover:bg-primary/90 transition-colors"
+              className="w-full py-3 cursor-pointer rounded-xl text-sm font-bold bg-primary text-white hover:bg-primary/90 transition-colors"
             >
               Okay, got it
             </button>
@@ -736,7 +830,7 @@ export default function RoomPage() {
                   wsHook.triggerGlobalRefresh();
                 }
               }}
-              className="w-full py-3 rounded-xl text-sm font-bold bg-success text-black hover:bg-success/90 transition-colors"
+              className="w-full py-3 cursor-pointer rounded-xl text-sm font-bold bg-success/80 text-black hover:bg-success transition-colors"
             >
               Okay, got it
             </button>

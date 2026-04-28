@@ -96,21 +96,21 @@ export default function OutputPanel({ wsHook }) {
           {language !== 'sql' && (
             <button
               onClick={() => setActiveOutputTab("TEST_CASES")}
-              className={`text-xs font-semibold uppercase tracking-wider pb-1 border-b-2 transition-colors ${activeOutputTab === "TEST_CASES" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-white"}`}
+              className={`text-xs font-semibold cursor-pointer uppercase tracking-wider pb-1 border-b-2 transition-colors ${activeOutputTab === "TEST_CASES" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-white"}`}
             >
               Test Cases ({testCases.length})
             </button>
           )}
           <button
             onClick={() => setActiveOutputTab("OUTPUT")}
-            className={`text-xs font-semibold uppercase tracking-wider pb-1 border-b-2 transition-colors ${activeOutputTab === "OUTPUT" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-white"}`}
+            className={`text-xs cursor-pointer font-semibold uppercase tracking-wider pb-1 border-b-2 transition-colors ${activeOutputTab === "OUTPUT" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-white"}`}
           >
             Output
           </button>
         </div>
         <button
           onClick={() => useRoomStore.getState().setShowOutputPanel(false)}
-          className="text-muted-foreground hover:text-white transition-colors text-xs"
+          className="text-muted-foreground cursor-pointer hover:text-white transition-colors text-xs"
         >
           Close Panel
         </button>
@@ -234,7 +234,7 @@ export default function OutputPanel({ wsHook }) {
                 onClick={handleAddTestCase}
                 disabled={!newExpected.trim() || isViewer}
                 title={isViewer ? "Viewers cannot modify test cases." : (editingIndex !== null ? "Update Test Case" : "Add Test Case")}
-                className="w-full flex items-center justify-center gap-2 py-2 bg-primary/10 text-primary border border-primary/20 rounded hover:bg-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs font-semibold shrink-0"
+                className="w-full flex cursor-pointer items-center justify-center gap-2 py-2 bg-primary/10 text-primary border border-primary/20 rounded hover:bg-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs font-semibold shrink-0"
               >
                 {editingIndex !== null ? (
                   <><Edit2 className="w-4 h-4" /> Update Test Case</>
@@ -249,7 +249,7 @@ export default function OutputPanel({ wsHook }) {
                     setNewInput("");
                     setNewExpected("");
                   }}
-                  className="w-full flex items-center justify-center gap-2 py-1.5 bg-[#1E1E2E] text-muted-foreground hover:text-white rounded transition-colors text-[10px] font-semibold shrink-0 mt-1"
+                  className="w-full flex cursor-pointer items-center justify-center gap-2 py-1.5 bg-[#1E1E2E] text-muted-foreground hover:text-white rounded transition-colors text-[10px] font-semibold shrink-0 mt-1"
                 >
                   <X className="w-3 h-3" /> Cancel Edit
                 </button>
@@ -263,7 +263,7 @@ export default function OutputPanel({ wsHook }) {
                 {testCases.length > 0 && !isViewer && (
                   <button
                     onClick={handleRemoveAll}
-                    className="text-[10px] font-semibold text-danger hover:underline bg-danger/10 px-2 py-0.5 rounded"
+                    className="text-[10px] cursor-pointer font-semibold text-danger hover:underline bg-danger/10 px-2 py-0.5 rounded"
                   >
                     Remove All
                   </button>
@@ -282,10 +282,10 @@ export default function OutputPanel({ wsHook }) {
                         {!isViewer && (
                           <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button onClick={() => handleEditTestCase(idx)} title="Edit" className="text-muted-foreground hover:text-success p-1 rounded hover:bg-[#1E1E2E] transition-colors">
-                              <Edit2 className="w-3.5 h-3.5" />
+                              <Edit2 className="w-3.5 h-3.5 cursor-pointer" />
                             </button>
                             <button onClick={() => removeTestCase(idx)} title="Delete" className="text-muted-foreground hover:text-danger p-1 rounded hover:bg-[#1E1E2E] transition-colors">
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-3.5 h-3.5 cursor-pointer" />
                             </button>
                           </div>
                         )}
