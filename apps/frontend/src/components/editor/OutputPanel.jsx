@@ -12,7 +12,8 @@ export default function OutputPanel({ wsHook }) {
 
   const { user } = useUserStore();
   const currentUserParticipant = useRoomStore(state => state.participants.find(p => p.id === user?.id));
-  const isViewer = currentUserParticipant?.role === 'VIEWER';
+  const isActive = useRoomStore(state => state.isActive);
+  const isViewer = !isActive || currentUserParticipant?.role === 'VIEWER';
 
   const [newInput, setNewInput] = useState("");
   const [newExpected, setNewExpected] = useState("");

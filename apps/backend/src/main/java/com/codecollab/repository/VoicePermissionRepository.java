@@ -14,4 +14,5 @@ import java.util.UUID;
 public interface VoicePermissionRepository extends JpaRepository<VoicePermission, UUID> {
     Optional<VoicePermission> findByRoomAndUser(Room room, User user);
     List<VoicePermission> findByRoom(Room room);
+    void deleteByRoom(Room room);
 }

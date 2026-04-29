@@ -42,6 +42,8 @@ public class RoomService {
     private final RoomTestCaseRepository roomTestCaseRepository;
     private final RoomCodeCacheRepository roomCodeCacheRepository;
     private final com.codecollab.repository.VoicePermissionRepository voicePermissionRepository;
+    private final com.codecollab.repository.CodeHistoryRepository codeHistoryRepository;
+    private final com.codecollab.repository.SubmissionRepository submissionRepository;
     private final RoomSocketHandler roomSocketHandler;
 
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -146,13 +148,12 @@ public class RoomService {
     }
 
     public RoomResponse getRoomStatus(String roomId) {
-        Room room = roomRepository.findByIdAndIsActiveTrue(roomId)
-                .orElseThrow(() -> new RuntimeException("Room not found or inactive"));
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new RuntimeException("Room not found"));
 
-        if (room.getExpiresAt() != null && java.time.LocalDateTime.now().isAfter(room.getExpiresAt())) {
+        if (room.getIsActive() && room.getExpiresAt() != null && java.time.LocalDateTime.now().isAfter(room.getExpiresAt())) {
             room.setIsActive(false);
-            roomRepository.save(room);
-            throw new RuntimeException("Room session has expired");
+            room = roomRepository.save(room);
         }
 
         List<RoomMember> members = roomMemberRepository.findByRoom(room);
@@ -161,13 +162,20 @@ public class RoomService {
 
     @Transactional
     public RoomResponse joinRoom(String roomId, String userEmail, String requestedRole) {
-        Room room = roomRepository.findByIdAndIsActiveTrue(roomId)
-                .orElseThrow(() -> new RuntimeException("Room not found or inactive"));
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new RuntimeException("Room not found"));
 
         if (room.getExpiresAt() != null && java.time.LocalDateTime.now().isAfter(room.getExpiresAt())) {
-            room.setIsActive(false);
-            roomRepository.save(room);
-            throw new RuntimeException("Room session has expired");
+            if (room.getIsActive()) {
+                room.setIsActive(false);
+                roomRepository.save(room);
+            }
+        }
+
+        if (!room.getIsActive()) {
+            // Room is ended/inactive: just fetch and return. No waitlist needed.
+            List<RoomMember> existingMembers = roomMemberRepository.findByRoom(room);
+            return mapToRoomResponse(room, existingMembers);
         }
 
         User user = userRepository.findByEmail(userEmail)
@@ -269,8 +277,7 @@ public class RoomService {
         
         // Data Cleanup Strategy:
         // Free up PostgreSQL memory permanently once the room is marked dead.
-        roomTestCaseRepository.deleteByRoom(room);
-        roomCodeCacheRepository.deleteByRoom(room);
+        // Data is intentionally NOT deleted to allow historical Read-Only access.
         
         logActivity(room, requester, "Permanently ended the Workspace");
         roomSocketHandler.broadcastToRoom(roomId, "end", "ROOM_ENDED_BY_HOST");
@@ -282,13 +289,43 @@ public class RoomService {
         if (traceFile.exists()) traceFile.delete();
     }
 
+    @Transactional
     public List<RoomResponse> getMyRooms(String userEmail) {
         User user = userRepository.findByEmail(userEmail).orElseThrow();
         List<RoomMember> memberships = roomMemberRepository.findByUser(user);
         
+        int displayLimit = "PRO".equalsIgnoreCase(user.getSubscriptionType()) ? 20 : 10;
+        int deleteLimit = 20; // Hard limit for database retention regardless of tier
+        
+        if (memberships.size() > deleteLimit) {
+            List<RoomMember> sorted = new java.util.ArrayList<>(memberships);
+            sorted.sort((m1, m2) -> m1.getRoom().getCreatedAt().compareTo(m2.getRoom().getCreatedAt()));
+            int toDeleteCount = sorted.size() - deleteLimit;
+            List<RoomMember> toDelete = sorted.subList(0, toDeleteCount);
+
+            for (RoomMember m : toDelete) {
+                Room roomToDelete = m.getRoom();
+                roomMemberRepository.deleteByRoom(roomToDelete);
+                roomTestCaseRepository.deleteByRoom(roomToDelete);
+                roomCodeCacheRepository.deleteByRoom(roomToDelete);
+                roomChatRepository.deleteByRoom(roomToDelete);
+                roomLogRepository.deleteByRoom(roomToDelete);
+                voicePermissionRepository.deleteByRoom(roomToDelete);
+                codeHistoryRepository.deleteByRoom(roomToDelete);
+                submissionRepository.deleteByRoom(roomToDelete);
+                roomRepository.delete(roomToDelete);
+
+                java.io.File dbFile = new java.io.File("./data/rooms/room_" + roomToDelete.getId() + ".mv.db");
+                if (dbFile.exists()) dbFile.delete();
+                java.io.File traceFile = new java.io.File("./data/rooms/room_" + roomToDelete.getId() + ".trace.db");
+                if (traceFile.exists()) traceFile.delete();
+            }
+            memberships.removeAll(toDelete);
+        }
+
         return memberships.stream()
                 .sorted((m1, m2) -> m2.getRoom().getCreatedAt().compareTo(m1.getRoom().getCreatedAt()))
-                .limit(10)
+                .limit(displayLimit)
                 .map(m -> {
                     Room room = m.getRoom();
                     List<RoomMember> members = roomMemberRepository.findByRoom(room);
@@ -347,17 +384,6 @@ public class RoomService {
              roomSocketHandler.broadcastToRoom(roomId, "time.extended", room.getExpiresAt().toString());
              logActivity(room, requester, "Extended Session Time by " + extraMinutes + " Minutes");
         }
-    }
-
-    @Transactional
-    public void deleteRoomHistory(String roomId, String userEmail) {
-        Room room = roomRepository.findById(roomId).orElseThrow();
-        User user = userRepository.findByEmail(userEmail).orElseThrow();
-        // Allow deleting only if room is inactive (Ended)
-        if (room.getIsActive()) {
-             throw new RuntimeException("Cannot delete history of an active room");
-        }
-        roomMemberRepository.deleteByRoomAndUser(room, user);
     }
 
     @Transactional
@@ -608,5 +634,35 @@ public class RoomService {
                 .languageCache(languageCache)
                 .testCases(mappedTestCases)
                 .build();
+    }
+
+    @Transactional
+    public void deleteRoomHistory(String roomId, String userEmail) {
+        Room room = roomRepository.findById(roomId).orElseThrow(() -> new RuntimeException("Room not found"));
+        User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new RuntimeException("User not found"));
+        
+        List<RoomMember> members = roomMemberRepository.findByRoom(room);
+        boolean isOnlyMember = members.size() == 1 && members.get(0).getUser().getId().equals(user.getId());
+        
+        if (isOnlyMember) {
+            // Delete globally if they are the only member left
+            roomMemberRepository.deleteByRoom(room);
+            roomTestCaseRepository.deleteByRoom(room);
+            roomCodeCacheRepository.deleteByRoom(room);
+            roomChatRepository.deleteByRoom(room);
+            roomLogRepository.deleteByRoom(room);
+            voicePermissionRepository.deleteByRoom(room);
+            codeHistoryRepository.deleteByRoom(room);
+            submissionRepository.deleteByRoom(room);
+            roomRepository.delete(room);
+
+            java.io.File dbFile = new java.io.File("./data/rooms/room_" + room.getId() + ".mv.db");
+            if (dbFile.exists()) dbFile.delete();
+            java.io.File traceFile = new java.io.File("./data/rooms/room_" + room.getId() + ".trace.db");
+            if (traceFile.exists()) traceFile.delete();
+        } else {
+            // Just remove their membership
+            roomMemberRepository.deleteByRoomAndUser(room, user);
+        }
     }
 }

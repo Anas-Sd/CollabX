@@ -39,7 +39,7 @@ export default function RoomPage() {
   const { roomId } = useParams();
   const router = useRouter();
   const { user, isAuthenticated, restoreSession } = useUserStore();
-  const { roomName, expiresAt, setRoomInfo, language, setLanguage, testCases, participants, setParticipants, sessionEndedReason, roleChangeAlert, hostTransferAlert, isExecuting, showOutputPanel, setShowOutputPanel, selectedCode } = useRoomStore();
+  const { roomName, expiresAt, isActive, setRoomInfo, language, setLanguage, testCases, participants, setParticipants, sessionEndedReason, roleChangeAlert, hostTransferAlert, isExecuting, showOutputPanel, setShowOutputPanel, selectedCode } = useRoomStore();
   const [copied, setCopied] = useState(false);
   const [activeSidebarTab, setActiveSidebarTab] = useState('USERS');
   const [showLangMenu, setShowLangMenu] = useState(false);
@@ -72,7 +72,7 @@ export default function RoomPage() {
   }, [showLangMenu]);
 
   const wsHook = useWebSocket(roomId);
-  const voiceControls = useVoice(roomId, user);
+  const voiceControls = useVoice(roomId, user, isActive);
 
   const [isMounted, setIsMounted] = useState(false);
   const joinedRef = useRef(false);
@@ -111,7 +111,7 @@ export default function RoomPage() {
     const fetchRoomData = async () => {
       try {
         const res = await api.post(`/rooms/${roomId}/join`, { role: 'VIEWER' });
-        setRoomInfo(res.data.id || roomId, res.data.name, res.data.expiresAt);
+        setRoomInfo(res.data.id || roomId, res.data.name, res.data.expiresAt, res.data.isActive);
         if (res.data.members) {
           setParticipants(res.data.members);
         }
@@ -183,7 +183,7 @@ export default function RoomPage() {
   };
 
   const currentUserParticipant = useRoomStore.getState().participants.find(p => p.id === user?.id);
-  const isPending = currentUserParticipant?.status === 'PENDING';
+  const isPending = isActive && currentUserParticipant?.status === 'PENDING';
   const isHost = currentUserParticipant?.role === 'HOST';
 
   // Force mute if backend indicates host revoked voice permission
@@ -218,7 +218,7 @@ export default function RoomPage() {
   };
 
   useEffect(() => {
-    if (!expiresAt) {
+    if (!expiresAt || !isActive) {
       setTimeLeft(null);
       return;
     }
@@ -251,7 +251,7 @@ export default function RoomPage() {
     updateTimer();
     interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [expiresAt, router]);
+  }, [expiresAt, isActive, router]);
 
   const handleExtend = async () => {
     if (extending) return;
@@ -546,15 +546,15 @@ export default function RoomPage() {
           {/* Premium Custom Dropdown */}
           <div className="relative" ref={langMenuRef}>
             <button
-              onClick={() => isHost && setShowLangMenu(!showLangMenu)}
-              disabled={!isHost}
+              onClick={() => (!isActive || isHost) && setShowLangMenu(!showLangMenu)}
+              disabled={isActive && !isHost}
               className={`flex items-center justify-between min-w-[140px] px-4 py-2.5 rounded-xl border transition-all text-xs font-bold uppercase
-                ${isHost ? 'bg-background border-border text-white hover:border-primary/50 cursor-pointer shadow-sm' : 'bg-background/50 border-border/50 text-white/50 cursor-not-allowed'}
+                ${(!isActive || isHost) ? 'bg-background border-border text-white hover:border-primary/50 cursor-pointer shadow-sm' : 'bg-background/50 border-border/50 text-white/50 cursor-not-allowed'}
               `}
-              title={!isHost ? "Only the Host can change the language" : ""}
+              title={isActive && !isHost ? "Only the Host can change the language" : ""}
             >
               <span>{language === 'cpp' ? 'C++' : language}</span>
-              {isHost && <ChevronDown size={14} className={`text-muted-foreground transition-transform ${showLangMenu ? 'rotate-180' : ''}`} />}
+              {(!isActive || isHost) && <ChevronDown size={14} className={`text-muted-foreground transition-transform ${showLangMenu ? 'rotate-180' : ''}`} />}
             </button>
 
             {showLangMenu && (
@@ -579,7 +579,7 @@ export default function RoomPage() {
             )}
           </div>
 
-          {language === 'sql' && (currentUserParticipant?.role === 'HOST' || currentUserParticipant?.role === 'EDITOR') ? (
+          {language === 'sql' && isActive && (currentUserParticipant?.role === 'HOST' || currentUserParticipant?.role === 'EDITOR') ? (
             <div className="flex items-center gap-2">
 
   {/* Execute Selected */}
@@ -689,7 +689,9 @@ export default function RoomPage() {
                 {/* Tooltip */}
                 <div className="tooltip-content">
                   <div className="tooltip-box">
-                    {currentUserParticipant?.role === 'VIEWER'
+                    {!isActive
+                      ? "Room ended cannot edit"
+                      : currentUserParticipant?.role === 'VIEWER'
                       ? "Viewers cannot execute code"
                       : testCases.length === 0
                         ? "Add test cases to execute"

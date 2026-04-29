@@ -11,4 +11,5 @@ import java.util.UUID;
 @Repository
 public interface RoomChatRepository extends JpaRepository<RoomChat, UUID> {
     List<RoomChat> findByRoomOrderByCreatedAtAsc(Room room);
+    void deleteByRoom(Room room);
 }

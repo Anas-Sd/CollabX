@@ -1,13 +1,13 @@
 import { useEffect, useState, useRef } from 'react';
 import api from '../lib/api';
 
-export const useVoice = (roomId, user) => {
+export const useVoice = (roomId, user, isActive = true) => {
   const [isMicMuted, setIsMicMuted] = useState(true);
   const clientRef = useRef(null);
   const localAudioTrackRef = useRef(null);
 
   useEffect(() => {
-    if (!roomId || !user) return;
+    if (!roomId || !user || !isActive) return;
 
     let mounted = true;
 

@@ -8,9 +8,10 @@ export const useWebSocket = (roomId) => {
   const ws = useRef(null);
   const { user } = useUserStore();
   const roomStore = useRoomStore();
+  const isActive = useRoomStore((state) => state.isActive);
 
   const connect = useCallback(() => {
-    if (!user || !roomId) return;
+    if (!user || !roomId || !isActive) return;
     if (ws.current && (ws.current.readyState === WebSocket.CONNECTING || ws.current.readyState === WebSocket.OPEN)) return;
 
     const token = localStorage.getItem('token');
@@ -159,7 +160,7 @@ export const useWebSocket = (roomId) => {
         ws.current = null;
       }
     };
-  }, [roomId, user]);
+  }, [roomId, user, isActive]);
 
   const fetchRoomMembers = async () => {
     try {

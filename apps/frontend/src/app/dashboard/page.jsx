@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus, LogOut, Code, Crown, AlertTriangle } from 'lucide-react';
+import { Plus, LogOut, Code, Crown, AlertTriangle, Trash2 } from 'lucide-react';
 import { useUserStore } from '../../store/userStore';
 import CreateRoomModal from '../../components/room/CreateRoomModal';
 import api from '../../lib/api';
@@ -21,6 +21,7 @@ function DashboardContent() {
 
   const [isMounted, setIsMounted] = useState(false);
   const [alertModalConfig, setAlertModalConfig] = useState({ isOpen: false, title: '', message: '' });
+  const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, roomId: null });
 
   useEffect(() => {
     setIsMounted(true);
@@ -70,12 +71,34 @@ function DashboardContent() {
     }
   };
 
+  const handleDeleteHistoryClick = (e, roomId) => {
+    e.stopPropagation();
+    setDeleteConfirm({ isOpen: true, roomId });
+  };
+
+  const executeDeleteHistory = async () => {
+    if (!deleteConfirm.roomId) return;
+    try {
+      await api.delete(`/rooms/${deleteConfirm.roomId}/history`);
+      fetchRecentRooms();
+      useNotificationStore.getState().addNotification('Session removed from history', 'success');
+    } catch (err) {
+      console.error('Failed to delete history', err);
+      useNotificationStore.getState().addNotification('Failed to remove session', 'error');
+    } finally {
+      setDeleteConfirm({ isOpen: false, roomId: null });
+    }
+  };
+
   const handleJoin = async (e) => {
     e.preventDefault();
     if (!joinCode) return;
     setLoadingJoin(true);
     try {
-      await api.post(`/rooms/${joinCode}/join`, { role: joinRole });
+      const res = await api.post(`/rooms/${joinCode}/join`, { role: joinRole });
+      if (res.data && res.data.isActive === false) {
+        useNotificationStore.getState().addNotification('This room has ended. You are viewing the history.', 'warning');
+      }
       router.push(`/room/${joinCode}`);
     } catch (err) {
       if (!err.response || err.response.status >= 500) {
@@ -227,23 +250,75 @@ function DashboardContent() {
 
         {recentRooms.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {recentRooms.map((room) => (
-              <div key={room.id} className="bg-card border border-border rounded-xl p-5 hover:border-primary/50 transition-colors cursor-pointer" onClick={() => router.push(`/room/${room.id}`)}>
-                <div className="flex justify-between items-start mb-4">
-                  <h4 className="font-bold text-white">{room.name || 'Untitled'}</h4>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-danger/10 text-danger border border-danger/20">
-                    ENDED
-                  </span>
+            {recentRooms.map((room) => {
+              const myMember = room.members?.find(m => m.id === user.id);
+              const status = myMember?.status || 'UNKNOWN';
+
+              let badgeText = 'UNKNOWN';
+              let badgeClasses = 'bg-background border-border text-muted-foreground';
+
+              if (!room.isActive) {
+                badgeText = 'ENDED';
+                badgeClasses = 'bg-danger/10 text-danger border-danger/20';
+              } else if (status === 'KICKED') {
+                badgeText = 'KICKED';
+                badgeClasses = 'bg-danger/10 text-danger border-danger/20';
+              } else if (status === 'REJECTED') {
+                badgeText = 'REJECTED';
+                badgeClasses = 'bg-danger/10 text-danger border-danger/20';
+              } else if (status === 'LEFT') {
+                badgeText = 'LEFT';
+                badgeClasses = 'bg-muted border-border text-muted-foreground';
+              } else if (status === 'PENDING') {
+                badgeText = 'WAITING';
+                badgeClasses = 'bg-[#F5A623]/10 text-[#F5A623] border-[#F5A623]/20';
+              } else {
+                badgeText = 'LIVE';
+                badgeClasses = 'bg-success/10 text-success border-success/20';
+              }
+
+              return (
+                <div key={room.id} className={`bg-card border border-border rounded-xl p-5 hover:border-primary/50 transition-colors ${room.isActive ? 'cursor-pointer' : ''}`} onClick={() => room.isActive && router.push(`/room/${room.id}`)}>
+                  <div className="flex justify-between items-start mb-4">
+                    <h4 className="font-bold text-white max-w-[70%] truncate flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${room.isActive ? 'bg-success animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-danger shadow-[0_0_8px_rgba(239,68,68,0.6)]'}`} />
+                      {room.name || 'Untitled'}
+                    </h4>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs px-2 py-0.5 rounded-full border ${badgeClasses}`}>
+                        {badgeText}
+                      </span>
+                      <button
+                        onClick={(e) => handleDeleteHistoryClick(e, room.id)}
+                        className="text-muted-foreground hover:text-danger transition-colors p-1 rounded hover:bg-danger/10"
+                        title="Delete from history"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="text-xs font-mono text-muted-foreground bg-background px-2 py-1 rounded border border-border inline-block">
+                    {room.id}
+                  </div>
+                  <div className="mt-4 flex items-center justify-between text-muted-foreground text-sm gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-4 h-4 rounded-full border border-border flex items-center justify-center">👤</span>
+                      {room.maxMembers || 5} MAX
+                    </div>
+                  </div>
+                  {!room.isActive && (
+                    <div className="mt-4 pt-4 border-t border-border">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); router.push(`/room/${room.id}`); }}
+                        className="w-full py-2 bg-background border border-border text-white text-sm font-bold rounded-lg hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer"
+                      >
+                        ENTER ROOM
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <div className="text-xs font-mono text-muted-foreground bg-background px-2 py-1 rounded border border-border inline-block">
-                  {room.id}
-                </div>
-                <div className="mt-4 flex items-center text-muted-foreground text-sm gap-2">
-                  <span className="w-4 h-4 rounded-full border border-border flex items-center justify-center">?</span>
-                  {room.maxMembers || 5} MAX
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="bg-card border border-border rounded-xl p-8 text-center text-muted-foreground">
@@ -272,6 +347,33 @@ function DashboardContent() {
             >
               Close
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirm Modal */}
+      {deleteConfirm.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-card w-full max-w-sm rounded-2xl border border-danger/30 shadow-[0_0_30px_-5px_rgba(239,68,68,0.3)] p-6 relative flex flex-col items-center text-center">
+            <div className="w-12 h-12 rounded-full bg-danger/10 text-danger flex items-center justify-center mb-4">
+              <Trash2 size={24} />
+            </div>
+            <h2 className="text-xl font-bold text-white mb-2">Delete Session?</h2>
+            <p className="text-sm text-muted-foreground mb-6">Are you sure you want to delete this session from your history? The data in this will be permanently deleted.</p>
+            <div className="flex gap-3 w-full">
+              <button
+                onClick={() => setDeleteConfirm({ isOpen: false, roomId: null })}
+                className="flex-1 py-2.5 bg-background border border-border text-white rounded-xl text-sm font-bold hover:bg-muted transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={executeDeleteHistory}
+                className="flex-1 py-2.5 bg-danger border border-danger text-white rounded-xl text-sm font-bold hover:bg-danger/80 transition-colors cursor-pointer"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}

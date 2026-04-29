@@ -3,6 +3,7 @@ import { create } from 'zustand';
 export const useRoomStore = create((set, get) => ({
   roomId: null,
   roomName: 'Workspace',
+  isActive: true,
   expiresAt: null,
   code: '',
   language: 'java',
@@ -29,7 +30,7 @@ export const useRoomStore = create((set, get) => ({
   setRoleChangeAlert: (alert) => set({ roleChangeAlert: alert }),
   setHostTransferAlert: (alert) => set({ hostTransferAlert: alert }),
 
-  setRoomInfo: (id, name, expiresAt = null) => set({ roomId: id, roomName: name, expiresAt }),
+  setRoomInfo: (id, name, expiresAt = null, isActive = true) => set({ roomId: id, roomName: name, expiresAt, isActive }),
   setExpiresAt: (expiresAt) => set({ expiresAt }),
 
   setCode: (code) => set((state) => ({

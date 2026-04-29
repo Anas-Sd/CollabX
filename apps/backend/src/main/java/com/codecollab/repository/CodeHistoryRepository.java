@@ -12,4 +12,5 @@ import java.util.UUID;
 public interface CodeHistoryRepository extends JpaRepository<CodeHistory, UUID> {
     List<CodeHistory> findByRoomOrderBySavedAtDesc(Room room);
     long countByRoom(Room room);
+    void deleteByRoom(Room room);
 }

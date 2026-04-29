@@ -13,7 +13,8 @@ export default function CodeEditor({ wsHook }) {
   const cursorDecorationsRef = useRef([]);
 
   const currentUserParticipant = useRoomStore((state) => state.participants.find(p => p.id === user?.id));
-  const isViewer = currentUserParticipant?.role === 'VIEWER';
+  const isActive = useRoomStore((state) => state.isActive);
+  const isViewer = !isActive || currentUserParticipant?.role === 'VIEWER';
 
   const handleEditorDidMount = (editor, monaco) => {
     editorRef.current = editor;
@@ -56,11 +57,25 @@ export default function CodeEditor({ wsHook }) {
 
   const handleEditorChange = (value) => {
     if (isViewer) return;
+    
     setCode(value);
 
     // Immediate sync as requested
     wsHook.sendCodeChange(value, language);
   };
+
+  useEffect(() => {
+    if (!editorRef.current || !monacoRef.current) return;
+    
+    // Add event listener for attempted edits in read-only mode
+    const disposable = editorRef.current.onDidAttemptReadOnlyEdit(() => {
+      import('../../store/notificationStore').then(({ useNotificationStore }) => {
+        useNotificationStore.getState().addNotification('You do not have permission to edit code', 'error');
+      });
+    });
+
+    return () => disposable.dispose();
+  }, []);
 
   // Render remote cursors
   useEffect(() => {

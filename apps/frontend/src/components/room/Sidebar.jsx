@@ -11,7 +11,7 @@ import LogsPanel from '../../../components/collaboration/LogsPanel';
 export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voiceControls }) {
   const router = useRouter();
   const { user } = useUserStore();
-  const { participants, removeParticipant, updateParticipantRole, chatMessages, unreadChatCount, resetUnreadChat } = useRoomStore();
+  const { isActive, participants, removeParticipant, updateParticipantRole, chatMessages, unreadChatCount, resetUnreadChat } = useRoomStore();
   const [openMenuId, setOpenMenuId] = useState(null);
   const menuRef = useRef(null);
   const chatEndRef = useRef(null);
@@ -151,7 +151,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
             </span>
           )}
         </button>
-        {isHost && (
+        {isHost && isActive && (
           <button
             onClick={() => handleTabClick('WAITLIST')}
             className={`p-3 rounded-xl transition-colors relative cursor-pointer ${activeTab === 'WAITLIST' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-white hover:bg-background'}`}
@@ -164,7 +164,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
             )}
           </button>
         )}
-        {isHost && (
+        {(isHost || !isActive) && (
           <button
             onClick={() => handleTabClick('LOGS')}
             className={`p-3 rounded-xl transition-colors relative cursor-pointer ${activeTab === 'LOGS' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-white hover:bg-background'}`}
@@ -180,13 +180,20 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
         {activeTab === 'USERS' && (
           <>
             <div className="p-4 flex gap-2">
-              {isHost ? (
+              {!isActive ? (
+                <button
+                  onClick={() => router.push('/dashboard')}
+                  className="w-full cursor-pointer py-2 bg-muted/20 text-muted-foreground border border-border rounded-lg text-sm font-bold hover:bg-muted/50 hover:text-white transition-colors"
+                >
+                  Exit Room
+                </button>
+              ) : isHost ? (
                 <div className="flex flex-col gap-2 w-full">
                   <button
                     onClick={() => {
                       openConfirm(
                         "End Workspace",
-                        "Are you sure you want to end this workspace? This will forcefully disconnect all users and delete the session.",
+                        "Are you sure you want to end this workspace? This will forcefully disconnect all users and mark the session as historical.",
                         "End Workspace",
                         () => api.post(`/rooms/${roomId}/end`).then(() => router.push('/dashboard'))
                       );
@@ -212,8 +219,8 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
                 <button
                   onClick={() => openConfirm(
                     "Leave Workspace",
-                    "Are you sure you want to leave this workspace? You will need an access code to rejoin.",
-                    "Leave Workspace",
+                    "Are you sure you want to leave this workspace? You can rejoin later if you want.",
+                    "Leave",
                     () => api.delete(`/rooms/${roomId}/leave`).then(() => router.push('/dashboard'))
                   )}
                   className="w-full py-2 cursor-pointer bg-background border border-border text-white rounded-lg text-sm font-bold hover:bg-red-500/70 transition-colors"
@@ -251,7 +258,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {isMe ? (
+                      {isActive && isMe && (
                         <button
                           onClick={() => {
                             if (p.isMuted) {
@@ -268,11 +275,10 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
                             <Mic size={16} className="text-muted-foreground hover:text-white transition-colors" />
                           )}
                         </button>
-                      ) : (
-                        p.isMuted && isHost && <MicOff size={14} className="text-danger/70" />
                       )}
+                      {isActive && !isMe && p.isMuted && isHost && <MicOff size={14} className="text-danger/70" />}
 
-                      {!isMe && isHost && (
+                      {!isMe && isHost && isActive && (
                         <button
                           onClick={() => setOpenMenuId(showMenu ? null : p.id)}
                           className="p-1 cursor-pointer text-muted-foreground hover:text-white rounded hover:bg-background"
@@ -411,8 +417,9 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
             <div className="p-4 border-t border-border">
               <input
                 type="text"
-                placeholder="Type a message..."
-                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary cursor-text"
+                disabled={!isActive}
+                placeholder={isActive ? "Type a message..." : "Room ended cannot edit"}
+                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary cursor-text disabled:opacity-50 disabled:cursor-not-allowed"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && e.target.value.trim()) {
                     wsHook.sendChatMessage(e.target.value);
@@ -424,7 +431,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
           </div>
         )}
         
-        {activeTab === 'LOGS' && isHost && (
+        {activeTab === 'LOGS' && (isHost || !isActive) && (
           <div className="flex flex-col h-full overflow-hidden">
              <LogsPanel />
           </div>
