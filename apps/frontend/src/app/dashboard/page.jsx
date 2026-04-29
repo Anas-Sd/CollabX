@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus, LogOut, Code, Crown, AlertTriangle, Trash2 } from 'lucide-react';
+import { Plus, LogOut, Code, Crown, AlertTriangle, Trash2, Users } from 'lucide-react';
 import { useUserStore } from '../../store/userStore';
 import CreateRoomModal from '../../components/room/CreateRoomModal';
 import api from '../../lib/api';
@@ -259,63 +259,87 @@ function DashboardContent() {
 
               if (!room.isActive) {
                 badgeText = 'ENDED';
-                badgeClasses = 'bg-danger/10 text-danger border-danger/20';
               } else if (status === 'KICKED') {
                 badgeText = 'KICKED';
-                badgeClasses = 'bg-danger/10 text-danger border-danger/20';
               } else if (status === 'REJECTED') {
                 badgeText = 'REJECTED';
-                badgeClasses = 'bg-danger/10 text-danger border-danger/20';
               } else if (status === 'LEFT') {
                 badgeText = 'LEFT';
-                badgeClasses = 'bg-muted border-border text-muted-foreground';
               } else if (status === 'PENDING') {
                 badgeText = 'WAITING';
-                badgeClasses = 'bg-[#F5A623]/10 text-[#F5A623] border-[#F5A623]/20';
               } else {
                 badgeText = 'LIVE';
-                badgeClasses = 'bg-success/10 text-success border-success/20';
+              }
+
+              // The user explicitly requested the color to be strictly based on room.isActive
+              if (room.isActive) {
+                badgeClasses = 'bg-success/10 text-success border-success/20 shadow-[0_0_10px_rgba(34,197,94,0.3)]';
+              } else {
+                badgeClasses = 'bg-danger/10 text-danger border-danger/20 shadow-[0_0_10px_rgba(239,68,68,0.3)]';
               }
 
               return (
-                <div key={room.id} className={`bg-card border border-border rounded-xl p-5 hover:border-primary/50 transition-colors ${room.isActive ? 'cursor-pointer' : ''}`} onClick={() => room.isActive && router.push(`/room/${room.id}`)}>
-                  <div className="flex justify-between items-start mb-4">
-                    <h4 className="font-bold text-white max-w-[70%] truncate flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${room.isActive ? 'bg-success animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-danger shadow-[0_0_8px_rgba(239,68,68,0.6)]'}`} />
-                      {room.name || 'Untitled'}
-                    </h4>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs px-2 py-0.5 rounded-full border ${badgeClasses}`}>
-                        {badgeText}
-                      </span>
+                <div key={room.id} className={`group relative flex flex-col justify-between rounded-2xl border border-white/5 bg-[#111118]/80 p-6 backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:border-primary/40 hover:bg-[#151520] hover:shadow-2xl hover:shadow-primary/10 overflow-hidden ${room.isActive ? 'cursor-pointer' : ''}`} onClick={() => room.isActive && router.push(`/room/${room.id}`)}>
+                  {/* Abstract Background Elements */}
+                  <div className="pointer-events-none absolute -inset-px rounded-2xl border border-white/5 opacity-0 transition duration-500 group-hover:opacity-100 mix-blend-overlay"></div>
+                  <div className="pointer-events-none absolute -top-24 -right-24 h-48 w-48 rounded-full bg-primary/20 blur-[80px] opacity-0 transition-opacity duration-700 group-hover:opacity-60"></div>
+                  <div className="pointer-events-none absolute -bottom-24 -left-24 h-48 w-48 rounded-full bg-blue-500/10 blur-[80px] opacity-0 transition-opacity duration-700 group-hover:opacity-40"></div>
+
+                  {/* Header Section */}
+                  <div className="relative z-10 flex flex-col gap-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-3.5">
+                        <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-black/40 shadow-inner backdrop-blur-md transition-colors duration-300 group-hover:border-primary/30 group-hover:bg-primary/10`}>
+                          <Code className={`h-5 w-5 ${room.isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary/70'}`} />
+                        </div>
+                        <div className="flex flex-col mt-0.5">
+                          <h4 className={`text-[15px] font-bold tracking-tight text-white/90 group-hover:text-white transition-colors leading-tight ${room.isActive ? 'max-w-[120px] truncate' : 'break-words pr-2 max-w-[150px]'}`}>
+                            {room.name || 'Untitled Workspace'}
+                          </h4>
+                          <span className="mt-1 text-[10px] font-medium text-muted-foreground/70 font-mono tracking-widest uppercase">
+                            ID: {room.id}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-bold tracking-widest uppercase backdrop-blur-md transition-all duration-300 ${badgeClasses}`}>
+                          {room.isActive ? (
+                            <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.8)]"></span>
+                          ) : (
+                            <span className="h-1.5 w-1.5 rounded-full bg-danger shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
+                          )}
+                          {badgeText}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer Section */}
+                  <div className="relative z-10 mt-8 flex flex-col gap-4">
+                    <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
+                      <div className="flex items-center gap-2 rounded-lg bg-black/30 px-3 py-1.5 border border-white/5 backdrop-blur-md shadow-inner transition-colors group-hover:bg-black/50">
+                        <Users className="h-3.5 w-3.5 text-muted-foreground/70" />
+                        <span className="tracking-widest font-mono text-[10px]">{room.members?.length || 1} / {room.maxMembers || 5}</span>
+                      </div>
+                      
                       <button
                         onClick={(e) => handleDeleteHistoryClick(e, room.id)}
-                        className="text-muted-foreground hover:text-danger transition-colors p-1 rounded hover:bg-danger/10"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-muted-foreground/50 transition-all duration-300 hover:border-danger/30 hover:bg-danger/10 hover:text-danger cursor-pointer shadow-sm group-hover:text-muted-foreground"
                         title="Delete from history"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
-                  </div>
-                  <div className="text-xs font-mono text-muted-foreground bg-background px-2 py-1 rounded border border-border inline-block">
-                    {room.id}
-                  </div>
-                  <div className="mt-4 flex items-center justify-between text-muted-foreground text-sm gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="w-4 h-4 rounded-full border border-border flex items-center justify-center">👤</span>
-                      {room.maxMembers || 5} MAX
-                    </div>
-                  </div>
-                  {!room.isActive && (
-                    <div className="mt-4 pt-4 border-t border-border">
+
+                    {!room.isActive && (
                       <button
                         onClick={(e) => { e.stopPropagation(); router.push(`/room/${room.id}`); }}
-                        className="w-full py-2 bg-background border border-border text-white text-sm font-bold rounded-lg hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer"
+                        className="mt-1 w-full rounded-xl border border-white/5 bg-white/5 px-4 py-3 text-[11px] font-bold tracking-widest uppercase text-white/80 transition-all duration-300 hover:border-primary/50 hover:bg-primary/20 hover:text-primary hover:shadow-[0_0_20px_rgba(var(--primary),0.2)] cursor-pointer backdrop-blur-md group-hover:border-white/10 group-hover:text-white"
                       >
-                        ENTER ROOM
+                        Enter History
                       </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               );
             })}
