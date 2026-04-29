@@ -24,8 +24,8 @@
   --color-success: #00D4AA;
   --color-success-foreground: #ffffff;
 
-  --font-sans: "Inter", sans-serif;
-  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --font-sans: var(--font-geist-sans), sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
 }
 
 /* Base styles for dark theme */
@@ -85,4 +85,15 @@ body {
 .tooltip-arrow {
   @apply w-2 h-2 bg-black rotate-45 absolute left-1/2 
          -translate-x-1/2 bottom-full -mb-1;
+}
+
+/* Shimmer Animation */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
 }

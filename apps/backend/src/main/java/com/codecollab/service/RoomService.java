@@ -542,6 +542,7 @@ public class RoomService {
                     .role(member.getRole())
                     .status("APPROVED")
                     .joinedAt(member.getJoinedAt())
+                    .subscriptionType(member.getUser().getSubscriptionType())
                     .build();
             logActivity(room, requester, "Accepted " + targetUser.getName());
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
@@ -582,6 +583,7 @@ public class RoomService {
                         .role(m.getRole())
                         .status(m.getStatus())
                         .joinedAt(m.getJoinedAt())
+                        .subscriptionType(m.getUser().getSubscriptionType())
                         .build())
                 .collect(Collectors.toList());
 

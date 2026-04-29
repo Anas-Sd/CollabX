@@ -27,3 +27,8 @@ jwt:
 judge0:
   api-url: ${JUDGE0_API_URL:https://judge0-ce.p.rapidapi.com}
   api-key: ${JUDGE0_API_KEY:}
+
+razorpay:
+  key:
+    id: ${RAZORPAY_KEY_ID:}
+    secret: ${RAZORPAY_KEY_SECRET:}

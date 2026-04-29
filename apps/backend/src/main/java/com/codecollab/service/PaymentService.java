@@ -85,6 +85,7 @@ public class PaymentService {
                 paymentRepository.save(payment);
 
                 user.setSubscriptionType("PRO");
+                user.setSubscriptionExpiresAt(LocalDateTime.now().plusMinutes(43200));
                 userRepository.save(user);
                 return true;
             } else {

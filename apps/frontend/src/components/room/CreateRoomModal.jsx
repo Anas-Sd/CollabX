@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, Sparkles, ChevronRight, Zap } from 'lucide-react';
 import api from '../../lib/api';
@@ -13,6 +13,16 @@ export default function CreateRoomModal({ isOpen, onClose }) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { user } = useUserStore();
+
+  useEffect(() => {
+    if (isOpen) {
+      setName('');
+      setDuration(30);
+      setCustomDuration(60);
+      setLimit(2);
+      setLoading(false);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -119,8 +129,11 @@ export default function CreateRoomModal({ isOpen, onClose }) {
           <form onSubmit={handleCreate} className="space-y-7">
             {/* Workspace Name */}
             <div className="space-y-2.5">
-              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
+              {/* <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
                 Workspace Name <span className="text-danger">*</span>
+              </label> */}
+              <label htmlFor="name" className="block text-xs font-bold text-[#8B8B9E] mb-2 tracking-widest uppercase">
+                Workspace Name
               </label>
               <div className="relative group">
                 <input
@@ -135,10 +148,10 @@ export default function CreateRoomModal({ isOpen, onClose }) {
 
             {/* Session Duration */}
             <div className="space-y-2.5">
-              <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
+              <label className="block text-xs font-bold text-[#8B8B9E] mb-2 tracking-widest uppercase">
                 Session Duration
               </label>
-              <div className="flex bg-black/40 border border-white/10 rounded-xl p-1 shadow-inner relative">
+              <div className="flex gap-1 bg-[#050508] border border-[#2A2A35] rounded-xl p-1 shadow-inner relative z-20">
                 {[
                   { label: '30M', value: 30, pro: false },
                   { label: '1H', value: 60, pro: false },
@@ -149,9 +162,9 @@ export default function CreateRoomModal({ isOpen, onClose }) {
                     key={opt.label}
                     type="button"
                     onClick={() => handleSelectDuration(opt.value, opt.pro)}
-                    className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all relative z-10 ${duration === opt.value
-                      ? 'bg-gradient-to-b from-white/10 to-transparent text-white shadow-[0_2px_10px_rgba(0,0,0,0.5)] border border-white/10'
-                      : 'text-muted-foreground hover:text-white hover:bg-white/5 border border-transparent'
+                    className={`flex-1 text-center py-2.5 rounded-lg text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-1.5 overflow-visible relative group/item ${duration === opt.value
+                      ? 'bg-gradient-to-b from-white/10 to-transparent  text-white shadow-[0_2px_10px_rgba(0,0,0,0.5)] scale-[1.02]'
+                      : ' border-transparent text-[#8B8B9E] hover:text-white hover:bg-white/5'
                       }`}
                   >
                     {opt.label}
@@ -188,7 +201,7 @@ export default function CreateRoomModal({ isOpen, onClose }) {
               <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
                 Participant Limit
               </label>
-              <div className="flex bg-black/40 border border-white/10 rounded-xl p-1 shadow-inner relative">
+              <div className="flex gap-1 bg-black/40 border border-white/10 rounded-xl p-1 shadow-inner relative">
                 {[
                   { label: '2', value: 2, pro: false },
                   { label: '5', value: 5, pro: false },
@@ -199,9 +212,9 @@ export default function CreateRoomModal({ isOpen, onClose }) {
                     key={opt.label}
                     type="button"
                     onClick={() => handleSelectLimit(opt.value, opt.pro)}
-                    className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all relative z-10 ${limit === opt.value
-                      ? 'bg-gradient-to-b from-white/10 to-transparent text-white shadow-[0_2px_10px_rgba(0,0,0,0.5)] border border-white/10'
-                      : 'text-muted-foreground hover:text-white hover:bg-white/5 border border-transparent'
+                    className={`flex items-center justify-center cursor-pointer flex-1 py-2.5 text-xs font-bold rounded-lg transition-all relative z-10 ${limit === opt.value
+                      ? 'bg-gradient-to-b from-white/10 to-transparent text-white shadow-[0_2px_10px_rgba(0,0,0,0.5)] '
+                      : 'text-muted-foreground hover:text-white hover:bg-white/5'
                       }`}
                   >
                     {opt.label}
@@ -216,17 +229,17 @@ export default function CreateRoomModal({ isOpen, onClose }) {
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 py-3.5 rounded-xl text-sm font-bold bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="flex-1 py-3.5 cursor-pointer rounded-xl text-sm font-bold bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-[2] py-3.5 rounded-xl text-sm font-bold bg-primary text-white hover:bg-primary/90 transition-all disabled:opacity-50 flex items-center justify-center gap-2 hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] hover:scale-[1.02] active:scale-[0.98] border border-primary/50 relative overflow-hidden group"
+                className="flex-[2] py-3.5 cursor-pointer rounded-xl text-sm font-bold bg-primary text-white hover:bg-primary/90 transition-all disabled:opacity-50 flex items-center justify-center gap-2 hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] hover:scale-[1.02] active:scale-[0.98] border border-primary/50 relative overflow-hidden group"
               >
                 {/* Button shine effect */}
-                <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+                <div className="absolute  inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
                 {loading ? (
                   <span className="flex items-center gap-2">
                     <Sparkles size={16} className="animate-spin" /> Initializing...

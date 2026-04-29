@@ -47,6 +47,8 @@ public class AuthService {
             throw new RuntimeException("Invalid email or password");
         }
 
+        user = checkSubscriptionExpiration(user);
+
         String token = jwtUtil.generateToken(user.getEmail());
 
         return AuthResponse.builder()
@@ -58,7 +60,18 @@ public class AuthService {
     public UserDto getCurrentUser(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        user = checkSubscriptionExpiration(user);
         return mapToUserDto(user);
+    }
+
+    private User checkSubscriptionExpiration(User user) {
+        if ("PRO".equals(user.getSubscriptionType()) && user.getSubscriptionExpiresAt() != null) {
+            if (user.getSubscriptionExpiresAt().isBefore(java.time.LocalDateTime.now())) {
+                user.setSubscriptionType("FREE");
+                user = userRepository.save(user);
+            }
+        }
+        return user;
     }
 
     private UserDto mapToUserDto(User user) {
@@ -68,6 +81,7 @@ public class AuthService {
                 .email(user.getEmail())
                 .subscriptionType(user.getSubscriptionType())
                 .createdAt(user.getCreatedAt())
+                .subscriptionExpiresAt(user.getSubscriptionExpiresAt())
                 .build();
     }
 }

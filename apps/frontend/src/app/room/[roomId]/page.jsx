@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Play, Copy, Check, TerminalSquare, ChevronDown, Clock, Sparkles } from 'lucide-react';
+import { Play, Copy, Check, TerminalSquare, ChevronDown, Clock, Sparkles, Zap } from 'lucide-react';
 import { useRoomStore } from '../../../store/roomStore';
 import { useUserStore } from '../../../store/userStore';
 import { useWebSocket } from '../../../hooks/useWebSocket';
@@ -11,6 +11,7 @@ import OutputPanel from '../../../components/editor/OutputPanel';
 import Sidebar from '../../../components/room/Sidebar';
 import api from '../../../lib/api';
 import { useNotificationStore } from '../../../store/notificationStore';
+import ProUpgradeModal from '../../../components/subscription/ProUpgradeModal';
 
 const DEFAULT_CODE_TEMPLATES = {
   java: `public class Main {
@@ -43,6 +44,7 @@ export default function RoomPage() {
   const [copied, setCopied] = useState(false);
   const [activeSidebarTab, setActiveSidebarTab] = useState('USERS');
   const [showLangMenu, setShowLangMenu] = useState(false);
+  const [isProModalOpen, setIsProModalOpen] = useState(false);
   const [roomAlert, setRoomAlert] = useState(null);
   const langMenuRef = useRef(null);
 
@@ -171,7 +173,25 @@ export default function RoomPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const proLanguages = ['javascript', 'sql'];
+
   const handleLanguageChange = (newLang) => {
+    if (proLanguages.includes(newLang)) {
+      if (!isPro) {
+        setIsProModalOpen(true);
+        return;
+      }
+      
+      const hasFreeUsers = useRoomStore.getState().participants.some(p => p.subscriptionType !== 'PRO');
+      if (hasFreeUsers) {
+        setRoomAlert({
+          title: "Pro Language Restriction",
+          message: "You can only use SQL and JavaScript when all members in the workspace are CollabX Pro users. Please ask free users to upgrade or leave the room."
+        });
+        return;
+      }
+    }
+
     const state = useRoomStore.getState();
     const cachedCode = state.languageCache[newLang];
     const newCode = cachedCode || DEFAULT_CODE_TEMPLATES[newLang] || '';
@@ -543,6 +563,18 @@ export default function RoomPage() {
             </button>
           )}
 
+          {/* Premium Upgrade Button */}
+          {!isPro && (
+            <button
+              onClick={() => setIsProModalOpen(true)}
+              className="group relative cursor-pointer flex items-center gap-1.5 overflow-hidden rounded-lg bg-gradient-to-r from-[#F5A524] to-[#F5D547] px-3 py-1.5 text-white transition-all hover:bg-primary/90 hover:shadow-[0_0_15px_rgba(139,92,246,0.4)]"
+            >
+              <Sparkles size={12} className="fill-white" />
+              <span className="text-[10px] font-black tracking-widest uppercase relative z-10">PRO</span>
+              <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-shimmer pointer-events-none" />
+            </button>
+          )}
+
           {/* Premium Custom Dropdown */}
           <div className="relative" ref={langMenuRef}>
             <button
@@ -567,11 +599,18 @@ export default function RoomPage() {
                     <button
                       key={lang}
                       onClick={() => handleLanguageChange(lang)}
-                      className={`w-full text-left hover:cursor-pointer px-4 py-2.5 text-xs font-bold uppercase transition-colors
+                      className={`relative w-full text-left hover:cursor-pointer px-4 py-2.5 text-xs font-bold uppercase transition-colors
                         ${language === lang ? 'bg-primary/20 text-primary border-l-2 border-primary' : 'text-white hover:bg-primary/10 hover:text-primary border-l-2 border-transparent'}
                       `}
                     >
-                      {lang === 'cpp' ? 'C++' : lang}
+                      <div className="flex justify-between items-center w-full">
+                        <span className="pr-8">{lang === 'cpp' ? 'C++' : lang}</span>
+                        {proLanguages.includes(lang) && (
+                          <div className="absolute top-1 right-1 flex items-center gap-1 bg-gradient-to-r from-[#F5A524] to-[#F5D547] px-1.5 py-0.5 rounded text-[8px] font-black text-black shadow-md transform rotate-12">
+                            <span>PRO</span>
+                          </div>
+                        )}
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -839,6 +878,7 @@ export default function RoomPage() {
           </div>
         </div>
       )}
+      <ProUpgradeModal isOpen={isProModalOpen} onClose={() => setIsProModalOpen(false)} />
     </div>
   );
 }

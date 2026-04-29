@@ -183,7 +183,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
               {!isActive ? (
                 <button
                   onClick={() => router.push('/dashboard')}
-                  className="w-full cursor-pointer py-2 bg-muted/20 text-muted-foreground border border-border rounded-lg text-sm font-bold hover:bg-muted/50 hover:text-white transition-colors"
+                  className="w-full cursor-pointer py-2 bg-muted/20 text-muted-foreground border border-border rounded-lg text-sm font-bold hover:bg-red-500/70 text-white transition-colors"
                 >
                   Exit Room
                 </button>
@@ -250,8 +250,8 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
                         <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-success border-2 border-card rounded-full"></div>
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-sm font-bold text-white">
-                          {p.name} {isMe && <span className="text-muted-foreground font-normal">(You)</span>}
+                        <span className={`text-sm font-bold ${p.subscriptionType?.toUpperCase() === 'PRO' ? 'text-transparent bg-clip-text bg-gradient-to-r from-[#F5A623] to-[#FFC107] drop-shadow-[0_0_8px_rgba(245,166,35,0.8)]' : 'text-white'}`}>
+                          {p.name} {isMe && <span className="text-muted-foreground font-normal drop-shadow-none">(You)</span>}
                         </span>
                         <span className="text-[10px] text-muted-foreground tracking-widest uppercase">{p.role}</span>
                       </div>
@@ -349,7 +349,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
         {activeTab === 'WAITLIST' && (
           <div className="flex flex-col h-full">
             <div className="px-4 py-4 border-b border-border flex items-center justify-between">
-              <span className="text-xs font-bold text-white tracking-widest uppercase flex"><UserPlus className='w-4 h-4 text-primary mr-2'/> Waiting Room</span>
+              <span className="text-xs font-bold text-white tracking-widest uppercase flex"><UserPlus className='w-4 h-4 text-primary mr-2' /> Waiting Room</span>
               <span className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px] font-bold">
                 {pendingParticipants.length}
               </span>
@@ -368,7 +368,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
                         {p.name.charAt(0).toUpperCase()}
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-sm font-bold text-white">{p.name}</span>
+                        <span className={`text-sm font-bold ${p.subscriptionType?.toUpperCase() === 'PRO' ? 'text-transparent bg-clip-text bg-gradient-to-r from-[#F5A623] to-[#FFC107] drop-shadow-[0_0_8px_rgba(245,166,35,0.8)]' : 'text-white'}`}>{p.name}</span>
                         <span className="text-[10px] text-muted-foreground uppercase tracking-widest">{currentUserParticipant?.role === "VIEWER" ? "VIEWER" : " " || currentUserParticipant?.role === "EDITOR" ? "EDITOR" : " "}</span>
                       </div>
                     </div>
@@ -396,14 +396,16 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
         {activeTab === 'CHAT' && (
           <div className="flex flex-col h-full">
             <div className="px-4 py-4 border-b border-border">
-              <span className="text-xs font-bold text-white tracking-widest uppercase flex"><MessageSquare className='w-4 h-4 mr-2 text-primary'/> Room Chat</span>
+              <span className="text-xs font-bold text-white tracking-widest uppercase flex"><MessageSquare className='w-4 h-4 mr-2 text-primary' /> Room Chat</span>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {chatMessages.map((msg, idx) => {
                 const isMe = msg.userId === user?.id || (!msg.userId && msg.userName === user?.name);
+                const sender = participants.find(p => p.id === msg.userId);
+                const isProSender = sender?.subscriptionType?.toUpperCase() === 'PRO' || (isMe && user?.subscriptionType?.toUpperCase() === 'PRO');
                 return (
                   <div key={idx} className={`flex flex-col items-start`}>
-                    <span className="text-[10px] text-muted-foreground mb-1 px-1">
+                    <span className={`text-[10px] mb-1 px-1 font-bold ${isProSender ? 'text-transparent bg-clip-text bg-gradient-to-r from-[#F5A623] to-[#FFC107] drop-shadow-[0_0_8px_rgba(245,166,35,0.8)]' : 'text-muted-foreground'}`}>
                       {isMe ? 'You' : msg.userName}
                     </span>
                     <div className={`px-3 py-2 rounded-xl text-sm max-w-[95%] break-words ${isMe ? 'bg-primary/20 border border-primary/30 text-white rounded-tl-sm' : 'bg-background border border-border text-white rounded-tl-sm'}`}>
@@ -430,10 +432,10 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
             </div>
           </div>
         )}
-        
+
         {activeTab === 'LOGS' && (isHost || !isActive) && (
           <div className="flex flex-col h-full overflow-hidden">
-             <LogsPanel />
+            <LogsPanel />
           </div>
         )}
       </div>

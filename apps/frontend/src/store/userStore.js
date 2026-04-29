@@ -27,6 +27,13 @@ export const useUserStore = create((set) => ({
     set({ user: userData, isAuthenticated: true });
   },
 
+  setUser: (userData) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('user', JSON.stringify(userData));
+    }
+    set({ user: userData });
+  },
+
   logout: () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('token');

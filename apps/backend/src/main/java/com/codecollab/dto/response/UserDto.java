@@ -14,4 +14,5 @@ public class UserDto {
     private String email;
     private String subscriptionType;
     private LocalDateTime createdAt;
+    private LocalDateTime subscriptionExpiresAt;
 }
