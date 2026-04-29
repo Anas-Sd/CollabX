@@ -25,3 +25,7 @@ Thumbs.db
 scratch*.js
 scratch*.ts
 *.log
+
+
+# room databases
+apps/backend/data/rooms/
