@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useUserStore } from '../../store/userStore';
 import { useRoomStore } from '../../store/roomStore';
 import { Users, MessageSquare, UserPlus, Shield, MicOff, Mic, MoreVertical, LogOut } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../lib/api';
 import { useNotificationStore } from '../../store/notificationStore';
 import LogsPanel from '../../../components/collaboration/LogsPanel';
@@ -238,12 +239,21 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {activeParticipants.map((p) => {
-                const isMe = p.id === user?.id;
-                const showMenu = openMenuId === p.id;
+              <AnimatePresence>
+                {activeParticipants.map((p, index) => {
+                  const isMe = p.id === user?.id;
+                  const showMenu = openMenuId === p.id;
 
-                return (
-                  <div key={p.id} ref={showMenu ? menuRef : null} className="flex items-center justify-between group relative">
+                  return (
+                    <motion.div 
+                      key={p.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ delay: index * 0.05 }}
+                      ref={showMenu ? menuRef : null} 
+                      className="flex items-center justify-between group relative"
+                    >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-sm relative">
                         {p.name.charAt(0).toUpperCase()}
@@ -339,9 +349,10 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
                         </button>
                       </div>
                     )}
-                  </div>
+                  </motion.div>
                 );
               })}
+              </AnimatePresence>
             </div>
           </>
         )}
@@ -356,39 +367,48 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {pendingParticipants.length === 0 ? (
-                <div className="text-center text-sm text-muted-foreground italic mt-4">
-                  No pending requests.
-                </div>
-              ) : (
-                pendingParticipants.map(p => (
-                  <div key={p.id} className="flex flex-col gap-3 p-3 rounded-xl border border-border bg-background/50">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
-                        {p.name.charAt(0).toUpperCase()}
+              <AnimatePresence>
+                {pendingParticipants.length === 0 ? (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center text-sm text-muted-foreground italic mt-4">
+                    No pending requests.
+                  </motion.div>
+                ) : (
+                  pendingParticipants.map((p, index) => (
+                    <motion.div 
+                      key={p.id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9, x: 20 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="flex flex-col gap-3 p-3 rounded-xl border border-border bg-background/50"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
+                          {p.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className={`text-sm font-bold ${p.subscriptionType?.toUpperCase() === 'PRO' ? 'text-transparent bg-clip-text bg-gradient-to-r from-[#F5A623] to-[#FFC107] drop-shadow-[0_0_8px_rgba(245,166,35,0.8)]' : 'text-white'}`}>{p.name}</span>
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-widest">{currentUserParticipant?.role === "VIEWER" ? "VIEWER" : " " || currentUserParticipant?.role === "EDITOR" ? "EDITOR" : " "}</span>
+                        </div>
                       </div>
-                      <div className="flex flex-col">
-                        <span className={`text-sm font-bold ${p.subscriptionType?.toUpperCase() === 'PRO' ? 'text-transparent bg-clip-text bg-gradient-to-r from-[#F5A623] to-[#FFC107] drop-shadow-[0_0_8px_rgba(245,166,35,0.8)]' : 'text-white'}`}>{p.name}</span>
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-widest">{currentUserParticipant?.role === "VIEWER" ? "VIEWER" : " " || currentUserParticipant?.role === "EDITOR" ? "EDITOR" : " "}</span>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleWaitlist(p.id, true)}
+                          className="flex-1 cursor-pointer py-1.5 text-xs font-bold bg-success/10 text-success rounded-lg border border-success/20 hover:bg-success/20 transition-colors"
+                        >
+                          Accept
+                        </button>
+                        <button
+                          onClick={() => handleWaitlist(p.id, false)}
+                          className="flex-1 cursor-pointer py-1.5 text-xs font-bold bg-danger/10 text-danger rounded-lg border border-danger/20 hover:bg-danger/20 transition-colors"
+                        >
+                          Reject
+                        </button>
                       </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleWaitlist(p.id, true)}
-                        className="flex-1 cursor-pointer py-1.5 text-xs font-bold bg-success/10 text-success rounded-lg border border-success/20 hover:bg-success/20 transition-colors"
-                      >
-                        Accept
-                      </button>
-                      <button
-                        onClick={() => handleWaitlist(p.id, false)}
-                        className="flex-1 cursor-pointer py-1.5 text-xs font-bold bg-danger/10 text-danger rounded-lg border border-danger/20 hover:bg-danger/20 transition-colors"
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
+                    </motion.div>
+                  ))
+                )}
+              </AnimatePresence>
             </div>
           </div>
         )}

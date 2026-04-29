@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Plus, LogOut, Code, Crown, AlertTriangle, Trash2, ArrowRight, Sparkles, Clock, Calendar, Users, LucideActivity } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { useUserStore } from '../../store/userStore';
 import CreateRoomModal from '../../components/room/CreateRoomModal';
@@ -129,8 +130,26 @@ function DashboardContent() {
   // Prevent rendering mismatch during hydration by returning null until mounted, matching the server.
   if (!isMounted || !user) return null;
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="min-h-screen bg-background"
+    >
       {/* Top Bar */}
       <header className="h-16 border-b border-border px-8 flex items-center justify-between">
         <div className="flex items-center gap-2 text-white font-bold text-xl">
@@ -335,7 +354,12 @@ function DashboardContent() {
         </div>
 
         {recentRooms.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            className="grid grid-cols-1 md:grid-cols-3 gap-4"
+          >
             {recentRooms.map((room) => {
               const myMember = room.members?.find(m => m.id === user.id);
               const status = myMember?.status || 'UNKNOWN';
@@ -364,7 +388,12 @@ function DashboardContent() {
               }
 
               return (
-                <div key={room.id} className={`group bg-gradient-to-b from-[#1C1C24] to-[#0A0A0F] border border-[#2A2A35] rounded-[24px] p-1.5 hover:border-primary/50 transition-all duration-500 hover:shadow-[0_15px_40px_-10px_rgba(108,99,255,0.25)] relative overflow-hidden flex flex-col hover:-translate-y-2 ${room.isActive ? 'cursor-pointer' : ''}`} onClick={() => room.isActive && router.push(`/room/${room.id}`)}>
+                <motion.div 
+                  variants={itemVariants}
+                  key={room.id} 
+                  className={`group bg-gradient-to-b from-[#1C1C24] to-[#0A0A0F] border border-[#2A2A35] rounded-[24px] p-1.5 hover:border-primary/50 transition-all duration-500 hover:shadow-[0_15px_40px_-10px_rgba(108,99,255,0.25)] relative overflow-hidden flex flex-col hover:-translate-y-2 ${room.isActive ? 'cursor-pointer' : ''}`} 
+                  onClick={() => room.isActive && router.push(`/room/${room.id}`)}
+                >
                   <div className="relative h-full w-full bg-[#0F0F16] rounded-[18px] p-6 flex flex-col overflow-hidden z-10">
 
                     {/* Ambient Glow */}
@@ -459,10 +488,10 @@ function DashboardContent() {
                       </div>
                     )}
                   </div>
-                </div>
+                </motion.div>
               );
             })}
-          </div>
+          </motion.div>
         ) : (
           <div className="bg-card border border-border rounded-xl p-8 text-center text-muted-foreground">
             No historical sessions found.
@@ -470,58 +499,60 @@ function DashboardContent() {
         )}
       </main>
 
-      <CreateRoomModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
+        {/* Modals */}
+        <CreateRoomModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
 
-      {/* Alert Modal */}
-      {alertModalConfig.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-card w-full max-w-sm rounded-2xl border border-border shadow-2xl p-6 relative flex flex-col items-center text-center">
-            <div className="w-12 h-12 rounded-full bg-danger/10 text-danger flex items-center justify-center mb-4">
-              <AlertTriangle size={24} />
-            </div>
-            <h2 className="text-xl font-bold text-white mb-2">{alertModalConfig.title}</h2>
-            <p className="text-sm text-muted-foreground mb-6">{alertModalConfig.message}</p>
-            <button
-              onClick={() => {
-                setAlertModalConfig({ isOpen: false, title: '', message: '' });
-                localStorage.removeItem('dashboardAlert');
-              }}
-              className="w-full py-2.5 bg-background border border-border text-white rounded-xl text-sm font-bold hover:bg-muted transition-colors"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirm Modal */}
-      {deleteConfirm.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-card w-full max-w-sm rounded-2xl border border-danger/30 shadow-[0_0_30px_-5px_rgba(239,68,68,0.3)] p-6 relative flex flex-col items-center text-center">
-            <div className="w-12 h-12 rounded-full bg-danger/10 text-danger flex items-center justify-center mb-4">
-              <Trash2 size={24} />
-            </div>
-            <h2 className="text-xl font-bold text-white mb-2">Delete Session?</h2>
-            <p className="text-sm text-muted-foreground mb-6">Are you sure you want to delete this session from your history? The data in this will be permanently deleted.</p>
-            <div className="flex gap-3 w-full">
+        {/* Alert Modal */}
+        {alertModalConfig.isOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div className="bg-card w-full max-w-sm rounded-2xl border border-border shadow-2xl p-6 relative flex flex-col items-center text-center">
+              <div className="w-12 h-12 rounded-full bg-danger/10 text-danger flex items-center justify-center mb-4">
+                <AlertTriangle size={24} />
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">{alertModalConfig.title}</h2>
+              <p className="text-sm text-muted-foreground mb-6">{alertModalConfig.message}</p>
               <button
-                onClick={() => setDeleteConfirm({ isOpen: false, roomId: null })}
-                className="flex-1 py-2.5 bg-background border border-border text-white rounded-xl text-sm font-bold hover:bg-muted transition-colors cursor-pointer"
+                onClick={() => {
+                  setAlertModalConfig({ isOpen: false, title: '', message: '' });
+                  localStorage.removeItem('dashboardAlert');
+                }}
+                className="w-full py-2.5 bg-background border border-border text-white rounded-xl text-sm font-bold hover:bg-muted transition-colors cursor-pointer"
               >
-                Cancel
-              </button>
-              <button
-                onClick={executeDeleteHistory}
-                className="flex-1 py-2.5 bg-danger border border-danger text-white rounded-xl text-sm font-bold hover:bg-danger/80 transition-colors cursor-pointer"
-              >
-                Delete
+                Close
               </button>
             </div>
           </div>
-        </div>
-      )}
-      <ProUpgradeModal isOpen={isProModalOpen} onClose={() => setIsProModalOpen(false)} />
-    </div>
+        )}
+
+        {/* Delete Confirm Modal */}
+        {deleteConfirm.isOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div className="bg-card w-full max-w-sm rounded-2xl border border-danger/30 shadow-[0_0_30px_-5px_rgba(239,68,68,0.3)] p-6 relative flex flex-col items-center text-center">
+              <div className="w-12 h-12 rounded-full bg-danger/10 text-danger flex items-center justify-center mb-4">
+                <Trash2 size={24} />
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">Delete Session?</h2>
+              <p className="text-sm text-muted-foreground mb-6">Are you sure you want to delete this session from your history? The data in this will be permanently deleted.</p>
+              <div className="flex gap-3 w-full">
+                <button
+                  onClick={() => setDeleteConfirm({ isOpen: false, roomId: null })}
+                  className="flex-1 py-2.5 bg-background border border-border text-white rounded-xl text-sm font-bold hover:bg-muted transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={executeDeleteHistory}
+                  className="flex-1 py-2.5 bg-danger border border-danger text-white rounded-xl text-sm font-bold hover:bg-danger/80 transition-colors cursor-pointer"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <ProUpgradeModal isOpen={isProModalOpen} onClose={() => setIsProModalOpen(false)} />
+      </motion.div>
   );
 }
 

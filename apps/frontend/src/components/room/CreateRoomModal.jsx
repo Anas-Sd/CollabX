@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, Sparkles, ChevronRight, Zap } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../lib/api';
 import { useUserStore } from '../../store/userStore';
 import { useNotificationStore } from '../../store/notificationStore';
@@ -23,8 +24,6 @@ export default function CreateRoomModal({ isOpen, onClose }) {
       setLoading(false);
     }
   }, [isOpen]);
-
-  if (!isOpen) return null;
 
   const isPro = user?.subscriptionType === 'PRO';
 
@@ -90,15 +89,27 @@ export default function CreateRoomModal({ isOpen, onClose }) {
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Animated Backdrop Blur */}
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-xl transition-opacity animate-in fade-in duration-500"
-        onClick={onClose}
-      />
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Animated Backdrop Blur */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute inset-0 bg-black/60 backdrop-blur-xl"
+            onClick={onClose}
+          />
 
-      {/* Modal Container */}
-      <div className="relative w-full max-w-lg transform rounded-3xl bg-[#0a0a0f]/90 border border-white/10 shadow-[0_0_60px_-15px_rgba(99,102,241,0.3)] overflow-hidden animate-in zoom-in-95 fade-in duration-300">
+          {/* Modal Container */}
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0, y: 10 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 10 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="relative w-full max-w-lg transform rounded-3xl bg-[#0a0a0f]/90 border border-white/10 shadow-[0_0_60px_-15px_rgba(99,102,241,0.3)] overflow-hidden"
+          >
 
         {/* Animated Top Glow Line */}
         <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-70"></div>
@@ -254,7 +265,9 @@ export default function CreateRoomModal({ isOpen, onClose }) {
             </div>
           </form>
         </div>
-      </div>
+      </motion.div>
     </div>
+      )}
+    </AnimatePresence>
   );
 }

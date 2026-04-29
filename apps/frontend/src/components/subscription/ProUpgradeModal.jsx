@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Crown, Check, X, Zap, Loader2, Clock, Users, Timer, Sparkles, Database } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../lib/api';
 import { useUserStore } from '../../store/userStore';
 import { useNotificationStore } from '../../store/notificationStore';
@@ -23,8 +24,6 @@ export default function ProUpgradeModal({ isOpen, onClose }) {
       onClose();
     }
   };
-
-  if (!isOpen) return null;
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
@@ -115,9 +114,46 @@ export default function ProUpgradeModal({ isOpen, onClose }) {
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0, scale: 0.9, y: 20 },
+    visible: { 
+      opacity: 1, 
+      scale: 1, 
+      y: 0,
+      transition: { 
+        type: "spring", stiffness: 300, damping: 25,
+        staggerChildren: 0.1, delayChildren: 0.2
+      }
+    },
+    exit: { opacity: 0, scale: 0.95, y: -20, transition: { duration: 0.2 } }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, x: -20 },
+    visible: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+  };
+
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-hidden" onClick={handleOutsideClick}>
-      <div ref={modalRef} className="relative w-full max-w-4xl overflow-hidden rounded-3xl border border-[#F5A623]/30 bg-[#0A0A0F] shadow-[0_0_50px_rgba(245,166,35,0.15)] flex flex-col md:flex-row">
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-hidden">
+          {/* Backdrop */}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            onClick={handleOutsideClick}
+          />
+          
+          <motion.div 
+            ref={modalRef} 
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="relative w-full max-w-4xl overflow-hidden rounded-3xl border border-[#F5A623]/30 bg-[#0A0A0F] shadow-[0_0_50px_rgba(245,166,35,0.15)] flex flex-col md:flex-row"
+          >
         
         {/* Glow Effects */}
         <div className="absolute -top-32 -right-32 h-64 w-64 rounded-full bg-[#F5A623]/20 blur-[100px] pointer-events-none"></div>
@@ -144,7 +180,7 @@ export default function ProUpgradeModal({ isOpen, onClose }) {
             Unlock the ultimate collaborative coding experience with advanced features and zero limits.
           </p>
 
-          <div className="w-full space-y-5">
+          <motion.div className="w-full space-y-5">
             {[
               { name: "Custom Session Durations", icon: Clock },
               { name: "Expanded Participant Limits", icon: Users },
@@ -154,15 +190,15 @@ export default function ProUpgradeModal({ isOpen, onClose }) {
             ].map((feature, i) => {
               const Icon = feature.icon;
               return (
-              <div key={i} className="flex items-center gap-4">
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-yellow-500 text-black">
+              <motion.div variants={itemVariants} key={i} className="flex items-center gap-4">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-yellow-500 text-black shadow-[0_0_10px_rgba(234,179,8,0.5)]">
                   <Icon size={14} strokeWidth={3} />
                 </div>
                 <span className="text-base font-medium text-white/90">{feature.name}</span>
-              </div>
+              </motion.div>
               )
             })}
-          </div>
+          </motion.div>
         </div>
 
         {/* Right Side: Payment */}
@@ -199,7 +235,9 @@ export default function ProUpgradeModal({ isOpen, onClose }) {
           </div>
         </div>
 
-      </div>
-    </div>
+        </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 }
