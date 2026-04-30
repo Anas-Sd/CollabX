@@ -1,6 +1,7 @@
 import localFont from "next/font/local";
 import "./globals.css";
 import ToastContainer from '../components/ui/ToastContainer';
+import IntroSplash from '../components/ui/IntroSplash';
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -44,6 +45,7 @@ export default function RootLayout({ children }) {
         </div>
 
         <div className="hidden md:flex flex-col min-h-screen">
+          <IntroSplash />
           {children}
           <ToastContainer />
         </div>

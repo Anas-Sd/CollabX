@@ -106,6 +106,12 @@ function DashboardContent() {
       useNotificationStore.getState().addNotification('Enter a Room Code to Join.', 'warning');
       return;
     }
+    const isHistorical = recentRooms.find(r => (r.id === joinCode || r.roomId === joinCode) && !r.isActive);
+    if (isHistorical) {
+      useNotificationStore.getState().addNotification('Room is ended. You can access it from your Historical Sessions.', 'error');
+      return;
+    }
+
     setLoadingJoin(true);
     try {
       const res = await api.post(`/rooms/${joinCode}/join`, { role: joinRole });
@@ -152,11 +158,11 @@ function DashboardContent() {
     >
       {/* Top Bar */}
       <header className="h-16 border-b border-border px-8 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-white font-bold text-xl">
-          <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary">
-            <Code size={18} />
+        <div className="flex items-center gap-2 text-white text-2xl">
+          <div className="flex items-center tracking-tighter relative">
+            <span className="font-black mr-2 text-white relative z-10">Collab</span>
+            <span className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-[#FFC107] to-[#F5A623] drop-shadow-[0_0_10px_rgba(245,166,35,0.4)] relative z-0 -ml-2">X</span>
           </div>
-          CollabX
         </div>
 
         <div className="flex items-center gap-4">
@@ -287,7 +293,7 @@ function DashboardContent() {
 
           {/* Subscription Card */}
           {isPro ? (
-            <div className="bg-card border border-[#F5A524]/50 rounded-2xl p-6 flex flex-col relative overflow-hidden transition-all duration-500 group origin-left hover:!transform-none" style={{ transform: 'rotateY(-10deg)', transformStyle: 'preserve-3d' }}>
+            <div className="bg-card border border-[#F5A524]/50 rounded-2xl p-6 flex flex-col relative overflow-hidden transition-all duration-500 group hover:shadow-[0_0_20px_rgba(245,165,36,0.5)] origin-left hover:!transform-none" style={{ transform: 'rotateY(-10deg)', transformStyle: 'preserve-3d' }}>
               <div className="absolute inset-0 bg-gradient-to-br from-[#F5A623]/20 via-[#F5A623]/5 to-transparent z-0"></div>
               
               <div className="absolute top-0 right-0 p-4 opacity-30 group-hover:rotate-12 group-hover:scale-125 transition-transform duration-700 pointer-events-none">
@@ -297,10 +303,10 @@ function DashboardContent() {
               
               <div className="relative z-10 h-full flex flex-col">
                 <div className="flex justify-between items-start mb-6">
-                  <div className="w-12 h-12 rounded-2xl bg-[#F5A524]/10 border border-[#F5A524]/30 flex items-center justify-center mb-5 text-[#F5A524] shadow-[0_0_20px_rgba(245,165,36,0.2)]">
+                  <div className="w-12 h-12 rounded-2xl bg-[#F5A524]/10 border border-[#F5A524]/30 flex items-center justify-center mb-5 text-[#F5A524] shadow-[0_0_20px_rgba(245,165,36,0.2)] hover:shadow-[0_0_20px_rgba(245,165,36,0.5)]">
                     <Crown className="w-6 h-6" />
                   </div>
-                  <span className="px-3 py-1 rounded-full bg-[#F5A524]/20 border border-[#F5A524]/40 text-xs font-bold text-[#F5A524] uppercase shadow-[0_0_10px_rgba(245,165,36,0.3)]">
+                  <span className="px-3 py-1 bg-transparent rounded-full bg-[#F5A524]/20 border border-[#F5A524]/40 text-xs font-bold text-[#F5A524] uppercase shadow-[0_0_10px_rgba(245,165,36,0.3)]">
                     Active
                   </span>
                 </div>

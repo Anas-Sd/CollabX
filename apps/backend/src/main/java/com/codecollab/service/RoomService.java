@@ -172,12 +172,6 @@ public class RoomService {
             }
         }
 
-        if (!room.getIsActive()) {
-            // Room is ended/inactive: just fetch and return. No waitlist needed.
-            List<RoomMember> existingMembers = roomMemberRepository.findByRoom(room);
-            return mapToRoomResponse(room, existingMembers);
-        }
-
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -186,6 +180,13 @@ public class RoomService {
         java.util.Optional<RoomMember> existingOpt = existingMembers.stream()
                 .filter(m -> m.getUser().getId().equals(user.getId()))
                 .findFirst();
+
+        if (!room.getIsActive()) {
+            if (existingOpt.isEmpty()) {
+                throw new RuntimeException("Workspace has already ended and cannot be joined.");
+            }
+            return mapToRoomResponse(room, existingMembers);
+        }
 
         if (existingOpt.isPresent()) {
             RoomMember exist = existingOpt.get();

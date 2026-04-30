@@ -549,18 +549,27 @@ export default function RoomPage() {
         <div className="flex items-center gap-4">
 
           {timeLeft !== null && timeLeft <= 900 && isHost && (
-            <button
-              onClick={handleExtend}
-              disabled={extending || !isPro}
-              title={!isPro ? "PRO Subscription Required" : ""}
-              className={`flex items-center cursor-pointer gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${isPro
-                ? 'bg-gradient-to-r from-yellow-500/20 to-amber-600/20 text-yellow-500 border border-yellow-500/30 hover:bg-yellow-500/30 hover:scale-105 active:scale-95 shadow-[0_0_15px_-3px_rgba(234,179,8,0.3)]'
-                : 'bg-background/50 border border-border/50 text-muted-foreground cursor-not-allowed'
-                } ${extending && isPro ? 'opacity-50' : ''}`}
-            >
-              <Sparkles size={12} className={extending ? "animate-spin" : ""} />
-              {extending ? 'Extending...' : '+30 Min'}
-            </button>
+            <div className="relative group/extend">
+              <button
+                onClick={handleExtend}
+                disabled={extending || !isPro}
+                className={`flex items-center cursor-pointer gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${isPro
+                  ? 'bg-gradient-to-r from-yellow-500/20 to-amber-600/20 text-yellow-500 border border-yellow-500/30 hover:bg-yellow-500/30 hover:scale-105 active:scale-95 shadow-[0_0_15px_-3px_rgba(234,179,8,0.3)]'
+                  : 'bg-background/50 border border-border/50 text-muted-foreground cursor-not-allowed'
+                  } ${extending && isPro ? 'opacity-50' : ''}`}
+              >
+                <Sparkles size={12} className={extending ? "animate-spin" : ""} />
+                {extending ? 'Extending...' : '+30 Min'}
+              </button>
+              
+              {!isPro && (
+                <div className="absolute top-full right-0 mt-2 w-48 opacity-0 group-hover/extend:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                  <div className="bg-card border border-border text-white text-xs p-2 rounded shadow-xl text-center">
+                    PRO Subscription Required to extend workspace duration.
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           {/* Premium Upgrade Button */}
@@ -845,7 +854,7 @@ export default function RoomPage() {
             </p>
             <button
               onClick={() => useRoomStore.getState().setHostTransferAlert(false)}
-              className="w-full py-3 rounded-xl text-sm font-bold bg-[#F5A623] text-black hover:bg-[#F5A623]/90 transition-colors"
+              className="w-full py-3 cursor-pointer rounded-xl text-sm font-bold bg-[#F5A623] text-black hover:bg-[#F5A623]/90 transition-colors"
             >
               Assume Control
             </button>

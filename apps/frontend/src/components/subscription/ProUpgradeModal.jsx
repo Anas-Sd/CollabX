@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Crown, Check, X, Zap, Loader2, Clock, Users, Timer, Sparkles, Database } from 'lucide-react';
+import { Crown, Check, X, Zap, Loader2, Clock, Users, Timer, Sparkles, Database, CheckCircle2, XCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../lib/api';
 import { useUserStore } from '../../store/userStore';
@@ -7,6 +7,7 @@ import { useNotificationStore } from '../../store/notificationStore';
 
 export default function ProUpgradeModal({ isOpen, onClose }) {
   const [loading, setLoading] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState(null);
   const { user, setUser } = useUserStore();
   const modalRef = useRef(null);
 
@@ -76,16 +77,14 @@ export default function ProUpgradeModal({ isOpen, onClose }) {
             });
 
             if (verifyRes.data.success) {
-              useNotificationStore.getState().addNotification('Successfully upgraded to PRO!', 'success');
-              // Update local user state
+              setPaymentStatus({ type: 'success', message: 'You have unlocked the ultimate collaborative coding experience. Enjoy zero limits and full historical retention.' });
               setUser({ ...user, subscriptionType: 'PRO' });
-              onClose();
             } else {
-              useNotificationStore.getState().addNotification('Payment verification failed', 'error');
+              setPaymentStatus({ type: 'error', message: 'Payment verification failed. Please contact support.' });
             }
           } catch (err) {
             console.error('Verification Error:', err);
-            useNotificationStore.getState().addNotification('Error verifying payment', 'error');
+            setPaymentStatus({ type: 'error', message: 'An error occurred while verifying your payment.' });
           }
         },
         prefill: {
@@ -101,14 +100,14 @@ export default function ProUpgradeModal({ isOpen, onClose }) {
       paymentObject.open();
 
       paymentObject.on('payment.failed', function (response) {
-        console.error('Payment Failed:', response.error);
-        useNotificationStore.getState().addNotification(response.error.description || 'Payment Failed', 'error');
+        console.warn('Payment Failed:', response.error);
+        setPaymentStatus({ type: 'error', message: response?.error?.description || 'Your payment could not be processed.' });
       });
 
     } catch (err) {
       console.error('Order Error:', err);
-      const errorMessage = err.response?.data?.message || err.message || 'Could not initiate payment';
-      useNotificationStore.getState().addNotification(`Error: ${errorMessage}`, 'error');
+      const errorMessage = err.response?.data?.message || err.message || 'Could not initiate payment sequence.';
+      setPaymentStatus({ type: 'error', message: errorMessage });
     } finally {
       setLoading(false);
     }
@@ -152,20 +151,79 @@ export default function ProUpgradeModal({ isOpen, onClose }) {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="relative w-full max-w-4xl overflow-hidden rounded-3xl border border-[#F5A623]/30 bg-[#0A0A0F] shadow-[0_0_50px_rgba(245,166,35,0.15)] flex flex-col md:flex-row"
+            className="relative w-full max-w-4xl overflow-hidden rounded-3xl border border-[#F5A623]/30 bg-[#0A0A0F] shadow-[0_0_50px_rgba(245,166,35,0.15)] flex flex-col md:flex-row min-h-[400px]"
           >
         
         {/* Glow Effects */}
-        <div className="absolute -top-32 -right-32 h-64 w-64 rounded-full bg-[#F5A623]/20 blur-[100px] pointer-events-none"></div>
-        <div className="absolute -bottom-32 -left-32 h-64 w-64 rounded-full bg-[#FFC107]/10 blur-[100px] pointer-events-none"></div>
+        <div className="absolute -top-32 -right-32 h-64 w-64 rounded-full bg-[#F5A623]/20 blur-[100px] pointer-events-none z-0"></div>
+        <div className="absolute -bottom-32 -left-32 h-64 w-64 rounded-full bg-[#FFC107]/10 blur-[100px] pointer-events-none z-0"></div>
 
         {/* Close Button */}
         <button 
           onClick={onClose}
-          className="absolute cursor-pointer hover:bg-yellow-500/90 top-4 right-4 z-20 rounded-full p-2 text-muted-foreground hover:bg-white/10 hover:text-white transition-colors"
+          className="absolute cursor-pointer hover:bg-yellow-500/90 top-4 right-4 z-50 rounded-full p-2 text-muted-foreground hover:bg-white/10 hover:text-white transition-colors"
         >
           <X size={20} />
         </button>
+
+        <AnimatePresence mode="wait">
+          {paymentStatus ? (
+            <motion.div
+              key="payment-status"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative z-10 w-full flex flex-col items-center justify-center p-12 text-center"
+            >
+              {paymentStatus.type === 'success' ? (
+                <>
+                  <div className="w-24 h-24 rounded-full bg-success/10 text-success flex items-center justify-center mb-6 border border-success/30 shadow-[0_0_50px_rgba(34,197,94,0.3)]">
+                    <CheckCircle2 size={48} strokeWidth={2.5} />
+                  </div>
+                  <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-success to-emerald-400 mb-4">
+                    Payment Successful!
+                  </h2>
+                  <p className="text-muted-foreground text-lg mb-10 max-w-md">
+                    {paymentStatus.message}
+                  </p>
+                  <button
+                    onClick={() => {
+                      setPaymentStatus(null);
+                      onClose();
+                    }}
+                    className="w-full max-w-[250px] cursor-pointer py-4 rounded-xl text-sm font-bold bg-success text-black hover:bg-success/90 transition-all shadow-[0_0_20px_rgba(34,197,94,0.4)]"
+                  >
+                    Start Building
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="w-24 h-24 rounded-full bg-danger/10 text-danger flex items-center justify-center mb-6 border border-danger/30 shadow-[0_0_50px_rgba(239,68,68,0.3)]">
+                    <XCircle size={48} strokeWidth={2.5} />
+                  </div>
+                  <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-danger to-red-400 mb-4">
+                    Payment Failed
+                  </h2>
+                  <p className="text-muted-foreground text-lg mb-10 max-w-md">
+                    {paymentStatus.message}
+                  </p>
+                  <button
+                    onClick={() => setPaymentStatus(null)}
+                    className="w-full max-w-[250px] cursor-pointer py-4 rounded-xl text-sm font-bold bg-background border border-border text-white hover:bg-muted transition-all"
+                  >
+                    Try Again
+                  </button>
+                </>
+              )}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="upgrade-content"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col md:flex-row w-full h-full relative z-10"
+            >
 
         {/* Left Side: Features */}
         <div className="relative z-10 p-8 md:p-12 flex flex-col justify-center flex-1 border-b md:border-b-0 md:border-r border-white/10 bg-gradient-to-br from-black/60 to-transparent">
@@ -234,7 +292,9 @@ export default function ProUpgradeModal({ isOpen, onClose }) {
             <p>You can cancel anytime.</p>
           </div>
         </div>
-
+            </motion.div>
+          )}
+        </AnimatePresence>
         </motion.div>
         </div>
       )}
