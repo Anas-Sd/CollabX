@@ -33,7 +33,7 @@ export default function IntroSplash() {
       setMounted(true);
       const timer = setTimeout(() => {
         setShow(false);
-      }, 3200);
+      }, 3250);
       return () => clearTimeout(timer);
     } else {
       setMounted(true);
