@@ -245,7 +245,7 @@ export default function RoomPage() {
 
     const calculateTimeLeft = () => {
       const now = new Date();
-      const expiration = new Date(expiresAt);
+      const expiration = new Date(expiresAt.endsWith('Z') ? expiresAt : expiresAt + 'Z');
       const diffInSeconds = Math.floor((expiration - now) / 1000);
       return diffInSeconds;
     };

@@ -460,7 +460,7 @@ function DashboardContent() {
                             <Calendar size={8} /> Created
                           </span>
                           <span className="text-[11px] font-mono text-white/90">
-                            {room.createdAt ? format(new Date(room.createdAt), 'MMM d, h:mm a') : 'N/A'}
+                            {room.createdAt ? format(new Date(room.createdAt.endsWith('Z') ? room.createdAt : room.createdAt + 'Z'), 'MMM d, h:mm a') : 'N/A'}
                           </span>
                         </div>
                         {!room.isActive && (
@@ -469,7 +469,7 @@ function DashboardContent() {
                               <Clock size={8} /> Ended
                             </span>
                             <span className="text-[11px] font-mono text-white/90">
-                              {room.expiresAt ? format(new Date(room.expiresAt), 'MMM d, h:mm a') : 'N/A'}
+                              {room.expiresAt ? format(new Date(room.expiresAt.endsWith('Z') ? room.expiresAt : room.expiresAt + 'Z'), 'MMM d, h:mm a') : 'N/A'}
                             </span>
                           </div>
                         )}
@@ -486,7 +486,7 @@ function DashboardContent() {
                           <div className="absolute inset-0 bg-white/20 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
                           <div className="relative flex items-center justify-center gap-2 rounded-[11px] bg-[#111118] px-4 py-3 transition-all duration-300 group-hover/btn:bg-transparent">
                             <span className="text-xs font-black uppercase tracking-[0.2em] text-white/90 group-hover/btn:text-white">
-                              Enter Historyy
+                              Enter Session
                             </span>
                             <ArrowRight size={14} className="text-white/50 group-hover/btn:text-white group-hover/btn:translate-x-1.5 transition-all duration-300" />
                           </div>
