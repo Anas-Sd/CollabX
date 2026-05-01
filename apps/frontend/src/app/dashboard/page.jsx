@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus, LogOut, Code, Crown, AlertTriangle, Trash2, ArrowRight, Sparkles, Clock, Calendar, Users, LucideActivity } from 'lucide-react';
+import { Plus, LogOut, Code, Crown, AlertTriangle, Trash2, Monitor, ArrowRight, Sparkles, Clock, Calendar, Users, LucideActivity, MonitorCloudIcon, LampDeskIcon, HeartPulse, GitGraph, LucideSendToBack, IndentDecrease, IndentDecreaseIcon, LucideListIndentDecrease, Brain } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { useUserStore } from '../../store/userStore';
@@ -66,7 +66,7 @@ function DashboardContent() {
 
   useEffect(() => {
     if (isMounted && !isAuthenticated) {
-      router.push('/login');
+      router.push('/');
     } else if (isMounted && isAuthenticated) {
       fetchRecentRooms();
     }

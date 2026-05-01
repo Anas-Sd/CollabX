@@ -16,8 +16,11 @@ const geistMono = localFont({
 });
 
 export const metadata = {
-  title: "CodeCollab",
+  title: "CollabX",
   description: "Real-time collaborative coding platform",
+  icons: {
+    icon: '/collabx_logo.svg',
+  },
 };
 
 export default function RootLayout({ children }) {

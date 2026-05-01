@@ -104,7 +104,7 @@ export default function RoomPage() {
     useRoomStore.getState().resetRoom();
 
     if (isMounted && !isAuthenticated) {
-      router.push('/login');
+      router.push('/');
       return;
     }
 

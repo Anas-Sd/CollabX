@@ -6,15 +6,41 @@ import { Playfair_Display } from 'next/font/google';
 const playfair = Playfair_Display({ subsets: ['latin'], weight: '900', style: 'italic' });
 
 export default function IntroSplash() {
-  const [show, setShow] = useState(true);
+  const [show, setShow] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Hide the splash screen after 3.2 seconds
-    const timer = setTimeout(() => {
-      setShow(false);
-    }, 3200);
-    return () => clearTimeout(timer);
+    const isJustLoggedOut = sessionStorage.getItem('justLoggedOut');
+    const isJustLoggedIn = sessionStorage.getItem('justLoggedIn');
+    const isFirstVisit = !sessionStorage.getItem('introPlayed');
+    const isHomePage = window.location.pathname === '/';
+
+    let willShow = false;
+    if (isJustLoggedOut || isJustLoggedIn) {
+      sessionStorage.removeItem('justLoggedOut');
+      sessionStorage.removeItem('justLoggedIn');
+      willShow = false;
+    } else if (isHomePage) {
+      willShow = true;
+    } else if (isFirstVisit) {
+      willShow = true;
+    }
+
+    sessionStorage.setItem('introPlayed', 'true');
+
+    if (willShow) {
+      setShow(true);
+      setMounted(true);
+      const timer = setTimeout(() => {
+        setShow(false);
+      }, 3200);
+      return () => clearTimeout(timer);
+    } else {
+      setMounted(true);
+    }
   }, []);
+
+  if (!mounted) return null;
 
   const letterVariants = {
     hidden: { opacity: 0 },

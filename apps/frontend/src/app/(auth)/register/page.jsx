@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '../../../lib/api';
 import { useUserStore } from '../../../store/userStore';
+import { useNotificationStore } from '../../../store/notificationStore';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -22,7 +23,7 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/dashboard');
+      router.push('/');
     }
   }, [isAuthenticated, router]);
 
@@ -33,7 +34,8 @@ export default function RegisterPage() {
     try {
       const res = await api.post('/auth/register', { name, email, password });
       login(res.data.user, res.data.token);
-      router.push('/dashboard');
+      useNotificationStore.getState().addNotification('Account created successfully', 'success');
+      router.push('/');
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
     } finally {

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '../../../lib/api';
 import { useUserStore } from '../../../store/userStore';
+import { useNotificationStore } from '../../../store/notificationStore';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -21,7 +22,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/dashboard');
+      router.push('/');
     }
   }, [isAuthenticated, router]);
 
@@ -31,8 +32,9 @@ export default function LoginPage() {
     setError('');
     try {
       const res = await api.post('/auth/login', { email, password });
+      useNotificationStore.getState().addNotification('Logged in successfully', 'success');
       login(res.data.user, res.data.token);
-      router.push('/dashboard');
+      router.push('/');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
     } finally {
