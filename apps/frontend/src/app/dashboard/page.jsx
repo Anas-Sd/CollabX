@@ -486,7 +486,7 @@ function DashboardContent() {
                           <div className="absolute inset-0 bg-white/20 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
                           <div className="relative flex items-center justify-center gap-2 rounded-[11px] bg-[#111118] px-4 py-3 transition-all duration-300 group-hover/btn:bg-transparent">
                             <span className="text-xs font-black uppercase tracking-[0.2em] text-white/90 group-hover/btn:text-white">
-                              Enter History
+                              Enter Historyy
                             </span>
                             <ArrowRight size={14} className="text-white/50 group-hover/btn:text-white group-hover/btn:translate-x-1.5 transition-all duration-300" />
                           </div>
