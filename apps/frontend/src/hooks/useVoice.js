@@ -25,9 +25,6 @@ export const useVoice = (roomId, user, isActive = true) => {
         const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID?.trim();
 
         console.log('Agora Init Check:', { actualAppId: appId, tokenLength: token?.length });
-        if (appId !== '38e24f8afa2042e19f63e62bd63d9a63') {
-          alert('Next.js is STILL caching your old App ID! It is currently passing: ' + appId + '. Please delete the .next folder and run npm run dev again.');
-        }
 
         if (!appId || !token) {
           console.warn('Agora credentials missing. Voice chat disabled.');
