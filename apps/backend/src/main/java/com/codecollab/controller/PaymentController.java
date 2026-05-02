@@ -38,4 +38,11 @@ public class PaymentController {
         boolean verified = paymentService.verifySignature(email, request);
         return ResponseEntity.ok(Map.of("success", verified));
     }
+
+    @PostMapping("/cancel")
+    public ResponseEntity<?> cancelSubscription(Authentication authentication) {
+        String email = authentication.getName();
+        paymentService.cancelSubscription(email);
+        return ResponseEntity.ok(Map.of("success", true, "message", "Subscription cancelled successfully"));
+    }
 }

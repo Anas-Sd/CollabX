@@ -58,13 +58,21 @@ export const useVoice = (roomId, user, isActive = true) => {
           return;
         }
 
-        const localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
-        await localAudioTrack.setMuted(true); // Default to muted
-        localAudioTrackRef.current = localAudioTrack;
+        let localAudioTrack = null;
+        try {
+          localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+          await localAudioTrack.setMuted(true); // Default to muted
+          localAudioTrackRef.current = localAudioTrack;
+        } catch (micErr) {
+          console.warn('Microphone access denied or not available:', micErr);
+          import('../store/notificationStore').then(({ useNotificationStore }) => {
+            useNotificationStore.getState().addNotification('Microphone access denied. You will only be able to listen.', 'error');
+          });
+        }
 
-        if (mounted) {
+        if (mounted && localAudioTrack) {
           await client.publish([localAudioTrack]);
-        } else {
+        } else if (!mounted && localAudioTrack) {
           localAudioTrack.close();
           await client.leave();
         }

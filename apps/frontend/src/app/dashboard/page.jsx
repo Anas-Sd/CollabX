@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus, LogOut, Code, Crown, AlertTriangle, Trash2, Monitor, ArrowRight, Sparkles, Clock, Calendar, Users, LucideActivity, MonitorCloudIcon, LampDeskIcon, HeartPulse, GitGraph, LucideSendToBack, IndentDecrease, IndentDecreaseIcon, LucideListIndentDecrease, Brain } from 'lucide-react';
+import { Plus, LogOut, Code, Crown, AlertTriangle, Trash2, Monitor, ArrowRight, Sparkles, Clock, Calendar, Users, LucideActivity, MonitorCloudIcon, LampDeskIcon, HeartPulse, GitGraph, LucideSendToBack, IndentDecrease, IndentDecreaseIcon, LucideListIndentDecrease, Brain, User, LayoutDashboard } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { useUserStore } from '../../store/userStore';
@@ -32,6 +32,8 @@ function DashboardContent() {
   const [isMounted, setIsMounted] = useState(false);
   const [alertModalConfig, setAlertModalConfig] = useState({ isOpen: false, title: '', message: '' });
   const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, roomId: null });
+  const [cancelConfirm, setCancelConfirm] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -89,14 +91,34 @@ function DashboardContent() {
   const executeDeleteHistory = async () => {
     if (!deleteConfirm.roomId) return;
     try {
-      await api.delete(`/rooms/${deleteConfirm.roomId}/history`);
-      fetchRecentRooms();
-      useNotificationStore.getState().addNotification('Session removed from history', 'success');
-    } catch (err) {
-      console.error('Failed to delete history', err);
-      useNotificationStore.getState().addNotification('Failed to remove session', 'error');
+      await api.delete(`/history/${deleteConfirm.roomId}`);
+      setRecentRooms(recentRooms.filter(r => r.id !== deleteConfirm.roomId));
+      useNotificationStore.getState().addNotification('Session deleted from history', 'success');
+    } catch (error) {
+      console.error("Failed to delete history:", error);
+      useNotificationStore.getState().addNotification('Failed to delete session', 'error');
     } finally {
       setDeleteConfirm({ isOpen: false, roomId: null });
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    setIsCancelling(true);
+    try {
+      await api.post('/payments/cancel');
+      useUserStore.getState().setUser({
+        ...user,
+        subscriptionType: 'FREE',
+        subscriptionExpiresAt: null
+      });
+      useNotificationStore.getState().addNotification('Subscription cancelled successfully.', 'success');
+    } catch (error) {
+      console.error("Failed to cancel subscription:", error);
+      useNotificationStore.getState().addNotification('Failed to cancel subscription', 'error');
+    } finally {
+      setIsCancelling(false);
+      setCancelConfirm(false);
+      router.refresh();
     }
   };
 
@@ -159,13 +181,19 @@ function DashboardContent() {
       {/* Top Bar */}
       <header className="h-16 border-b border-border px-8 flex items-center justify-between">
         <div className="flex items-center gap-2 text-white text-2xl">
-          <div className="flex items-center tracking-tighter relative">
+          <div className="flex items-center tracking-tighter relative cursor-pointer" onClick={() => router.push('/')}>
             <span className="font-black mr-2 text-white relative z-10">Collab</span>
             <span className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-[#FFC107] to-[#F5A623] drop-shadow-[0_0_10px_rgba(245,166,35,0.4)] relative z-0 -ml-2">X</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          {/* Profile Icon */}
+          <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-sm border border-primary/30">
+             <User size={16} />
+          </div>
+
+          {/* Name Bubble */}
           <div className="flex items-center gap-2 bg-card border border-border rounded-full py-1.5 px-3">
             <div className={`w-2 h-2 rounded-full ${isPro ? 'bg-[#F5A524] shadow-[0_0_10px_rgba(245,165,36,0.8)]' : 'bg-success'}`}></div>
             <span className={`text-sm font-medium ${isPro ? 'text-transparent bg-clip-text bg-gradient-to-r from-[#F5A524] to-[#FFC107] drop-shadow-[0_0_5px_rgba(245,165,36,0.5)]' : 'text-white'}`}>{user.name}</span>
@@ -173,9 +201,20 @@ function DashboardContent() {
               {user.subscriptionType || 'FREE'}
             </span>
           </div>
+
+          {/* Dashboard Button */}
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="p-2.5 text-muted-foreground hover:text-primary transition-colors rounded-lg hover:bg-primary/10 border border-transparent"
+            title="Dashboard"
+          >
+            <LayoutDashboard size={18} />
+          </button>
+
+          {/* Logout Button */}
           <button
             onClick={logout}
-            className="p-2 text-muted-foreground hover:text-white transition-colors rounded-lg hover:bg-card border border-transparent hover:border-border"
+            className="p-2.5 text-danger/70 hover:text-danger transition-colors rounded-lg hover:bg-danger/10 border border-transparent"
             title="Logout"
           >
             <LogOut size={18} />
@@ -314,6 +353,9 @@ function DashboardContent() {
                 <p className="text-sm text-white/80 mb-8 flex-grow">You have unlocked the ultimate collaborative coding experience. Enjoy zero limits and full historical retention.</p>
                 <div className="mt-auto flex items-center justify-center gap-2 py-3.5 bg-white/5 border border-[#F5A524]/30 rounded-xl font-bold tracking-widest text-[11px] uppercase text-[#F5A524] shadow-[0_0_15px_rgba(245,165,36,0.15)]">
                   <Sparkles size={14} /> {daysRemaining !== null ? `${daysRemaining} Days Remaining` : 'Subscription Active'}
+                </div>
+                <div className="text-center mt-2 -mb-3">
+                  <span onClick={() => setCancelConfirm(true)} className='cursor-pointer text-xs brightness-75 hover:brightness-100 font-bold text-white hover:underline transition-colors'>Cancel Subscription?</span>
                 </div>
               </div>
             </div>
@@ -460,7 +502,7 @@ function DashboardContent() {
                             <Calendar size={8} /> Created
                           </span>
                           <span className="text-[11px] font-mono text-white/90">
-                            {room.createdAt ? format(new Date(room.createdAt.endsWith('Z') ? room.createdAt : room.createdAt + 'Z'), 'MMM d, h:mm a') : 'N/A'}
+                            {room.createdAt ? format(new Date(process.env.NEXT_PUBLIC_API_BASE_URL?.includes('railway') && !room.createdAt.endsWith('Z') ? room.createdAt + 'Z' : room.createdAt), 'MMM d, h:mm a') : 'N/A'}
                           </span>
                         </div>
                         {!room.isActive && (
@@ -469,7 +511,7 @@ function DashboardContent() {
                               <Clock size={8} /> Ended
                             </span>
                             <span className="text-[11px] font-mono text-white/90">
-                              {room.expiresAt ? format(new Date(room.expiresAt.endsWith('Z') ? room.expiresAt : room.expiresAt + 'Z'), 'MMM d, h:mm a') : 'N/A'}
+                              {room.expiresAt ? format(new Date(process.env.NEXT_PUBLIC_API_BASE_URL?.includes('railway') && !room.expiresAt.endsWith('Z') ? room.expiresAt + 'Z' : room.expiresAt), 'MMM d, h:mm a') : 'N/A'}
                             </span>
                           </div>
                         )}
@@ -551,6 +593,35 @@ function DashboardContent() {
                   className="flex-1 py-2.5 bg-danger border border-danger text-white rounded-xl text-sm font-bold hover:bg-danger/80 transition-colors cursor-pointer"
                 >
                   Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Cancel Subscription Confirm Modal */}
+        {cancelConfirm && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div className="bg-card w-full max-w-sm rounded-2xl border border-danger/30 shadow-[0_0_30px_-5px_rgba(239,68,68,0.3)] p-6 relative flex flex-col items-center text-center">
+              <div className="w-12 h-12 rounded-full bg-danger/10 text-danger flex items-center justify-center mb-4">
+                <AlertTriangle size={24} />
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">Cancel Subscription?</h2>
+              <p className="text-sm text-muted-foreground mb-6">Are you sure you want to cancel your PRO subscription? <strong>This will not refund any previous payments</strong> and your account will immediately be downgraded to the Free tier.</p>
+              <div className="flex gap-3 w-full">
+                <button
+                  onClick={() => setCancelConfirm(false)}
+                  disabled={isCancelling}
+                  className="flex-1 py-2.5 bg-background border border-border text-white rounded-xl text-sm font-bold hover:bg-muted transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  Go Back
+                </button>
+                <button
+                  onClick={handleCancelSubscription}
+                  disabled={isCancelling}
+                  className="flex-1 py-2.5 bg-danger border border-danger text-white rounded-xl text-sm font-bold hover:bg-danger/80 transition-colors cursor-pointer flex justify-center items-center gap-2 disabled:opacity-50"
+                >
+                  {isCancelling ? 'Cancelling...' : 'Yes, Cancel'}
                 </button>
               </div>
             </div>

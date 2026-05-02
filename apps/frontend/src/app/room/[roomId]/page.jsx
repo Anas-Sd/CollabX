@@ -245,7 +245,7 @@ export default function RoomPage() {
 
     const calculateTimeLeft = () => {
       const now = new Date();
-      const expiration = new Date(expiresAt.endsWith('Z') ? expiresAt : expiresAt + 'Z');
+      const expiration = new Date(process.env.NEXT_PUBLIC_API_BASE_URL?.includes('railway') && !expiresAt.endsWith('Z') ? expiresAt + 'Z' : expiresAt);
       const diffInSeconds = Math.floor((expiration - now) / 1000);
       return diffInSeconds;
     };
@@ -585,18 +585,25 @@ export default function RoomPage() {
           )}
 
           {/* Premium Custom Dropdown */}
-          <div className="relative" ref={langMenuRef}>
+          <div className="relative group/lang" ref={langMenuRef}>
             <button
               onClick={() => (!isActive || isHost) && setShowLangMenu(!showLangMenu)}
               disabled={isActive && !isHost}
               className={`flex items-center justify-between min-w-[140px] px-4 py-2.5 rounded-xl border transition-all text-xs font-bold uppercase
                 ${(!isActive || isHost) ? 'bg-background border-border text-white hover:border-primary/50 cursor-pointer shadow-sm' : 'bg-background/50 border-border/50 text-white/50 cursor-not-allowed'}
               `}
-              title={isActive && !isHost ? "Only the Host can change the language" : ""}
             >
               <span>{language === 'cpp' ? 'C++' : language}</span>
               {(!isActive || isHost) && <ChevronDown size={14} className={`text-muted-foreground transition-transform ${showLangMenu ? 'rotate-180' : ''}`} />}
             </button>
+            {isActive && !isHost && (
+              <div className="absolute top-full right-0 mt-2 w-48 opacity-0 group-hover/lang:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                <div className="bg-card border border-border text-white text-xs p-2 rounded shadow-xl text-center">
+                  Only the Host can change the language
+                </div>
+              </div>
+            )}
+
 
             {showLangMenu && (
               <>

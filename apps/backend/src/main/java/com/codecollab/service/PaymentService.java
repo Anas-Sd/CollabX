@@ -97,4 +97,12 @@ public class PaymentService {
             throw new RuntimeException("Razorpay exception during signature verification", e);
         }
     }
+
+    public void cancelSubscription(String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setSubscriptionType("FREE");
+        user.setSubscriptionExpiresAt(null);
+        userRepository.save(user);
+    }
 }

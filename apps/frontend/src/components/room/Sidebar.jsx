@@ -24,10 +24,10 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
       }
     };
     if (openMenuId !== null) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('mousedown', handleClickOutside, true);
     }
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside, true);
     };
   }, [openMenuId]);
 
