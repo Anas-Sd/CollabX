@@ -44,6 +44,9 @@ public class Submission {
     @Column(name = "executed_at")
     private LocalDateTime executedAt;
 
+    @Column(name = "execution_time_ms")
+    private Long executionTimeMs;
+
     @PrePersist
     protected void onCreate() {
         if (executedAt == null) {

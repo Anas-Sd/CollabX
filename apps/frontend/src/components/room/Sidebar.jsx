@@ -300,12 +300,20 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
 
                     {/* Popover Menu for Host */}
                     {showMenu && (
-                      <div className="absolute right-0 top-10 w-48 bg-card border border-border rounded-lg shadow-xl z-50 overflow-hidden">
+                      <>
+                        <div 
+                          className="fixed inset-0 z-40" 
+                          onClick={() => setOpenMenuId(null)} 
+                        />
+                        <div className="absolute right-0 top-10 w-48 bg-card border border-border rounded-lg shadow-xl z-50 overflow-hidden">
                         <div className="px-3 py-2 border-b border-border text-[10px] font-bold text-muted-foreground tracking-widest uppercase">
                           Manage Options
                         </div>
                         <button
-                          onClick={() => handleRoleChange(p.id, p.role === 'EDITOR' ? 'VIEWER' : 'EDITOR')}
+                          onClick={() => {
+                            handleRoleChange(p.id, p.role === 'EDITOR' ? 'VIEWER' : 'EDITOR');
+                            setOpenMenuId(null);
+                          }}
                           className="w-full cursor-pointer text-left px-3 py-2 text-sm text-white hover:bg-primary/10 hover:text-primary transition-colors"
                         >
                           Set Role to {p.role === 'EDITOR' ? 'Viewer' : 'Editor'}
@@ -342,12 +350,16 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
                           Transfer Host Authority
                         </button>
                         <button
-                          onClick={() => handleKick(p.id)}
+                          onClick={() => {
+                            handleKick(p.id);
+                            setOpenMenuId(null);
+                          }}
                           className="w-full text-left cursor-pointer px-3 py-2 text-sm text-danger hover:bg-danger/10 transition-colors"
                         >
                           Kick from Workspace
                         </button>
                       </div>
+                      </>
                     )}
                   </motion.div>
                 );

@@ -1,0 +1,153 @@
+package com.codecollab.service;
+
+import com.codecollab.dto.request.UpdateProfileRequest;
+import com.codecollab.dto.response.ProfileResponse;
+import com.codecollab.model.Room;
+import com.codecollab.model.RoomMember;
+import com.codecollab.model.Submission;
+import com.codecollab.model.User;
+import com.codecollab.repository.RoomMemberRepository;
+import com.codecollab.repository.RoomRepository;
+import com.codecollab.repository.SubmissionRepository;
+import com.codecollab.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Service
+@RequiredArgsConstructor
+public class ProfileService {
+
+    private final UserRepository userRepository;
+    private final SubmissionRepository submissionRepository;
+    private final RoomRepository roomRepository;
+    private final RoomMemberRepository roomMemberRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public ProfileResponse getUserProfile(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<Submission> submissions = submissionRepository.findByUser(user);
+        List<Room> hostedRooms = roomRepository.findByHost(user);
+        List<RoomMember> joinedRooms = roomMemberRepository.findByUser(user);
+
+        int totalRuns = 0;
+        int totalSubmissions = 0;
+        int passedTestCases = 0;
+        long totalExecutionTime = 0;
+        long fastestRun = Long.MAX_VALUE;
+        Map<String, Integer> languageUsage = new HashMap<>();
+
+        for (Submission sub : submissions) {
+            // Count total runs
+            totalRuns++;
+            
+            // Collect language usage
+            languageUsage.put(sub.getLanguage(), languageUsage.getOrDefault(sub.getLanguage(), 0) + 1);
+
+            // Time calculation
+            long execTime = sub.getExecutionTimeMs() != null ? sub.getExecutionTimeMs() : 0;
+            totalExecutionTime += execTime;
+            if (execTime > 0 && execTime < fastestRun) {
+                fastestRun = execTime;
+            }
+
+            // A submission is considered a 'test case' submission if output has test case results or if it was PASSED/FAILED
+            if ("PASSED".equals(sub.getStatus()) || "FAILED".equals(sub.getStatus())) {
+                totalSubmissions++;
+                if ("PASSED".equals(sub.getStatus())) {
+                    passedTestCases++;
+                }
+            } else if ("SUCCESS".equals(sub.getStatus())) {
+                // If they just ran the code successfully, count it as a run but not necessarily a "test case passed"
+            }
+        }
+
+        double successRate = totalSubmissions > 0 ? ((double) passedTestCases / totalSubmissions) * 100.0 : 0.0;
+        long avgExecutionTime = totalRuns > 0 ? totalExecutionTime / totalRuns : 0;
+        if (fastestRun == Long.MAX_VALUE) fastestRun = 0;
+
+        return ProfileResponse.builder()
+                .name(user.getName())
+                .email(user.getEmail())
+                .profilePicture(user.getProfilePicture())
+                .totalRuns(totalRuns)
+                .totalSubmissions(totalSubmissions)
+                .passedTestCases(passedTestCases)
+                .successRate(successRate)
+                .avgExecutionTime(avgExecutionTime)
+                .fastestRun(fastestRun)
+                .languageUsage(languageUsage)
+                .roomsCreated(hostedRooms.size())
+                .roomsJoined(joinedRooms.size())
+                .sessionsHosted(hostedRooms.size())
+                .build();
+    }
+
+    public ProfileResponse updateProfile(String email, UpdateProfileRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (request.getName() != null && !request.getName().trim().isEmpty()) {
+            user.setName(request.getName().trim());
+        }
+        
+        // Always update if it's explicitly provided. If it's an empty string, treat it as null (removal).
+        if (request.getProfilePicture() != null) {
+            if (request.getProfilePicture().trim().isEmpty()) {
+                user.setProfilePicture(null);
+            } else {
+                user.setProfilePicture(request.getProfilePicture());
+            }
+        }
+
+        userRepository.save(user);
+
+        return getUserProfile(email);
+    }
+
+    @Transactional
+    public void changePassword(String email, com.codecollab.dto.request.ChangePasswordRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
+            throw new RuntimeException("Incorrect current password");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void deleteAccount(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Delete all submissions by this user
+        List<Submission> submissions = submissionRepository.findByUser(user);
+        submissionRepository.deleteAll(submissions);
+
+        // Delete all room memberships for this user
+        List<RoomMember> memberships = roomMemberRepository.findByUser(user);
+        roomMemberRepository.deleteAll(memberships);
+
+        // If user hosted rooms, we should technically delete the rooms or transfer host. Let's delete the rooms they host.
+        List<Room> hostedRooms = roomRepository.findByHost(user);
+        for (Room room : hostedRooms) {
+            submissionRepository.deleteByRoom(room);
+            roomMemberRepository.deleteByRoom(room);
+            // Delete room itself
+            roomRepository.delete(room);
+        }
+
+        // Finally delete the user
+        userRepository.delete(user);
+    }
+}

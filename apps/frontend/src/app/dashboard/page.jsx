@@ -188,18 +188,26 @@ function DashboardContent() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Profile Icon */}
-          <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-sm border border-primary/30">
-             <User size={16} />
-          </div>
+          {/* Profile Icon & Name Bubble */}
+          <div 
+            onClick={() => router.push('/profile')}
+            className="flex items-center gap-3 cursor-pointer group"
+          >
+            <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-sm border border-primary/30 overflow-hidden group-hover:border-primary transition-colors">
+              {user.profilePicture ? (
+                <img src={user.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <User size={16} />
+              )}
+            </div>
 
-          {/* Name Bubble */}
-          <div className="flex items-center gap-2 bg-card border border-border rounded-full py-1.5 px-3">
-            <div className={`w-2 h-2 rounded-full ${isPro ? 'bg-[#F5A524] shadow-[0_0_10px_rgba(245,165,36,0.8)]' : 'bg-success'}`}></div>
-            <span className={`text-sm font-medium ${isPro ? 'text-transparent bg-clip-text bg-gradient-to-r from-[#F5A524] to-[#FFC107] drop-shadow-[0_0_5px_rgba(245,165,36,0.5)]' : 'text-white'}`}>{user.name}</span>
-            <span className={`text-xs px-2 py-0.5 rounded-full uppercase border ${isPro ? 'bg-[#F5A524]/10 text-[#F5A524] border-[#F5A524]/30' : 'bg-muted text-muted-foreground border-border'}`}>
-              {user.subscriptionType || 'FREE'}
-            </span>
+            <div className="flex items-center gap-2 bg-card border border-border rounded-full py-1.5 px-3 group-hover:border-primary/50 transition-colors">
+              <div className={`w-2 h-2 rounded-full ${isPro ? 'bg-[#F5A524] shadow-[0_0_10px_rgba(245,165,36,0.8)]' : 'bg-success'}`}></div>
+              <span className={`text-sm font-medium ${isPro ? 'text-transparent bg-clip-text bg-gradient-to-r from-[#F5A524] to-[#FFC107] drop-shadow-[0_0_5px_rgba(245,165,36,0.5)]' : 'text-white'}`}>{user.name}</span>
+              <span className={`text-xs px-2 py-0.5 rounded-full uppercase border ${isPro ? 'bg-[#F5A524]/10 text-[#F5A524] border-[#F5A524]/30' : 'bg-muted text-muted-foreground border-border'}`}>
+                {user.subscriptionType || 'FREE'}
+              </span>
+            </div>
           </div>
 
           {/* Dashboard Button */}

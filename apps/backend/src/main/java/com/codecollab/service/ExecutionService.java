@@ -8,6 +8,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
+import com.codecollab.model.Submission;
+import com.codecollab.model.Room;
+import com.codecollab.repository.SubmissionRepository;
+import com.codecollab.repository.RoomRepository;
 import com.codecollab.websocket.RoomSocketHandler;
 
 import java.net.URI;
@@ -26,11 +30,18 @@ public class ExecutionService {
 
     private final UserRepository userRepository;
     private final RoomSocketHandler roomSocketHandler;
+    private final SubmissionRepository submissionRepository;
+    private final RoomRepository roomRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public ExecutionService(UserRepository userRepository, @Lazy RoomSocketHandler roomSocketHandler) {
+    public ExecutionService(UserRepository userRepository, 
+                            @Lazy RoomSocketHandler roomSocketHandler,
+                            SubmissionRepository submissionRepository,
+                            RoomRepository roomRepository) {
         this.userRepository = userRepository;
         this.roomSocketHandler = roomSocketHandler;
+        this.submissionRepository = submissionRepository;
+        this.roomRepository = roomRepository;
     }
 
     @Value("${judge0.api-url}")
@@ -62,11 +73,30 @@ public class ExecutionService {
             roomSocketHandler.broadcastToRoom(roomId, "execution.progress", progress);
         }
 
+        ExecutionResult result;
         if ("sql".equalsIgnoreCase(language) && roomId != null) {
-            return executeSqlLocal(code, roomId);
+            result = executeSqlLocal(code, roomId);
+        } else {
+            result = executeCodeInternal(code, language, stdin);
         }
 
-        return executeCodeInternal(code, language, stdin);
+        try {
+            Room room = roomId != null ? roomRepository.findById(roomId).orElse(null) : null;
+            Submission submission = Submission.builder()
+                    .user(userRepository.findByEmail(userEmail).orElse(null))
+                    .room(room)
+                    .code(code)
+                    .language(language)
+                    .output(result.getOutput())
+                    .status(result.getExitCode() == 0 ? "SUCCESS" : "ERROR")
+                    .executionTimeMs(result.getExecutionTimeMs())
+                    .build();
+            submissionRepository.save(submission);
+        } catch (Exception e) {
+            System.err.println("Failed to log execution: " + e.getMessage());
+        }
+
+        return result;
     }
 
     public com.codecollab.dto.response.SubmitCodeResponse submitCode(String userEmail, com.codecollab.dto.request.SubmitCodeRequest request) {
@@ -121,6 +151,23 @@ public class ExecutionService {
             }
 
             boolean allPassed = results.stream().allMatch(com.codecollab.dto.response.TestResultResponse::isPassed);
+
+            try {
+                Room room = request.getRoomId() != null ? roomRepository.findById(request.getRoomId()).orElse(null) : null;
+                long totalTime = results.stream().mapToLong(com.codecollab.dto.response.TestResultResponse::getExecutionTimeMs).sum();
+                Submission submission = Submission.builder()
+                        .user(userRepository.findByEmail(userEmail).orElse(null))
+                        .room(room)
+                        .code(request.getCode())
+                        .language(request.getLanguage())
+                        .output(allPassed ? "All test cases passed" : "Some test cases failed")
+                        .status(allPassed ? "PASSED" : "FAILED")
+                        .executionTimeMs(totalTime)
+                        .build();
+                submissionRepository.save(submission);
+            } catch (Exception e) {
+                System.err.println("Failed to log submission: " + e.getMessage());
+            }
 
             return com.codecollab.dto.response.SubmitCodeResponse.builder()
                     .results(results)

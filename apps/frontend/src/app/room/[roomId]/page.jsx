@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Play, Copy, Check, TerminalSquare, ChevronDown, Clock, Sparkles, Zap } from 'lucide-react';
+import { Play, Copy, Check, TerminalSquare, ChevronDown, Clock, Sparkles, Zap, User } from 'lucide-react';
 import { useRoomStore } from '../../../store/roomStore';
 import { useUserStore } from '../../../store/userStore';
 import { useWebSocket } from '../../../hooks/useWebSocket';

@@ -39,6 +39,9 @@ public class User {
     @Column(name = "subscription_expires_at")
     private LocalDateTime subscriptionExpiresAt;
     
+    @Column(name = "profile_picture", columnDefinition = "TEXT")
+    private String profilePicture;
+    
     @PrePersist
     protected void onCreate() {
         if (subscriptionType == null) {
