@@ -7,10 +7,19 @@ import com.codecollab.model.RoomMember;
 import com.codecollab.model.Submission;
 import com.codecollab.model.User;
 import com.codecollab.repository.RoomMemberRepository;
+import com.codecollab.repository.RoomMemberRepository;
 import com.codecollab.repository.RoomRepository;
 import com.codecollab.repository.SubmissionRepository;
 import com.codecollab.repository.UserRepository;
+import com.codecollab.repository.RoomChatRepository;
+import com.codecollab.repository.RoomLogRepository;
+import com.codecollab.repository.VoicePermissionRepository;
+import com.codecollab.repository.RoomCodeCacheRepository;
+import com.codecollab.repository.RoomTestCaseRepository;
+import com.codecollab.repository.CodeHistoryRepository;
+import com.codecollab.websocket.RoomSocketHandler;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +37,15 @@ public class ProfileService {
     private final RoomRepository roomRepository;
     private final RoomMemberRepository roomMemberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RoomChatRepository roomChatRepository;
+    private final RoomLogRepository roomLogRepository;
+    private final VoicePermissionRepository voicePermissionRepository;
+    private final RoomCodeCacheRepository roomCodeCacheRepository;
+    private final RoomTestCaseRepository roomTestCaseRepository;
+    private final CodeHistoryRepository codeHistoryRepository;
+    
+    @Lazy
+    private final RoomSocketHandler roomSocketHandler;
 
     public ProfileResponse getUserProfile(String email) {
         User user = userRepository.findByEmail(email)
@@ -130,6 +148,11 @@ public class ProfileService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        // Delete direct references to this user
+        roomChatRepository.deleteByUser(user);
+        roomLogRepository.deleteByUser(user);
+        voicePermissionRepository.deleteByUser(user);
+
         // Delete all submissions by this user
         List<Submission> submissions = submissionRepository.findByUser(user);
         submissionRepository.deleteAll(submissions);
@@ -141,8 +164,19 @@ public class ProfileService {
         // If user hosted rooms, we should technically delete the rooms or transfer host. Let's delete the rooms they host.
         List<Room> hostedRooms = roomRepository.findByHost(user);
         for (Room room : hostedRooms) {
+            // Alert any active participants that the room is terminating before we wipe it
+            if (roomSocketHandler != null) {
+                roomSocketHandler.broadcastToRoom(room.getId().toString(), "end", "ROOM_ENDED_BY_HOST");
+            }
+            
             submissionRepository.deleteByRoom(room);
             roomMemberRepository.deleteByRoom(room);
+            roomChatRepository.deleteByRoom(room);
+            roomLogRepository.deleteByRoom(room);
+            voicePermissionRepository.deleteByRoom(room);
+            roomCodeCacheRepository.deleteByRoom(room);
+            roomTestCaseRepository.deleteByRoom(room);
+            codeHistoryRepository.deleteByRoom(room);
             // Delete room itself
             roomRepository.delete(room);
         }

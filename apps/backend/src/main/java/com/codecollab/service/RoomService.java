@@ -544,6 +544,7 @@ public class RoomService {
                     .status("APPROVED")
                     .joinedAt(member.getJoinedAt())
                     .subscriptionType(member.getUser().getSubscriptionType())
+                    .profilePicture(member.getUser().getProfilePicture())
                     .build();
             logActivity(room, requester, "Accepted " + targetUser.getName());
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
@@ -585,6 +586,7 @@ public class RoomService {
                         .status(m.getStatus())
                         .joinedAt(m.getJoinedAt())
                         .subscriptionType(m.getUser().getSubscriptionType())
+                        .profilePicture(m.getUser().getProfilePicture())
                         .build())
                 .collect(Collectors.toList());
 

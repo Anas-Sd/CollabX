@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
   User, Mail, Camera, Activity, Code2, CheckCircle2, 
   Zap, Clock, PlayCircle, Users, LayoutDashboard,
-  Server, ArrowLeft, Trash2, Globe, Settings, Cpu, Terminal
+  Server, ArrowLeft, Trash2, Globe, Settings, Cpu, Terminal,
+  Edit2, Check, X
 } from 'lucide-react';
 import api from '../../lib/api';
 import { useUserStore } from '../../store/userStore';
@@ -40,6 +41,9 @@ function CountUp({ to, duration = 2, decimals = 0 }) {
 
 export default function ProfilePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams?.get('returnUrl') || '/dashboard';
+  const returnText = returnUrl.includes('/room/') ? 'Back to Room' : 'Dashboard';
   const { user, setUser, restoreSession } = useUserStore();
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -52,6 +56,9 @@ export default function ProfilePage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState('');
+  const [savingName, setSavingName] = useState(false);
   
   const fileInputRef = useRef(null);
 
@@ -68,6 +75,7 @@ export default function ProfilePage() {
     try {
       const res = await api.get('/profile');
       setProfileData(res.data);
+      setEditedName(res.data.name);
     } catch (error) {
       console.error('Failed to load profile', error);
       useNotificationStore.getState().addNotification('Failed to load profile data', 'error');
@@ -114,6 +122,27 @@ export default function ProfilePage() {
     } catch (error) {
       console.error('Failed to remove picture', error);
       useNotificationStore.getState().addNotification('Failed to remove profile picture', 'error');
+    }
+  };
+
+  const handleSaveName = async () => {
+    if (!editedName.trim() || editedName === profileData.name) {
+      setIsEditingName(false);
+      setEditedName(profileData.name);
+      return;
+    }
+    setSavingName(true);
+    try {
+      const res = await api.put('/profile', { name: editedName });
+      setProfileData(res.data);
+      setUser({ ...user, name: res.data.name });
+      setIsEditingName(false);
+      useNotificationStore.getState().addNotification('Profile name updated!', 'success');
+    } catch (error) {
+      console.error('Failed to update name', error);
+      useNotificationStore.getState().addNotification('Failed to update name', 'error');
+    } finally {
+      setSavingName(false);
     }
   };
 
@@ -232,11 +261,11 @@ export default function ProfilePage() {
 
         {/* Return Button */}
         <button 
-          onClick={() => router.push('/dashboard')}
+          onClick={() => router.push(returnUrl)}
           className="absolute top-8 left-8 flex items-center gap-3 text-white/50 hover:text-white transition-colors group z-50 cursor-pointer bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10"
         >
           <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-          <span className="font-bold tracking-widest text-[10px] uppercase">Dashboard</span>
+          <span className="font-bold tracking-widest text-[10px] uppercase">{returnText}</span>
         </button>
       </div>
 
@@ -258,24 +287,30 @@ export default function ProfilePage() {
               <div className="relative z-10">
                 {/* Avatar */}
                 <div className="relative cursor-pointer group/container shrink-0 mb-8 w-fit" onClick={() => fileInputRef.current?.click()}>
-                  <div className="w-32 h-32 rounded-3xl border-2 border-white/10 overflow-hidden bg-[#12121A] flex items-center justify-center relative z-10 shadow-2xl transition-transform duration-500 group-hover/container:scale-105 group-hover/container:rotate-3">
+                  <div className="w-32 h-32 rounded-2xl border-2 border-white/10 overflow-hidden bg-[#12121A] relative z-10 shadow-2xl transition-transform duration-500 group-hover/container:scale-105">
                     {profileData.profilePicture ? (
                       <>
-                        <img src={profileData.profilePicture} alt="Profile" className="w-full h-full object-cover" />
-                        <div 
-                          className="absolute inset-0 bg-black/60 opacity-0 group-hover/container:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm"
-                          onClick={handleRemoveImage} title="Remove Profile Picture"
-                        >
-                          <Trash2 size={28} className="text-danger hover:text-danger/80 transition-colors cursor-pointer" />
+                        <img src={profileData.profilePicture} alt="Profile" className="absolute inset-0 w-full h-full object-cover rounded-2xl" />
+                        <div className="tooltip absolute inset-0 w-full h-full">
+                          <div 
+                            className="absolute inset-0 bg-black/60 opacity-0 group-hover/container:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm rounded-2xl"
+                            onClick={(e) => { e.stopPropagation(); handleRemoveImage(e); }}
+                          >
+                            <Trash2 size={28} className="text-danger hover:text-danger/80 transition-colors cursor-pointer" />
+                          </div>
+                          <div className="tooltip-content z-50 mb-2">
+                            <div className="tooltip-box">Remove Profile Picture</div>
+                            <div className="tooltip-arrow"></div>
+                          </div>
                         </div>
                       </>
                     ) : (
-                      <>
+                      <div className="absolute inset-0 flex items-center justify-center">
                         <User size={48} className="text-white/20" />
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/container:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/container:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm rounded-2xl">
                           <Camera size={24} className="text-white" />
                         </div>
-                      </>
+                      </div>
                     )}
                   </div>
                   {!profileData.profilePicture && (
@@ -291,7 +326,34 @@ export default function ProfilePage() {
                   <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
                 </div>
 
-                <h1 className="text-4xl font-black tracking-tight text-white mb-2">{profileData.name}</h1>
+                <div className="flex justify-center mb-2 h-12">
+                  {isEditingName ? (
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="text" 
+                        value={editedName} 
+                        onChange={(e) => setEditedName(e.target.value)} 
+                        autoFocus
+                        onKeyDown={(e) => { if (e.key === 'Enter') handleSaveName(); if (e.key === 'Escape') { setIsEditingName(false); setEditedName(profileData.name); } }}
+                        className="bg-[#1A1A24] border border-primary/50 text-white text-2xl md:text-3xl font-black tracking-tight rounded-xl px-4 py-1 w-48 md:w-64 text-center focus:outline-none focus:border-primary transition-colors"
+                      />
+                      <button onClick={handleSaveName} disabled={savingName} className="p-2 bg-primary rounded-xl text-black hover:bg-primary/80 transition-colors cursor-pointer disabled:opacity-50">
+                        {savingName ? <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" /> : <Check size={20} />}
+                      </button>
+                      <button onClick={() => {setIsEditingName(false); setEditedName(profileData.name);}} className="p-2 bg-white/10 rounded-xl text-white hover:bg-white/20 transition-colors cursor-pointer">
+                        <X size={20} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3 group/edit">
+                      <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white">{profileData.name}</h1>
+                      <button onClick={() => setIsEditingName(true)} className="text-white/0 group-hover/edit:text-white/50 hover:!text-white transition-colors cursor-pointer">
+                        <Edit2 size={20} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+                
                 <div className="flex flex-col gap-4">
                   <div className="flex items-center gap-2 text-white/40">
                     <Mail size={16} />
@@ -316,17 +378,17 @@ export default function ProfilePage() {
               </h2>
               <div className="space-y-3">
                 <div className="flex justify-between items-center bg-[#12121A] p-4 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
-                  <span className="text-[11px] font-bold tracking-widest text-white/50 uppercase">Rooms Created</span>
+                  <span className="text-[11px] font-bold tracking-widest text-white/50 uppercase">Rooms Created / Hosted</span>
                   <span className="text-xl font-black text-white"><CountUp to={profileData.roomsCreated} /></span>
                 </div>
                 <div className="flex justify-between items-center bg-[#12121A] p-4 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
                   <span className="text-[11px] font-bold tracking-widest text-white/50 uppercase">Rooms Joined</span>
                   <span className="text-xl font-black text-white"><CountUp to={profileData.roomsJoined} /></span>
                 </div>
-                <div className="flex justify-between items-center bg-[#12121A] p-4 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
+                {/* <div className="flex justify-between items-center bg-[#12121A] p-4 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
                   <span className="text-[11px] font-bold tracking-widest text-white/50 uppercase">Sessions Hosted</span>
                   <span className="text-xl font-black text-white"><CountUp to={profileData.sessionsHosted} /></span>
-                </div>
+                </div> */}
               </div>
             </motion.div>
 

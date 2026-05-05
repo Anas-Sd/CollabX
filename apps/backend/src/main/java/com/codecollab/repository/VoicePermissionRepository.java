@@ -15,4 +15,5 @@ public interface VoicePermissionRepository extends JpaRepository<VoicePermission
     Optional<VoicePermission> findByRoomAndUser(Room room, User user);
     List<VoicePermission> findByRoom(Room room);
     void deleteByRoom(Room room);
+    void deleteByUser(User user);
 }

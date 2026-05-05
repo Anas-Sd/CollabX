@@ -14,4 +14,5 @@ public class RoomMemberResponse {
     private String status;
     private LocalDateTime joinedAt;
     private String subscriptionType;
+    private String profilePicture;
 }

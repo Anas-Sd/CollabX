@@ -9,4 +9,5 @@ import java.util.List;
 public interface RoomLogRepository extends JpaRepository<RoomLog, String> {
     List<RoomLog> findByRoomOrderByCreatedAtAsc(Room room);
     void deleteByRoom(Room room);
+    void deleteByUser(com.codecollab.model.User user);
 }

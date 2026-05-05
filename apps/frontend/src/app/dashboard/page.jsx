@@ -190,15 +190,11 @@ function DashboardContent() {
         <div className="flex items-center gap-3">
           {/* Profile Icon & Name Bubble */}
           <div 
-            onClick={() => router.push('/profile')}
+            onClick={() => router.push('/profile?returnUrl=/dashboard')}
             className="flex items-center gap-3 cursor-pointer group"
           >
-            <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-sm border border-primary/30 overflow-hidden group-hover:border-primary transition-colors">
-              {user.profilePicture ? (
-                <img src={user.profilePicture} alt="Profile" className="w-full h-full object-cover" />
-              ) : (
-                <User size={16} />
-              )}
+            <div className="w-8 h-8 rounded-full w-9 text-white/50 h-9 bg-primary/20 hover:text-white flex items-center justify-center font-bold text-sm border border-primary/30 overflow-hidden group-hover:border-primary transition-colors">
+              <User size={18} />
             </div>
 
             <div className="flex items-center gap-2 bg-card border border-border rounded-full py-1.5 px-3 group-hover:border-primary/50 transition-colors">

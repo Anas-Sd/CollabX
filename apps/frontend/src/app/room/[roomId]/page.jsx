@@ -520,6 +520,19 @@ export default function RoomPage() {
       {/* Header Island (Full Width) */}
       <div className="h-16 rounded-2xl border border-border flex items-center justify-between px-6 bg-card shrink-0 shadow-sm backdrop-blur-md bg-card/90 relative z-20">
         <div className="flex items-center gap-6">
+          <div className="tooltip">
+            <button
+              onClick={() => router.push(`/profile?returnUrl=/room/${roomId}`)}
+              className="p-2 cursor-pointer rounded-full w-9 text-white/50 h-9 bg-primary/20 text-muted-foreground hover:text-white transition-colors"
+            >
+              <User size={20} />
+            </button>
+            <div className="tooltip-content z-50">  
+              <div className="tooltip-box">View Profile</div>
+              <div className="tooltip-arrow"></div>
+            </div>
+          </div>
+
           <div className="flex flex-col justify-center">
             <span className="text-sm font-bold text-white leading-tight">{roomName || 'Untitled Workspace'}</span>
             <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-mono mt-0.5">

@@ -203,18 +203,20 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
                   >
                     End Room
                   </button>
-                  <button
-                    onClick={() => openConfirm(
-                      "Host Transfer Required",
-                      "You are the host. Please transfer host privileges to another member before leaving.",
-                      "Got it",
-                      () => setConfirmModalConfig(prev => ({ ...prev, isOpen: false })),
-                      true
-                    )}
-                    className="w-full py-2 cursor-pointer bg-background border border-border text-white rounded-lg text-sm font-bold hover:bg-muted transition-colors"
-                  >
-                    Leave Room
-                  </button>
+                  {activeParticipants.length > 1 && (
+                    <button
+                      onClick={() => openConfirm(
+                        "Host Transfer Required",
+                        "You are the host. Please transfer host privileges to another member before leaving.",
+                        "Got it",
+                        () => setConfirmModalConfig(prev => ({ ...prev, isOpen: false })),
+                        true
+                      )}
+                      className="w-full py-2 cursor-pointer bg-background border border-border text-white rounded-lg text-sm font-bold hover:bg-muted transition-colors"
+                    >
+                      Leave Room
+                    </button>
+                  )}
                 </div>
               ) : (
                 <button
@@ -257,7 +259,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-sm relative">
                         {p.name.charAt(0).toUpperCase()}
-                        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-success border-2 border-card rounded-full"></div>
+                        <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-success border-2 border-card rounded-full z-10"></div>
                       </div>
                       <div className="flex flex-col">
                         <span className={`text-sm font-bold ${p.subscriptionType?.toUpperCase() === 'PRO' ? 'text-transparent bg-clip-text bg-gradient-to-r from-[#F5A623] to-[#FFC107] drop-shadow-[0_0_8px_rgba(245,166,35,0.8)]' : 'text-white'}`}>
