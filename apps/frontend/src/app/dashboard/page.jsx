@@ -172,54 +172,57 @@ function DashboardContent() {
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
       className="min-h-screen bg-background"
     >
       {/* Top Bar */}
-      <header className="h-16 border-b border-border px-8 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-white text-2xl">
-          <div className="flex items-center tracking-tighter relative cursor-pointer" onClick={() => router.push('/')}>
-            <span className="font-black mr-2 text-white relative z-10">Collab</span>
-            <span className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-[#FFC107] to-[#F5A623] drop-shadow-[0_0_10px_rgba(245,166,35,0.4)] relative z-0 -ml-2">X</span>
-          </div>
-        </div>
+      <header className="h-16 border-b border-border px-8 flex items-center justify-between relative">
 
+        {/* Left Side: Profile Icon & Dashboard Button */}
         <div className="flex items-center gap-3">
-          {/* Profile Icon & Name Bubble */}
-          <div 
+          <div
             onClick={() => router.push('/profile?returnUrl=/dashboard')}
-            className="flex items-center gap-3 cursor-pointer group"
+            className="flex items-center cursor-pointer group"
           >
-            <div className="w-8 h-8 rounded-full w-9 text-white/50 h-9 bg-primary/20 hover:text-white flex items-center justify-center font-bold text-sm border border-primary/30 overflow-hidden group-hover:border-primary transition-colors">
+            <div className="w-10 h-10 rounded-full text-black bg-yellow-500 hover:brightness-110 flex items-center justify-center font-bold text-sm border border-primary/30 overflow-hidden group-hover:border-primary transition-colors">
               <User size={18} />
-            </div>
-
-            <div className="flex items-center gap-2 bg-card border border-border rounded-full py-1.5 px-3 group-hover:border-primary/50 transition-colors">
-              <div className={`w-2 h-2 rounded-full ${isPro ? 'bg-[#F5A524] shadow-[0_0_10px_rgba(245,165,36,0.8)]' : 'bg-success'}`}></div>
-              <span className={`text-sm font-medium ${isPro ? 'text-transparent bg-clip-text bg-gradient-to-r from-[#F5A524] to-[#FFC107] drop-shadow-[0_0_5px_rgba(245,165,36,0.5)]' : 'text-white'}`}>{user.name}</span>
-              <span className={`text-xs px-2 py-0.5 rounded-full uppercase border ${isPro ? 'bg-[#F5A524]/10 text-[#F5A524] border-[#F5A524]/30' : 'bg-muted text-muted-foreground border-border'}`}>
-                {user.subscriptionType || 'FREE'}
-              </span>
             </div>
           </div>
 
           {/* Dashboard Button */}
           <button
-            onClick={() => router.push('/dashboard')}
-            className="p-2.5 text-muted-foreground hover:text-primary transition-colors rounded-lg hover:bg-primary/10 border border-transparent"
-            title="Dashboard"
+            onClick={() => router.push('/')}
+            className="h-9 px-4 rounded-xl bg-yellow-500 hover:brightness-110 text-black flex items-center justify-center font-extrabold text-sm tracking-wider cursor-pointer gap-2 transition-colors border border-transparent"
           >
-            <LayoutDashboard size={18} />
+            <LayoutDashboard size={16} />
+            Dashboard
           </button>
+        </div>
 
-          {/* Logout Button */}
+        {/* Center: CollabX Logo */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 text-white text-2xl">
+          <div className="flex items-center tracking-tighter cursor-pointer hover:opacity-80 transition-opacity" onClick={() => router.push('/')}>
+            <span className="font-black mr-2 text-white relative z-10">Collab</span>
+            <span className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-[#FFC107] to-[#F5A623] drop-shadow-[0_0_10px_rgba(245,166,35,0.4)] relative z-0 -ml-2">X</span>
+          </div>
+        </div>
+
+        {/* Right Side: User Name/Badge & Logout */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 bg-card border border-border rounded-full py-1.5 px-3 transition-colors hover:border-primary/50 cursor-default">
+            <div className={`w-2 h-2 rounded-full ${isPro ? 'bg-[#F5A524] shadow-[0_0_10px_rgba(245,165,36,0.8)]' : 'bg-success'}`}></div>
+            <span className={`text-sm font-medium ${isPro ? 'text-transparent bg-clip-text bg-gradient-to-r from-[#F5A524] to-[#FFC107] drop-shadow-[0_0_5px_rgba(245,165,36,0.5)]' : 'text-white'}`}>{user.name}</span>
+            <span className={`text-xs px-2 py-0.5 rounded-full uppercase border ${isPro ? 'bg-[#F5A524]/10 text-[#F5A524] border-[#F5A524]/30' : 'bg-muted text-muted-foreground border-border'}`}>
+              {user.subscriptionType || 'FREE'}
+            </span>
+          </div>
+
           <button
             onClick={logout}
-            className="p-2.5 text-danger/70 hover:text-danger transition-colors rounded-lg hover:bg-danger/10 border border-transparent"
-            title="Logout"
+            className="p-2.5 text-danger/70 cursor-pointer hover:text-red-400 transition-colors rounded-lg hover:bg-danger/40 border border-transparent flex-shrink-0"
           >
             <LogOut size={18} />
           </button>
@@ -230,7 +233,9 @@ function DashboardContent() {
       <main className="flex-1 max-w-[1400px] w-full mx-auto px-6 py-10 flex flex-col gap-10 relative z-10">
         {/* Header Section */}
         <div>
-          <h2 className="text-3xl font-extrabold tracking-tight text-white mb-2">Overview</h2>
+          <h2 className="text-3xl font-extrabold tracking-tight text-white mb-2 flex items-center gap-3">
+            <LayoutDashboard className="w-8 h-8 text-primary" /> Overview
+          </h2>
           <p className="text-[#8B8B9E] font-medium text-sm">Manage your collaborative workspaces and active sessions globally.</p>
         </div>
 
@@ -338,15 +343,15 @@ function DashboardContent() {
           {isPro ? (
             <div className="bg-card border border-[#F5A524]/50 rounded-2xl p-6 flex flex-col relative overflow-hidden transition-all duration-500 group hover:shadow-[0_0_20px_rgba(245,165,36,0.5)] origin-left hover:!transform-none" style={{ transform: 'rotateY(-10deg)', transformStyle: 'preserve-3d' }}>
               <div className="absolute inset-0 bg-gradient-to-br from-[#F5A623]/20 via-[#F5A623]/5 to-transparent z-0"></div>
-              
+
               <div className="absolute top-0 right-0 p-4 opacity-30 group-hover:rotate-12 group-hover:scale-125 transition-transform duration-700 pointer-events-none">
                 <Sparkles className="w-24 h-24 text-[#F5A524]" />
               </div>
               <Crown className="absolute -bottom-10 -right-5 w-48 h-48 text-[#F5A524] opacity-10 -rotate-12 pointer-events-none group-hover:rotate-0 transition-transform duration-700" />
-              
+
               <div className="relative z-10 h-full flex flex-col">
                 <div className="flex justify-between items-start mb-6">
-                  <div className="w-12 h-12 rounded-2xl bg-[#F5A524]/10 border border-[#F5A524]/30 flex items-center justify-center mb-5 text-[#F5A524] shadow-[0_0_20px_rgba(245,165,36,0.2)] hover:shadow-[0_0_20px_rgba(245,165,36,0.5)]">
+                  <div className="w-12 h-12 rounded-2xl bg-[#F5A524]/10 border border-[#F5A524]/30 flex items-center justify-center mb-5 text-[#F5A524] shadow-[0_0_20px_rgba(245,165,36,0.2)] group-hover:shadow-[0_0_20px_rgba(245,165,36,0.5)] group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
                     <Crown className="w-6 h-6" />
                   </div>
                   <span className="px-3 py-1 bg-transparent rounded-full bg-[#F5A524]/20 border border-[#F5A524]/40 text-xs font-bold text-[#F5A524] uppercase shadow-[0_0_10px_rgba(245,165,36,0.3)]">
@@ -376,7 +381,7 @@ function DashboardContent() {
                     <Crown className="absolute -bottom-10 -right-5 w-48 h-48 text-[#F5A524] opacity-5 -rotate-12 pointer-events-none group-hover:rotate-0 transition-transform duration-700" />
                   </>
 
-                  <div className="w-12 h-12 rounded-2xl bg-[#151520] border border-white/10 flex items-center justify-center mb-5 text-[#F5A524] shadow-[0_0_20px_rgba(245,165,36,0.1)] group-hover:bg-[#F5A524]/10 transition-all z-10 relative">
+                  <div className="w-12 h-12 rounded-2xl bg-[#151520] border border-white/10 flex items-center justify-center mb-5 text-[#F5A524] shadow-[0_0_20px_rgba(245,165,36,0.1)] group-hover:bg-[#F5A524]/10 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 z-10 relative">
                     <Crown className="w-6 h-6" />
                   </div>
                   <span className="px-3 py-1 rounded-full bg-background border border-border text-xs font-bold text-muted-foreground uppercase">
@@ -406,7 +411,7 @@ function DashboardContent() {
         </div>
 
         {recentRooms.length > 0 ? (
-          <motion.div 
+          <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="show"
@@ -440,10 +445,10 @@ function DashboardContent() {
               }
 
               return (
-                <motion.div 
+                <motion.div
                   variants={itemVariants}
-                  key={room.id} 
-                  className={`group bg-gradient-to-b from-[#1C1C24] to-[#0A0A0F] border border-[#2A2A35] rounded-[24px] p-1.5 hover:border-primary/50 transition-all duration-500 hover:shadow-[0_15px_40px_-10px_rgba(108,99,255,0.25)] relative overflow-hidden flex flex-col hover:-translate-y-2 ${room.isActive ? 'cursor-pointer' : ''}`} 
+                  key={room.id}
+                  className={`group bg-gradient-to-b from-[#1C1C24] to-[#0A0A0F] border border-[#2A2A35] rounded-[24px] p-1.5 hover:border-primary/50 transition-all duration-500 hover:shadow-[0_15px_40px_-10px_rgba(108,99,255,0.25)] relative overflow-hidden flex flex-col hover:-translate-y-2 ${room.isActive ? 'cursor-pointer' : ''}`}
                   onClick={() => room.isActive && router.push(`/room/${room.id}`)}
                 >
                   <div className="relative h-full w-full bg-[#0F0F16] rounded-[18px] p-6 flex flex-col overflow-hidden z-10">
@@ -456,8 +461,8 @@ function DashboardContent() {
                       <div className="flex flex-col gap-1 w-[80%]">
                         <div className="flex items-center gap-2 mb-1">
                           <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-[9px] font-black uppercase tracking-widest shadow-sm ${room.isActive
-                              ? 'bg-success/10 border-success/30 text-success shadow-[0_0_10px_rgba(34,197,94,0.2)]'
-                              : 'bg-danger/10 border-danger/30 text-danger shadow-[0_0_10px_rgba(239,68,68,0.2)]'
+                            ? 'bg-success/10 border-success/30 text-success shadow-[0_0_10px_rgba(34,197,94,0.2)]'
+                            : 'bg-danger/10 border-danger/30 text-danger shadow-[0_0_10px_rgba(239,68,68,0.2)]'
                             }`}>
                             <div className={`w-1.5 h-1.5 rounded-full ${room.isActive ? 'bg-success animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.8)]' : 'bg-danger shadow-[0_0_8px_rgba(239,68,68,0.8)]'}`} />
                             {room.isActive ? 'LIVE' : 'ENDED'}
@@ -479,7 +484,7 @@ function DashboardContent() {
                       <button
                         onClick={(e) => handleDeleteHistoryClick(e, room.id)}
                         className="text-[#8B8B9E] hover:text-danger hover:bg-danger/10 p-2 rounded-xl transition-all cursor-pointer z-20 border border-transparent hover:border-danger/20 hover:shadow-[0_0_15px_rgba(239,68,68,0.15)]"
-                        // title="Delete from history"
+                      // title="Delete from history"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -551,89 +556,89 @@ function DashboardContent() {
         )}
       </main>
 
-        {/* Modals */}
-        <CreateRoomModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
+      {/* Modals */}
+      <CreateRoomModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
 
-        {/* Alert Modal */}
-        {alertModalConfig.isOpen && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="bg-card w-full max-w-sm rounded-2xl border border-border shadow-2xl p-6 relative flex flex-col items-center text-center">
-              <div className="w-12 h-12 rounded-full bg-danger/10 text-danger flex items-center justify-center mb-4">
-                <AlertTriangle size={24} />
-              </div>
-              <h2 className="text-xl font-bold text-white mb-2">{alertModalConfig.title}</h2>
-              <p className="text-sm text-muted-foreground mb-6">{alertModalConfig.message}</p>
+      {/* Alert Modal */}
+      {alertModalConfig.isOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-card w-full max-w-sm rounded-2xl border border-border shadow-2xl p-6 relative flex flex-col items-center text-center">
+            <div className="w-12 h-12 rounded-full bg-danger/10 text-danger flex items-center justify-center mb-4">
+              <AlertTriangle size={24} />
+            </div>
+            <h2 className="text-xl font-bold text-white mb-2">{alertModalConfig.title}</h2>
+            <p className="text-sm text-muted-foreground mb-6">{alertModalConfig.message}</p>
+            <button
+              onClick={() => {
+                setAlertModalConfig({ isOpen: false, title: '', message: '' });
+                localStorage.removeItem('dashboardAlert');
+              }}
+              className="w-full py-2.5 bg-background border border-border text-white rounded-xl text-sm font-bold hover:bg-muted transition-colors cursor-pointer"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirm Modal */}
+      {deleteConfirm.isOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-card w-full max-w-sm rounded-2xl border border-danger/30 shadow-[0_0_30px_-5px_rgba(239,68,68,0.3)] p-6 relative flex flex-col items-center text-center">
+            <div className="w-12 h-12 rounded-full bg-danger/10 text-danger flex items-center justify-center mb-4">
+              <Trash2 size={24} />
+            </div>
+            <h2 className="text-xl font-bold text-white mb-2">Delete Session?</h2>
+            <p className="text-sm text-muted-foreground mb-6">Are you sure you want to delete this session from your history? The data in this will be permanently deleted.</p>
+            <div className="flex gap-3 w-full">
               <button
-                onClick={() => {
-                  setAlertModalConfig({ isOpen: false, title: '', message: '' });
-                  localStorage.removeItem('dashboardAlert');
-                }}
-                className="w-full py-2.5 bg-background border border-border text-white rounded-xl text-sm font-bold hover:bg-muted transition-colors cursor-pointer"
+                onClick={() => setDeleteConfirm({ isOpen: false, roomId: null })}
+                className="flex-1 py-2.5 bg-background border border-border text-white rounded-xl text-sm font-bold hover:bg-muted transition-colors cursor-pointer"
               >
-                Close
+                Cancel
+              </button>
+              <button
+                onClick={executeDeleteHistory}
+                className="flex-1 py-2.5 bg-danger border border-danger text-white rounded-xl text-sm font-bold hover:bg-danger/80 transition-colors cursor-pointer"
+              >
+                Delete
               </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Delete Confirm Modal */}
-        {deleteConfirm.isOpen && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="bg-card w-full max-w-sm rounded-2xl border border-danger/30 shadow-[0_0_30px_-5px_rgba(239,68,68,0.3)] p-6 relative flex flex-col items-center text-center">
-              <div className="w-12 h-12 rounded-full bg-danger/10 text-danger flex items-center justify-center mb-4">
-                <Trash2 size={24} />
-              </div>
-              <h2 className="text-xl font-bold text-white mb-2">Delete Session?</h2>
-              <p className="text-sm text-muted-foreground mb-6">Are you sure you want to delete this session from your history? The data in this will be permanently deleted.</p>
-              <div className="flex gap-3 w-full">
-                <button
-                  onClick={() => setDeleteConfirm({ isOpen: false, roomId: null })}
-                  className="flex-1 py-2.5 bg-background border border-border text-white rounded-xl text-sm font-bold hover:bg-muted transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={executeDeleteHistory}
-                  className="flex-1 py-2.5 bg-danger border border-danger text-white rounded-xl text-sm font-bold hover:bg-danger/80 transition-colors cursor-pointer"
-                >
-                  Delete
-                </button>
-              </div>
+      {/* Cancel Subscription Confirm Modal */}
+      {cancelConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-card w-full max-w-sm rounded-2xl border border-danger/30 shadow-[0_0_30px_-5px_rgba(239,68,68,0.3)] p-6 relative flex flex-col items-center text-center">
+            <div className="w-12 h-12 rounded-full bg-danger/10 text-danger flex items-center justify-center mb-4">
+              <AlertTriangle size={24} />
+            </div>
+            <h2 className="text-xl font-bold text-white mb-2">Cancel Subscription?</h2>
+            <p className="text-sm text-muted-foreground mb-6">Are you sure you want to cancel your PRO subscription? <strong>This will not refund any previous payments</strong> and your account will immediately be downgraded to the Free tier.</p>
+            <div className="flex gap-3 w-full">
+              <button
+                onClick={() => setCancelConfirm(false)}
+                disabled={isCancelling}
+                className="flex-1 py-2.5 bg-background border border-border text-white rounded-xl text-sm font-bold hover:bg-muted transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Go Back
+              </button>
+              <button
+                onClick={handleCancelSubscription}
+                disabled={isCancelling}
+                className="flex-1 py-2.5 bg-danger border border-danger text-white rounded-xl text-sm font-bold hover:bg-danger/80 transition-colors cursor-pointer flex justify-center items-center gap-2 disabled:opacity-50"
+              >
+                {isCancelling ? 'Cancelling...' : 'Yes, Cancel'}
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Cancel Subscription Confirm Modal */}
-        {cancelConfirm && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="bg-card w-full max-w-sm rounded-2xl border border-danger/30 shadow-[0_0_30px_-5px_rgba(239,68,68,0.3)] p-6 relative flex flex-col items-center text-center">
-              <div className="w-12 h-12 rounded-full bg-danger/10 text-danger flex items-center justify-center mb-4">
-                <AlertTriangle size={24} />
-              </div>
-              <h2 className="text-xl font-bold text-white mb-2">Cancel Subscription?</h2>
-              <p className="text-sm text-muted-foreground mb-6">Are you sure you want to cancel your PRO subscription? <strong>This will not refund any previous payments</strong> and your account will immediately be downgraded to the Free tier.</p>
-              <div className="flex gap-3 w-full">
-                <button
-                  onClick={() => setCancelConfirm(false)}
-                  disabled={isCancelling}
-                  className="flex-1 py-2.5 bg-background border border-border text-white rounded-xl text-sm font-bold hover:bg-muted transition-colors cursor-pointer disabled:opacity-50"
-                >
-                  Go Back
-                </button>
-                <button
-                  onClick={handleCancelSubscription}
-                  disabled={isCancelling}
-                  className="flex-1 py-2.5 bg-danger border border-danger text-white rounded-xl text-sm font-bold hover:bg-danger/80 transition-colors cursor-pointer flex justify-center items-center gap-2 disabled:opacity-50"
-                >
-                  {isCancelling ? 'Cancelling...' : 'Yes, Cancel'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <ProUpgradeModal isOpen={isProModalOpen} onClose={() => setIsProModalOpen(false)} />
-      </motion.div>
+      <ProUpgradeModal isOpen={isProModalOpen} onClose={() => setIsProModalOpen(false)} />
+    </motion.div>
   );
 }
 

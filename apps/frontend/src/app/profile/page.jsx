@@ -7,7 +7,7 @@ import {
   User, Mail, Camera, Activity, Code2, CheckCircle2, 
   Zap, Clock, PlayCircle, Users, LayoutDashboard,
   Server, ArrowLeft, Trash2, Globe, Settings, Cpu, Terminal,
-  Edit2, Check, X
+  Edit2, Check, X, Eye, EyeOff
 } from 'lucide-react';
 import api from '../../lib/api';
 import { useUserStore } from '../../store/userStore';
@@ -52,6 +52,7 @@ export default function ProfilePage() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState({ current: false, new: false, confirm: false });
   const [isDeleting, setIsDeleting] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -148,6 +149,14 @@ export default function ProfilePage() {
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      useNotificationStore.getState().addNotification('Please fill in all password fields.', 'warning');
+      return;
+    }
+    if (newPassword.length < 6) {
+      useNotificationStore.getState().addNotification('New password must be at least 6 characters.', 'warning');
+      return;
+    }
     if (newPassword !== confirmPassword) {
       useNotificationStore.getState().addNotification('New passwords do not match', 'warning');
       return;
@@ -159,6 +168,7 @@ export default function ProfilePage() {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
+      setShowPassword({ current: false, new: false, confirm: false });
     } catch (error) {
       useNotificationStore.getState().addNotification(error.response?.data || 'Failed to change password', 'error');
     }
@@ -326,7 +336,7 @@ export default function ProfilePage() {
                   <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
                 </div>
 
-                <div className="flex justify-center mb-2 h-12">
+                <div className="flex mb-2 h-12">
                   {isEditingName ? (
                     <div className="flex items-center gap-2">
                       <input 
@@ -559,25 +569,34 @@ export default function ProfilePage() {
               className="relative w-full max-w-md bg-[#12121A] border border-border rounded-2xl shadow-2xl p-6"
             >
               <h2 className="text-xl font-bold mb-4">Change Password</h2>
-              <form onSubmit={handleChangePassword} className="space-y-4">
-                <div>
+              <form onSubmit={handleChangePassword} noValidate className="space-y-4">
+                <div className="relative">
                   <label className="block text-sm text-muted-foreground mb-1">Current Password</label>
-                  <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required
-                    className="w-full bg-[#1A1A24] border border-border rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary transition-colors" />
+                  <input type={showPassword.current ? "text" : "password"} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required
+                    className="w-full bg-[#1A1A24] border border-border rounded-lg px-4 py-2 pr-10 text-white focus:outline-none focus:border-primary transition-colors" />
+                  <button type="button" onClick={() => setShowPassword({ ...showPassword, current: !showPassword.current })} className="absolute right-3 top-8 text-muted-foreground hover:text-white transition-colors cursor-pointer">
+                    {showPassword.current ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
-                <div>
+                <div className="relative">
                   <label className="block text-sm text-muted-foreground mb-1">New Password</label>
-                  <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required minLength={6}
-                    className="w-full bg-[#1A1A24] border border-border rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary transition-colors" />
+                  <input type={showPassword.new ? "text" : "password"} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required minLength={6}
+                    className="w-full bg-[#1A1A24] border border-border rounded-lg px-4 py-2 pr-10 text-white focus:outline-none focus:border-primary transition-colors" />
+                  <button type="button" onClick={() => setShowPassword({ ...showPassword, new: !showPassword.new })} className="absolute right-3 top-8 text-muted-foreground hover:text-white transition-colors cursor-pointer">
+                    {showPassword.new ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
-                <div>
+                <div className="relative">
                   <label className="block text-sm text-muted-foreground mb-1">Confirm New Password</label>
-                  <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6}
-                    className="w-full bg-[#1A1A24] border border-border rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary transition-colors" />
+                  <input type={showPassword.confirm ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6}
+                    className="w-full bg-[#1A1A24] border border-border rounded-lg px-4 py-2 pr-10 text-white focus:outline-none focus:border-primary transition-colors" />
+                  <button type="button" onClick={() => setShowPassword({ ...showPassword, confirm: !showPassword.confirm })} className="absolute right-3 top-8 text-muted-foreground hover:text-white transition-colors cursor-pointer">
+                    {showPassword.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
                 <div className="flex justify-end gap-3 mt-6">
-                  <button type="button" onClick={() => setShowPasswordModal(false)} className="px-4 py-2 rounded-lg font-bold text-muted-foreground hover:text-white transition-colors">Cancel</button>
-                  <button type="submit" className="px-4 py-2 rounded-lg font-bold bg-primary text-black hover:bg-primary/90 transition-colors">Save Password</button>
+                  <button type="button" onClick={() => setShowPasswordModal(false)} className="px-4 py-2 rounded-lg font-bold text-muted-foreground hover:text-white transition-colors cursor-pointer">Cancel</button>
+                  <button type="submit" className="px-4 py-2 rounded-lg font-bold bg-primary text-black hover:bg-primary/90 transition-colors cursor-pointer hover:text-white">Save Password</button>
                 </div>
               </form>
             </motion.div>
@@ -619,7 +638,7 @@ export default function ProfilePage() {
                   type="button" 
                   onClick={handleDeleteAccount}
                   disabled={deleteConfirmationText !== 'DELETE'}
-                  className="px-5 py-2 rounded-xl font-bold bg-danger text-white hover:bg-danger/80 disabled:opacity-50 transition-colors cursor-pointer"
+                  className="px-5 py-2 rounded-xl font-bold bg-danger text-white hover:bg-danger/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                 >
                   Permanently Delete
                 </button>
