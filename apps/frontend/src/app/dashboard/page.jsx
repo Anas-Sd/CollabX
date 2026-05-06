@@ -40,6 +40,7 @@ function DashboardContent() {
     restoreSession();
   }, [restoreSession]);
 
+  
   useEffect(() => {
     if (isMounted) {
       const savedAlert = localStorage.getItem('dashboardAlert');

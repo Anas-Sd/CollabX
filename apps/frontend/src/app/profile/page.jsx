@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { 
   User, Mail, Camera, Activity, Code2, CheckCircle2, 
@@ -218,7 +219,7 @@ function ProfileContent() {
   const totalLangUsages = Object.values(profileData.languageUsage).reduce((a, b) => a + b, 0);
   
   // Always show default languages as 0 if they don't exist
-  const DEFAULT_LANGUAGES = ['javascript', 'python', 'java', 'cpp', 'rust', 'go'];
+  const DEFAULT_LANGUAGES = ['java', 'python', 'cpp', 'c', 'javascript', 'sql'];
   const baseLanguageMap = DEFAULT_LANGUAGES.reduce((acc, lang) => {
     acc[lang] = 0;
     return acc;
@@ -271,13 +272,13 @@ function ProfileContent() {
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent z-10" />
 
         {/* Return Button */}
-        <button 
-          onClick={() => router.push(returnUrl)}
+        <Link 
+          href={returnUrl}
           className="absolute top-8 left-8 flex items-center gap-3 text-white/50 hover:text-white transition-colors group z-50 cursor-pointer bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10"
         >
           <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
           <span className="font-bold tracking-widest text-[10px] uppercase">{returnText}</span>
-        </button>
+        </Link>
       </div>
 
       {/* ======================= MAIN CONTENT ZONE ======================= */}
@@ -485,13 +486,6 @@ function ProfileContent() {
                     <PlayCircle className="text-blue-500 mb-2 group-hover:scale-110 transition-transform origin-left" size={24}/>
                     <div>
                       <div className="text-3xl font-black text-white"><CountUp to={profileData.totalRuns} /></div>
-                      <div className="text-[9px] text-white/40 font-bold uppercase tracking-[0.2em] mt-1">Total Runs</div>
-                    </div>
-                  </div>
-                  <div className="bg-[#12121A]/80 backdrop-blur-sm p-5 rounded-2xl border border-white/5 hover:border-purple-500/30 transition-colors group flex flex-col justify-between">
-                    <Code2 className="text-purple-500 mb-2 group-hover:scale-110 transition-transform origin-left" size={24}/>
-                    <div>
-                      <div className="text-3xl font-black text-white"><CountUp to={profileData.totalSubmissions} /></div>
                       <div className="text-[9px] text-white/40 font-bold uppercase tracking-[0.2em] mt-1">Submissions</div>
                     </div>
                   </div>
@@ -500,6 +494,13 @@ function ProfileContent() {
                     <div>
                       <div className="text-3xl font-black text-white"><CountUp to={profileData.passedTestCases} /></div>
                       <div className="text-[9px] text-white/40 font-bold uppercase tracking-[0.2em] mt-1">Tests Passed</div>
+                    </div>
+                  </div>
+                  <div className="bg-[#12121A]/80 backdrop-blur-sm p-5 rounded-2xl border border-white/5 hover:border-purple-500/30 transition-colors group flex flex-col justify-between">
+                    <Activity className="text-purple-500 mb-2 group-hover:scale-110 transition-transform origin-left" size={24}/>
+                    <div>
+                      <div className="text-3xl font-black text-white"><CountUp to={profileData.successRate} decimals={1}/><span className="text-sm text-white/30 font-bold ml-1">%</span></div>
+                      <div className="text-[9px] text-white/40 font-bold uppercase tracking-[0.2em] mt-1">Success Rate</div>
                     </div>
                   </div>
                   <div className="bg-[#12121A]/80 backdrop-blur-sm p-5 rounded-2xl border border-white/5 hover:border-cyan-500/30 transition-colors group flex flex-col justify-between">
