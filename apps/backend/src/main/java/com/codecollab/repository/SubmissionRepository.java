@@ -10,6 +10,7 @@ import java.util.UUID;
 @Repository
 public interface SubmissionRepository extends JpaRepository<Submission, UUID> {
     List<Submission> findByRoomIdOrderByExecutedAtDesc(String roomId);
+    List<Submission> findTop100ByUserOrderByExecutedAtDesc(com.codecollab.model.User user);
     List<Submission> findByUser(com.codecollab.model.User user);
     void deleteByRoom(com.codecollab.model.Room room);
 }

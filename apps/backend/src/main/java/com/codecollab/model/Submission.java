@@ -47,6 +47,12 @@ public class Submission {
     @Column(name = "execution_time_ms")
     private Long executionTimeMs;
 
+    @Column(name = "test_cases_run")
+    private Integer testCasesRun;
+
+    @Column(name = "test_cases_passed")
+    private Integer testCasesPassed;
+
     @PrePersist
     protected void onCreate() {
         if (executedAt == null) {

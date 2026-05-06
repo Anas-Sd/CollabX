@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { Plus, LogOut, Code, Crown, AlertTriangle, Trash2, Monitor, ArrowRight, Sparkles, Clock, Calendar, Users, LucideActivity, MonitorCloudIcon, LampDeskIcon, HeartPulse, GitGraph, LucideSendToBack, IndentDecrease, IndentDecreaseIcon, LucideListIndentDecrease, Brain, User, LayoutDashboard } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
@@ -34,7 +35,6 @@ function DashboardContent() {
   const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, roomId: null });
   const [cancelConfirm, setCancelConfirm] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
-
   useEffect(() => {
     setIsMounted(true);
     restoreSession();

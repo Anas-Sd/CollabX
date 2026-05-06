@@ -155,6 +155,7 @@ public class ExecutionService {
             try {
                 Room room = request.getRoomId() != null ? roomRepository.findById(request.getRoomId()).orElse(null) : null;
                 long totalTime = results.stream().mapToLong(com.codecollab.dto.response.TestResultResponse::getExecutionTimeMs).sum();
+                long passedCount = results.stream().filter(com.codecollab.dto.response.TestResultResponse::isPassed).count();
                 Submission submission = Submission.builder()
                         .user(userRepository.findByEmail(userEmail).orElse(null))
                         .room(room)
@@ -163,6 +164,8 @@ public class ExecutionService {
                         .output(allPassed ? "All test cases passed" : "Some test cases failed")
                         .status(allPassed ? "PASSED" : "FAILED")
                         .executionTimeMs(totalTime)
+                        .testCasesRun(results.size())
+                        .testCasesPassed((int) passedCount)
                         .build();
                 submissionRepository.save(submission);
             } catch (Exception e) {

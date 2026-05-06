@@ -17,6 +17,7 @@ public class ProfileResponse {
     private String profilePicture;
     private int totalRuns;
     private int totalSubmissions;
+    private int totalTestCasesRun;
     private int passedTestCases;
     private double successRate;
     private long avgExecutionTime;

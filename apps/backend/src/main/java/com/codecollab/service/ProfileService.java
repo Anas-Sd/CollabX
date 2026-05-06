@@ -51,13 +51,13 @@ public class ProfileService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        List<Submission> submissions = submissionRepository.findByUser(user);
+        List<Submission> submissions = submissionRepository.findTop100ByUserOrderByExecutedAtDesc(user);
         List<Room> hostedRooms = roomRepository.findByHost(user);
         List<RoomMember> joinedRooms = roomMemberRepository.findByUser(user);
 
         int totalRuns = 0;
-        int totalSubmissions = 0;
         int passedTestCases = 0;
+        int totalTestCasesRun = 0;
         long totalExecutionTime = 0;
         long fastestRun = Long.MAX_VALUE;
         Map<String, Integer> languageUsage = new HashMap<>();
@@ -76,18 +76,22 @@ public class ProfileService {
                 fastestRun = execTime;
             }
 
-            // A submission is considered a 'test case' submission if output has test case results or if it was PASSED/FAILED
-            if ("PASSED".equals(sub.getStatus()) || "FAILED".equals(sub.getStatus())) {
-                totalSubmissions++;
-                if ("PASSED".equals(sub.getStatus())) {
-                    passedTestCases++;
-                }
-            } else if ("SUCCESS".equals(sub.getStatus())) {
-                // If they just ran the code successfully, count it as a run but not necessarily a "test case passed"
+            if (sub.getTestCasesRun() != null) {
+                totalTestCasesRun += sub.getTestCasesRun();
+            }
+            if (sub.getTestCasesPassed() != null) {
+                passedTestCases += sub.getTestCasesPassed();
+            } else if ("PASSED".equals(sub.getStatus())) {
+                // Fallback for legacy submissions before adding this field
+                passedTestCases++;
+                totalTestCasesRun++;
+            } else if ("FAILED".equals(sub.getStatus())) {
+                // Fallback for legacy failed submissions
+                totalTestCasesRun++;
             }
         }
 
-        double successRate = totalSubmissions > 0 ? ((double) passedTestCases / totalSubmissions) * 100.0 : 0.0;
+        double successRate = totalTestCasesRun > 0 ? ((double) passedTestCases / totalTestCasesRun) * 100.0 : 0.0;
         long avgExecutionTime = totalRuns > 0 ? totalExecutionTime / totalRuns : 0;
         if (fastestRun == Long.MAX_VALUE) fastestRun = 0;
 
@@ -96,7 +100,8 @@ public class ProfileService {
                 .email(user.getEmail())
                 .profilePicture(user.getProfilePicture())
                 .totalRuns(totalRuns)
-                .totalSubmissions(totalSubmissions)
+                .totalSubmissions(totalRuns) // Using totalRuns as submissions per the user's request
+                .totalTestCasesRun(totalTestCasesRun)
                 .passedTestCases(passedTestCases)
                 .successRate(successRate)
                 .avgExecutionTime(avgExecutionTime)
