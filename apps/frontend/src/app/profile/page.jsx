@@ -13,6 +13,7 @@ import api from '../../lib/api';
 import { useUserStore } from '../../store/userStore';
 import { useNotificationStore } from '../../store/notificationStore';
 import { AnimatePresence } from 'framer-motion';
+import { Suspense } from 'react';
 
 function CountUp({ to, duration = 2, decimals = 0 }) {
   const [count, setCount] = useState(0);
@@ -39,7 +40,7 @@ function CountUp({ to, duration = 2, decimals = 0 }) {
   return <span>{decimals > 0 ? count.toFixed(decimals) : Math.floor(count)}</span>;
 }
 
-export default function ProfilePage() {
+function ProfileContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const returnUrl = searchParams?.get('returnUrl') || '/dashboard';
@@ -681,5 +682,13 @@ export default function ProfilePage() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0A0A0F] flex items-center justify-center"><div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div></div>}>
+      <ProfileContent />
+    </Suspense>
   );
 }
