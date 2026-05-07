@@ -39,7 +39,7 @@ function DashboardContent() {
   const themeFocusRing = isPro ? 'focus:ring-[#F5A524]/50 focus:border-[#F5A524]' : 'focus:ring-primary/50 focus:border-primary';
   const themeBorderHoverLight = isPro ? 'hover:border-[#F5A524]/30' : 'hover:border-primary/30';
   const themeRoleActiveViewer = isPro ? 'bg-[#F5A524]/20 border border-[#F5A524]/40 text-white shadow-[0_0_15px_rgba(245,165,36,0.3)] scale-[1.02]' : 'bg-primary/20 border border-primary/40 text-white shadow-[0_0_15px_rgba(108,99,255,0.3)] scale-[1.02]';
-  const themeRoleActiveEditor = isPro ? 'bg-[#F5A524]/20 border border-[#F5A524]/40 text-white shadow-[0_0_15px_rgba(245,165,36,0.3)] scale-[1.02]' : 'bg-secondary/20 border border-secondary/40 text-white shadow-[0_0_15px_rgba(0,212,170,0.3)] scale-[1.02]';
+  const themeRoleActiveEditor = isPro ? 'bg-[#F5A524]/20 border border-[#F5A524]/40 text-white shadow-[0_0_15px_rgba(245,165,36,0.3)] scale-[1.02]' : 'bg-primary/20 border border-primary/40 text-white shadow-[0_0_15px_rgba(108,99,255,0.3)] scale-[1.02]';
   const themeEnterSessionBg = isPro ? 'from-[#F5A524] to-[#FFC107] hover:shadow-[0_0_20px_rgba(245,165,36,0.3)] text-black' : 'from-primary to-[#5a52d5] hover:shadow-[0_0_20px_rgba(108,99,255,0.3)] text-white';
   // const themeDashboardWrapper = isPro ? 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#1F1707] via-black to-black' : 'bg-background';
   const themeDashboardWrapper = isPro ? 'bg-gradient-to-tr from-[#0F0E0C] via-[#1A1610] to-[#B07A1A]' : 'bg-background';

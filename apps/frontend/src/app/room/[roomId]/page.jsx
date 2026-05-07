@@ -78,6 +78,7 @@ export default function RoomPage() {
   const voiceControls = useVoice(roomId, user, isActive);
 
   const [isMounted, setIsMounted] = useState(false);
+  const [isLoadingRoom, setIsLoadingRoom] = useState(true);
   const joinedRef = useRef(false);
   const hasWarnedRef = useRef(false);
 
@@ -168,6 +169,8 @@ export default function RoomPage() {
         }
         useNotificationStore.getState().addNotification(errorMsg, 'error');
         router.push('/dashboard');
+      } finally {
+        setIsLoadingRoom(false);
       }
     };
 
@@ -431,88 +434,77 @@ export default function RoomPage() {
     return () => document.removeEventListener('keydown', handleKeyDown, true);
   }, [currentUserParticipant?.role, roomId]);
 
-  if (!isMounted || !user) return <div className="min-h-screen bg-background flex items-center justify-center text-white">Loading...</div>;
+  if (!isMounted || !user || isLoadingRoom) return (
+    <div className="min-h-screen bg-[#0A0A0F] flex items-center justify-center">
+      <div className="flex flex-col items-center justify-center relative">
+        <div className="w-16 h-16 rounded-full border border-[#2A2A35] flex items-center justify-center bg-[#13131A] shadow-[0_0_40px_rgba(108,99,255,0.15)] mb-6">
+           <div className="w-6 h-6 rounded border-2 border-primary border-t-transparent animate-spin"></div>
+        </div>
+        <h2 className="text-xl font-bold text-white mb-2 tracking-tight">Accessing Workspace</h2>
+        <p className="text-sm text-muted-foreground">Securely connecting to the host...</p>
+      </div>
+    </div>
+  );
 
   if (isPending) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4">
-        <div className="bg-card shadow-2xl rounded-2xl p-8 max-w-md w-full text-center border border-border relative overflow-hidden">
+      <div className="min-h-screen bg-[#0A0A0F] flex items-center justify-center px-4 relative overflow-hidden">
+        {/* Ambient background blur */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
 
-          {/* subtle background glow */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
+        <div className="bg-[#12121A] shadow-2xl rounded-2xl max-w-4xl w-full border border-white/[0.05] relative overflow-hidden z-10 backdrop-blur-xl flex flex-col md:flex-row items-center p-8 md:p-12 gap-10">
+          
+          {/* Top Edge Highlight */}
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent z-20"></div>
 
-          {/* Loader */}
-          <div className="flex justify-center mb-6 relative">
-
-            {/* Outer glow */}
-            <div className="absolute w-24 h-24 rounded-full bg-primary/10 blur-2xl animate-pulse"></div>
-
-            {/* Gradient spinning ring */}
-            <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-white via-primary/60 to-transparent animate-spin">
-              <div className="w-full h-full bg-card rounded-full"></div>
-            </div>
-
-            {/* Inner soft pulse */}
-            {/* <div className="absolute w-8 h-8 rounded-full bg-primary/30 animate-ping"></div> */}
-
-          </div>
-
-          {/* Title */}
-          <h1 className="text-2xl sm:text-3xl font-semibold mb-2">
-            Waiting for Approval
-          </h1>
-
-          {/* Animated dots */}
-          <p className="text-muted-foreground text-sm mb-6">
-            Please wait while the host reviews your request
-            <span className="inline-flex ml-1">
-              <span className="animate-bounce [animation-delay:-0.3s]">.</span>
-              <span className="animate-bounce [animation-delay:-0.15s]">.</span>
-              <span className="animate-bounce">.</span>
-            </span>
-          </p>
-
-          {/* Room Details */}
-          <div className="relative bg-muted/40 rounded-xl p-5 text-left space-y-4 border border-border overflow-hidden">
-
-            {/* shimmer */}
-            <div className="absolute inset-[-20px] bg-gradient-to-r from-transparent via-white/5 to-transparent animate-[shimmer_2s_infinite]" />
-
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground relative">
-              Room Details
-            </h2>
-
-            <div className="flex items-center justify-between relative">
-              <span className="text-muted-foreground text-sm">Room Name</span>
-              <span className="font-medium text-white/60 animate-pulse">
-                {roomName}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between relative">
-              <span className="text-muted-foreground text-sm">Room ID</span>
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-white/60 animate-pulse">
-                  {roomId}
-                </span>
+          {/* Left Side: Loader & Message */}
+          <div className="flex-1 flex flex-col items-center justify-center text-center">
+            <div className="flex justify-center mb-8 relative">
+              <div className="absolute w-32 h-32 rounded-full bg-primary/10 blur-2xl animate-pulse"></div>
+              <div className="relative flex items-center justify-center w-20 h-20">
+                <div className="absolute inset-0 rounded-full border border-white/[0.05] bg-card/50 backdrop-blur-sm"></div>
+                <div className="absolute inset-2 rounded-full border-2 border-primary border-t-transparent border-r-transparent animate-spin"></div>
+                <div className="absolute inset-3 rounded-full border border-white/10 border-b-transparent border-l-transparent animate-spin animation-delay-150" style={{ animationDirection: 'reverse' }}></div>
+                <div className="w-8 h-8 flex items-center justify-center">
+                  <div className="w-2 h-2 rounded-full bg-primary animate-ping"></div>
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-between relative">
-              <span className="text-muted-foreground text-sm">Role</span>
-              <span className="font-medium text-white/60 text-sm animate-pulse">
-                {currentUserParticipant?.role}
-              </span>
+            <h1 className="text-3xl font-black text-white mb-3 tracking-tight">
+              Waiting For Approval
+            </h1>
+
+            <p className="text-muted-foreground text-[15px] leading-relaxed max-w-sm">
+              Please wait for the host to verify your request and grant you access to the workspace.              </p>
+          </div>
+
+          {/* Right Side: Details & Action */}
+          <div className="flex-1 flex flex-col justify-center w-full max-w-md mx-auto">
+            <div className="bg-white/[0.02] rounded-2xl p-6 text-left border border-white/[0.05] mb-6 space-y-5">
+              <div className="flex items-center justify-between pb-4 border-b border-white/[0.05]">
+                <span className="text-muted-foreground/70 text-xs font-bold uppercase tracking-wider">Workspace</span>
+                <span className="font-semibold text-white truncate max-w-[150px]">{roomName}</span>
+              </div>
+              <div className="flex items-center justify-between pb-4 border-b border-white/[0.05]">
+                <span className="text-muted-foreground/70 text-xs font-bold uppercase tracking-wider">Room ID</span>
+                <span className="font-mono text-white/80 text-sm">{roomId}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground/70 text-xs font-bold uppercase tracking-wider">Requested Role</span>
+                <span className="px-2.5 py-1 rounded-md bg-primary/10 text-primary text-xs font-bold tracking-widest">{currentUserParticipant?.role}</span>
+              </div>
             </div>
 
-          </div>
-          <div>
             <button
               onClick={async () => {
                 await api.delete(`/rooms/${roomId}/leave`).catch(console.error);
                 router.push("/dashboard");
               }}
-              className='bg-red-500 mt-5 hover:bg-red-600 brightness-50 hover:brightness-100 active:brightness-125 transition-all duration-200 text-white py-3 cursor-pointer px-4 rounded-xl w-full font-medium'>Cancel Request</button>
+              className="w-full bg-transparent hover:bg-red-500/30 hover:text-white/80 border border-danger/30 text-danger transition-all duration-300 py-3.5 px-4 rounded-xl text-sm font-bold tracking-wide uppercase cursor-pointer"
+            >
+              Cancel Request
+            </button>
           </div>
         </div>
       </div>
