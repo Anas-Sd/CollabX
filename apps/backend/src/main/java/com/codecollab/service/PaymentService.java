@@ -49,6 +49,8 @@ public class PaymentService {
 
         Payment payment = Payment.builder()
                 .user(user)
+                .userName(user.getName())
+                .email(user.getEmail())
                 .razorpayOrderId(order.get("id"))
                 .amount(request.getAmount())
                 .currency(request.getCurrency())

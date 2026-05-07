@@ -25,6 +25,12 @@ public class Payment {
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
+    @Column(name = "user_name", length = 100)
+    private String userName;
+
+    @Column(name = "email", length = 100)
+    private String email;
+
     @Column(name = "razorpay_order_id", length = 100)
     private String razorpayOrderId;
 
