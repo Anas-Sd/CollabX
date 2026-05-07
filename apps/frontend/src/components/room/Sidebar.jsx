@@ -135,59 +135,91 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
     <>
       {/* Icon Navigation Slim Bar Island */}
       <div className="w-16 h-full flex flex-col items-center py-4 bg-card rounded-2xl border border-border shadow-sm gap-6 relative shrink-0">
-        <button
-          onClick={() => handleTabClick('USERS')}
-          className={`p-3 rounded-xl transition-colors cursor-pointer ${activeTab === 'USERS' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-white hover:bg-background relative'}`}
-        >
-          <Users size={20} />
-        </button>
-        <button
-          onClick={() => handleTabClick('CHAT')}
-          className={`p-3 rounded-xl transition-colors relative cursor-pointer ${activeTab === 'CHAT' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-white hover:bg-background'}`}
-        >
-          <MessageSquare size={20} />
-          {unreadChatCount > 0 && (
-            <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 bg-danger text-[9px] font-bold text-white rounded-full border-2 border-card">
-              {unreadChatCount > 9 ? '9+' : unreadChatCount}
-            </span>
-          )}
-        </button>
-        {isHost && isActive && (
+        <div className="tooltip">
           <button
-            onClick={() => handleTabClick('WAITLIST')}
-            className={`p-3 rounded-xl transition-colors relative cursor-pointer ${activeTab === 'WAITLIST' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-white hover:bg-background'}`}
+            onClick={() => handleTabClick('USERS')}
+            className={`p-3 rounded-xl transition-colors cursor-pointer ${activeTab === 'USERS' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-white hover:bg-background relative'}`}
           >
-            <UserPlus size={20} />
-            {pendingParticipants.length > 0 && (
+            <Users size={20} />
+          </button>
+          <div className="tooltip-content">
+            <div className="tooltip-box">Participants</div>
+            <div className="tooltip-arrow"></div>
+          </div>
+        </div>
+
+        <div className="tooltip">
+          <button
+            onClick={() => handleTabClick('CHAT')}
+            className={`p-3 rounded-xl transition-colors relative cursor-pointer ${activeTab === 'CHAT' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-white hover:bg-background'}`}
+          >
+            <MessageSquare size={20} />
+            {unreadChatCount > 0 && (
               <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 bg-danger text-[9px] font-bold text-white rounded-full border-2 border-card">
-                {pendingParticipants.length > 9 ? '9+' : pendingParticipants.length}
+                {unreadChatCount > 9 ? '9+' : unreadChatCount}
               </span>
             )}
           </button>
+          <div className="tooltip-content">
+            <div className="tooltip-box">Chat</div>
+            <div className="tooltip-arrow"></div>
+          </div>
+        </div>
+
+        {isHost && isActive && (
+          <div className="tooltip">
+            <button
+              onClick={() => handleTabClick('WAITLIST')}
+              className={`p-3 rounded-xl transition-colors relative cursor-pointer ${activeTab === 'WAITLIST' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-white hover:bg-background'}`}
+            >
+              <UserPlus size={20} />
+              {pendingParticipants.length > 0 && (
+                <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 bg-danger text-[9px] font-bold text-white rounded-full border-2 border-card">
+                  {pendingParticipants.length > 9 ? '9+' : pendingParticipants.length}
+                </span>
+              )}
+            </button>
+            <div className="tooltip-content">
+              <div className="tooltip-box">Waiting List</div>
+              <div className="tooltip-arrow"></div>
+            </div>
+          </div>
         )}
+
         {(isHost || !isActive) && (
-          <button
-            onClick={() => handleTabClick('LOGS')}
-            className={`p-3 rounded-xl transition-colors relative cursor-pointer ${activeTab === 'LOGS' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-white hover:bg-background'}`}
-            title="Security Logs"
-          >
-            <Shield size={20} />
-          </button>
+          <div className="tooltip">
+            <button
+              onClick={() => handleTabClick('LOGS')}
+              className={`p-3 rounded-xl transition-colors relative cursor-pointer ${activeTab === 'LOGS' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-white hover:bg-background'}`}
+            >
+              <Shield size={20} />
+            </button>
+            <div className="tooltip-content">
+              <div className="tooltip-box">Audit Logs</div>
+              <div className="tooltip-arrow"></div>
+            </div>
+          </div>
         )}
+
         {(isHost || currentUserParticipant?.role === 'EDITOR' || !isActive) && (
-          <button
-            onClick={() => {
-              const newOpen = !isWhiteboardOpen;
-              setIsWhiteboardOpen(newOpen);
-              if (wsHook && wsHook.sendWhiteboardToggle && isActive) {
-                wsHook.sendWhiteboardToggle(newOpen);
-              }
-            }}
-            className={`p-3 rounded-xl transition-colors relative cursor-pointer mt-auto mb-4 ${isWhiteboardOpen ? 'bg-[#F5A524]/20 text-[#F5A524] shadow-[0_0_15px_rgba(245,165,36,0.3)]' : 'text-muted-foreground hover:text-white hover:bg-background'}`}
-            title="Whiteboard"
-          >
-            <PenTool size={20} />
-          </button>
+          <div className="tooltip">
+            <button
+              onClick={() => {
+                const newOpen = !isWhiteboardOpen;
+                setIsWhiteboardOpen(newOpen);
+                if (wsHook && wsHook.sendWhiteboardToggle && isActive) {
+                  wsHook.sendWhiteboardToggle(newOpen);
+                }
+              }}
+              className={`p-3 rounded-xl transition-colors relative cursor-pointer mb-4 ${isWhiteboardOpen ? 'bg-[#F5A524]/20 text-[#F5A524] shadow-[0_0_15px_rgba(245,165,36,0.3)]' : 'text-muted-foreground hover:text-white hover:bg-background'}`}
+            >
+              <PenTool size={20} />
+            </button>
+            <div className="tooltip-content">
+              <div className="tooltip-box">Blackboard</div>
+              <div className="tooltip-arrow"></div>
+            </div>
+          </div>
         )}
       </div>
 
