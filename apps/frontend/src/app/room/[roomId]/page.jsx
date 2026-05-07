@@ -12,6 +12,7 @@ import Sidebar from '../../../components/room/Sidebar';
 import api from '../../../lib/api';
 import { useNotificationStore } from '../../../store/notificationStore';
 import ProUpgradeModal from '../../../components/subscription/ProUpgradeModal';
+import Whiteboard from '../../../components/room/Whiteboard';
 
 const DEFAULT_CODE_TEMPLATES = {
   java: `public class Main {
@@ -40,7 +41,7 @@ export default function RoomPage() {
   const { roomId } = useParams();
   const router = useRouter();
   const { user, isAuthenticated, restoreSession } = useUserStore();
-  const { roomName, expiresAt, isActive, setRoomInfo, language, setLanguage, testCases, participants, setParticipants, sessionEndedReason, roleChangeAlert, hostTransferAlert, isExecuting, showOutputPanel, setShowOutputPanel, selectedCode } = useRoomStore();
+  const { roomName, expiresAt, isActive, setRoomInfo, language, setLanguage, testCases, participants, setParticipants, sessionEndedReason, roleChangeAlert, hostTransferAlert, isExecuting, showOutputPanel, setShowOutputPanel, selectedCode, isWhiteboardOpen } = useRoomStore();
   const [copied, setCopied] = useState(false);
   const [activeSidebarTab, setActiveSidebarTab] = useState('USERS');
   const [showLangMenu, setShowLangMenu] = useState(false);
@@ -140,6 +141,12 @@ export default function RoomPage() {
         }
         if (res.data.logs) {
           useRoomStore.getState().setLogs(res.data.logs);
+        }
+        if (res.data.isWhiteboardOpen !== undefined) {
+          useRoomStore.getState().setIsWhiteboardOpen(res.data.isWhiteboardOpen);
+        }
+        if (res.data.whiteboardData !== undefined) {
+          useRoomStore.getState().setWhiteboardData(res.data.whiteboardData);
         }
 
         const savedUnread = localStorage.getItem(`unread_${res.data.id || roomId}`);
@@ -812,28 +819,36 @@ export default function RoomPage() {
         {/* Editor Area */}
         <div ref={containerRef} className="flex-1 flex flex-col gap-4 min-w-0">
 
-          {/* Editor Island */}
-          <div className="flex-1 rounded-2xl border border-border bg-card overflow-hidden relative shadow-sm">
-            <CodeEditor wsHook={wsHook} />
-          </div>
-
-          {/* Resize Handle and Output Panel */}
-          {showOutputPanel && (
-            <div
-              style={{ height: `${outputPanelHeight}%` }}
-              className="relative rounded-2xl border border-border bg-card shadow-sm shrink-0 flex flex-col"
-            >
-              {/* Draggable Handle */}
-              <div
-                onMouseDown={handleMouseDown}
-                className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-4 group cursor-row-resize flex items-center justify-center z-10"
-              >
-                <div className="w-8 h-1 rounded-full bg-border group-hover:bg-primary transition-colors"></div>
-              </div>
-              <div className="flex-1 overflow-hidden rounded-2xl">
-                <OutputPanel wsHook={wsHook} />
-              </div>
+          {isWhiteboardOpen ? (
+            <div className="flex-1 rounded-2xl border border-border bg-card overflow-hidden relative shadow-sm">
+              <Whiteboard wsHook={wsHook} />
             </div>
+          ) : (
+            <>
+              {/* Editor Island */}
+              <div className="flex-1 rounded-2xl border border-border bg-card overflow-hidden relative shadow-sm">
+                <CodeEditor wsHook={wsHook} />
+              </div>
+
+              {/* Resize Handle and Output Panel */}
+              {showOutputPanel && (
+                <div
+                  style={{ height: `${outputPanelHeight}%` }}
+                  className="relative rounded-2xl border border-border bg-card shadow-sm shrink-0 flex flex-col"
+                >
+                  {/* Draggable Handle */}
+                  <div
+                    onMouseDown={handleMouseDown}
+                    className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-4 group cursor-row-resize flex items-center justify-center z-10"
+                  >
+                    <div className="w-8 h-1 rounded-full bg-border group-hover:bg-primary transition-colors"></div>
+                  </div>
+                  <div className="flex-1 overflow-hidden rounded-2xl">
+                    <OutputPanel wsHook={wsHook} />
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

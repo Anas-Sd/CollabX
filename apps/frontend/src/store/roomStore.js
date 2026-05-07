@@ -12,6 +12,8 @@ export const useRoomStore = create((set, get) => ({
   output: null,
   activeOutputTab: 'TEST_CASES',
   showOutputPanel: true,
+  isWhiteboardOpen: false,
+  whiteboardData: null,
   participants: [],
   chatMessages: [],
   logs: [],
@@ -29,6 +31,8 @@ export const useRoomStore = create((set, get) => ({
   setSessionEndedReason: (reason) => set({ sessionEndedReason: reason }),
   setRoleChangeAlert: (alert) => set({ roleChangeAlert: alert }),
   setHostTransferAlert: (alert) => set({ hostTransferAlert: alert }),
+  setIsWhiteboardOpen: (isOpen) => set({ isWhiteboardOpen: isOpen }),
+  setWhiteboardData: (data) => set({ whiteboardData: data }),
 
   setRoomInfo: (id, name, expiresAt = null, isActive = true) => set({ roomId: id, roomName: name, expiresAt, isActive }),
   setExpiresAt: (expiresAt) => set({ expiresAt }),
@@ -116,5 +120,7 @@ export const useRoomStore = create((set, get) => ({
     sessionEndedReason: null,
     roleChangeAlert: null,
     hostTransferAlert: null,
+    isWhiteboardOpen: false,
+    whiteboardData: null,
   }),
 }));

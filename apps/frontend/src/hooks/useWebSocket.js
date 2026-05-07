@@ -141,6 +141,12 @@ export const useWebSocket = (roomId) => {
           useRoomStore.getState().setExpiresAt(body);
           useNotificationStore.getState().addNotification("Session time was extended by the host!", 'success');
         }
+        else if (destination === 'whiteboard.toggle') {
+          useRoomStore.getState().setIsWhiteboardOpen(body.isOpen);
+        }
+        else if (destination === 'whiteboard.sync') {
+          useRoomStore.getState().setWhiteboardData(body.data);
+        }
       } catch (err) {
         console.error('Error parsing WS message', err);
       }
@@ -216,6 +222,14 @@ export const useWebSocket = (roomId) => {
     sendAction('ACTION_TRIGGER', { userId: user?.id, type });
   };
 
+  const sendWhiteboardToggle = (isOpen) => {
+    sendAction('WHITEBOARD_TOGGLE', { isOpen });
+  };
+
+  const sendWhiteboardSync = (data) => {
+    sendAction('WHITEBOARD_SYNC', { data });
+  };
+
   return {
     sendCodeChange,
     sendCursorMove,
@@ -225,6 +239,8 @@ export const useWebSocket = (roomId) => {
     sendExecutionResult,
     triggerGlobalRefresh,
     sendActionTrigger,
+    sendWhiteboardToggle,
+    sendWhiteboardSync,
     fetchRoomMembers
   };
 };

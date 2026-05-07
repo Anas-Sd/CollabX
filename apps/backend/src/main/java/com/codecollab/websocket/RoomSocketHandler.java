@@ -158,6 +158,16 @@ public class RoomSocketHandler extends TextWebSocketHandler {
                 case "FORCE_REFRESH":
                     broadcastToRoom(roomId, "refresh.all", "REFRESH");
                     break;
+                case "WHITEBOARD_TOGGLE":
+                    boolean isOpen = payloadNode.has("isOpen") && payloadNode.get("isOpen").asBoolean();
+                    roomService.updateWhiteboardToggle(roomId, isOpen);
+                    broadcastToRoomFilterSender(roomId, session.getId(), "whiteboard.toggle", payloadNode);
+                    break;
+                case "WHITEBOARD_SYNC":
+                    String wbData = payloadNode.has("data") ? payloadNode.get("data").asText() : "";
+                    roomService.updateWhiteboardData(roomId, wbData);
+                    broadcastToRoomFilterSender(roomId, session.getId(), "whiteboard.sync", payloadNode);
+                    break;
                 default:
                     log.warn("Unknown action received: {}", action);
             }

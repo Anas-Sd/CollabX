@@ -633,12 +633,32 @@ public class RoomService {
                 .expiresAt(room.getExpiresAt())
                 .currentCode(room.getCurrentCode())
                 .currentLanguage(room.getCurrentLanguage())
+                .isWhiteboardOpen(room.getIsWhiteboardOpen())
+                .whiteboardData(room.getWhiteboardData())
                 .members(memberResponses)
                 .chats(previousChats)
                 .logs(previousLogs)
                 .languageCache(languageCache)
                 .testCases(mappedTestCases)
                 .build();
+    }
+
+    @Transactional
+    public void updateWhiteboardToggle(String roomId, boolean isOpen) {
+        Room room = roomRepository.findById(roomId).orElse(null);
+        if (room != null) {
+            room.setIsWhiteboardOpen(isOpen);
+            roomRepository.save(room);
+        }
+    }
+
+    @Transactional
+    public void updateWhiteboardData(String roomId, String data) {
+        Room room = roomRepository.findById(roomId).orElse(null);
+        if (room != null) {
+            room.setWhiteboardData(data);
+            roomRepository.save(room);
+        }
     }
 
     @Transactional

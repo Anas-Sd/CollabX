@@ -18,6 +18,8 @@ public class RoomResponse {
     private LocalDateTime expiresAt;
     private String currentCode;
     private String currentLanguage;
+    private Boolean isWhiteboardOpen;
+    private String whiteboardData;
     
     private List<RoomMemberResponse> members;
     private List<com.codecollab.dto.request.ChatPayload> chats;

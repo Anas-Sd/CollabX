@@ -46,6 +46,12 @@ public class Room {
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
 
+    @Column(name = "is_whiteboard_open")
+    private Boolean isWhiteboardOpen;
+
+    @Column(name = "whiteboard_data", columnDefinition = "TEXT")
+    private String whiteboardData;
+
     @PrePersist
     protected void onCreate() {
         if (isActive == null) {
@@ -56,6 +62,9 @@ public class Room {
         }
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
+        }
+        if (isWhiteboardOpen == null) {
+            isWhiteboardOpen = false;
         }
     }
 }

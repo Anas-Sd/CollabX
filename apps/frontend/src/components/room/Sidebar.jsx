@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '../../store/userStore';
 import { useRoomStore } from '../../store/roomStore';
-import { Users, MessageSquare, UserPlus, Shield, MicOff, Mic, MoreVertical, LogOut } from 'lucide-react';
+import { Users, MessageSquare, UserPlus, Shield, MicOff, Mic, MoreVertical, LogOut, PenTool } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../lib/api';
 import { useNotificationStore } from '../../store/notificationStore';
@@ -12,7 +12,7 @@ import LogsPanel from '../../../components/collaboration/LogsPanel';
 export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voiceControls }) {
   const router = useRouter();
   const { user } = useUserStore();
-  const { isActive, participants, removeParticipant, updateParticipantRole, chatMessages, unreadChatCount, resetUnreadChat } = useRoomStore();
+  const { isActive, participants, removeParticipant, updateParticipantRole, chatMessages, unreadChatCount, resetUnreadChat, isWhiteboardOpen, setIsWhiteboardOpen } = useRoomStore();
   const [openMenuId, setOpenMenuId] = useState(null);
   const menuRef = useRef(null);
   const chatEndRef = useRef(null);
@@ -172,6 +172,21 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
             title="Security Logs"
           >
             <Shield size={20} />
+          </button>
+        )}
+        {(isHost || currentUserParticipant?.role === 'EDITOR' || !isActive) && (
+          <button
+            onClick={() => {
+              const newOpen = !isWhiteboardOpen;
+              setIsWhiteboardOpen(newOpen);
+              if (wsHook && wsHook.sendWhiteboardToggle && isActive) {
+                wsHook.sendWhiteboardToggle(newOpen);
+              }
+            }}
+            className={`p-3 rounded-xl transition-colors relative cursor-pointer mt-auto mb-4 ${isWhiteboardOpen ? 'bg-[#F5A524]/20 text-[#F5A524] shadow-[0_0_15px_rgba(245,165,36,0.3)]' : 'text-muted-foreground hover:text-white hover:bg-background'}`}
+            title="Whiteboard"
+          >
+            <PenTool size={20} />
           </button>
         )}
       </div>
