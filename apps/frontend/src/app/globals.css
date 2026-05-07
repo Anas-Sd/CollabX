@@ -97,3 +97,14 @@ body {
 .animate-shimmer {
   animation: shimmer 2s infinite;
 }
+
+/* Intro Transition */
+#app-content {
+  transition: opacity 1s ease-in-out;
+  opacity: 1;
+}
+
+body.intro-playing #app-content {
+  opacity: 0;
+  pointer-events: none;
+}

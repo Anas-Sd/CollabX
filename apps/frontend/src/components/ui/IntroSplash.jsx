@@ -6,8 +6,8 @@ import { Playfair_Display } from 'next/font/google';
 const playfair = Playfair_Display({ subsets: ['latin'], weight: '900', style: 'italic' });
 
 export default function IntroSplash() {
-  const [show, setShow] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [show, setShow] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
     const isJustLoggedOut = sessionStorage.getItem('justLoggedOut');
@@ -16,31 +16,39 @@ export default function IntroSplash() {
     const isHomePage = window.location.pathname === '/';
 
     let willShow = false;
-    if (isJustLoggedOut || isJustLoggedIn) {
+    if (isJustLoggedOut) {
       sessionStorage.removeItem('justLoggedOut');
-      sessionStorage.removeItem('justLoggedIn');
       willShow = false;
-    } else if (isHomePage) {
+    } else if (isJustLoggedIn) {
+      sessionStorage.removeItem('justLoggedIn');
       willShow = true;
-    } else if (isFirstVisit) {
+    } else if (isHomePage || isFirstVisit) {
       willShow = true;
     }
 
     sessionStorage.setItem('introPlayed', 'true');
 
-    if (willShow) {
-      setShow(true);
-      setMounted(true);
+    if (!willShow) {
+      setShow(false);
+    } else {
+      // Hide main content until intro is done
+      document.body.classList.add('intro-playing');
       const timer = setTimeout(() => {
         setShow(false);
+        // Remove the class immediately so the dashboard is ready behind the fading splash screen
+        document.body.classList.remove('intro-playing');
       }, 3250);
-      return () => clearTimeout(timer);
-    } else {
-      setMounted(true);
+      return () => {
+        clearTimeout(timer);
+        document.body.classList.remove('intro-playing');
+      };
     }
+    setIsInitializing(false);
   }, []);
 
-  if (!mounted) return null;
+  // Prevent hydration mismatch by keeping initial render simple, but don't return null because that causes glimpses.
+  // Instead, the container itself blocks view if `show` is true.
+  if (!show && isInitializing) return null;
 
   const letterVariants = {
     hidden: { opacity: 0 },
