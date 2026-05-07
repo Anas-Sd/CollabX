@@ -43,14 +43,16 @@ export default function RootLayout({ children }) {
           </p>
           <div className="w-16 h-1 bg-border rounded-full mb-8"></div>
           <p className="text-xs text-muted-foreground/50 font-mono tracking-widest uppercase">
-            Please switch to a computer
+            Please switch to a computer or  turn on desktop mode in your mobile
           </p>
         </div>
 
         <div className="hidden md:flex flex-col min-h-screen">
           <IntroSplash />
-          {children}
-          <ToastContainer />
+          <main id="app-content" className="flex-1 flex flex-col">
+            {children}
+            <ToastContainer />
+          </main>
         </div>
       </body>
     </html>
