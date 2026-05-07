@@ -24,6 +24,32 @@ function DashboardContent() {
   const { user, logout, restoreSession, isAuthenticated } = useUserStore();
   const searchParams = useSearchParams();
   const isPro = user?.subscriptionType === 'PRO';
+
+  // Dynamic Theme Colors
+  const themeText = isPro ? 'text-[#F5A524]' : 'text-primary';
+  const themeTextHover = isPro ? 'group-hover:text-[#F5A524]/90' : 'group-hover:text-primary/90';
+  const themeBorderHover = isPro ? 'hover:border-[#F5A524]/50' : 'hover:border-primary/50';
+  const themeShadowHover = isPro ? 'hover:shadow-[0_20px_40px_rgba(245,165,36,0.15)]' : 'hover:shadow-[0_20px_40px_rgba(108,99,255,0.15)]';
+  const themeGradientFromVia = isPro ? 'from-[#F5A524]/30 via-[#F5A524]/5' : 'from-primary/30 via-primary/5';
+  const themeIconGroup = isPro ? 'text-[#F5A524] group-hover:bg-[#F5A524]/20 group-hover:border-[#F5A524]/40' : 'text-primary group-hover:bg-primary/20 group-hover:border-primary/40';
+  const themeButtonBg = isPro ? 'bg-gradient-to-r from-[#F5A524] to-[#FFC107] shadow-[0_0_20px_rgba(245,165,36,0.4)] hover:shadow-[0_0_30px_rgba(245,165,36,0.7)] text-black' : 'bg-gradient-to-r from-primary to-[#5a52d5] shadow-[0_0_20px_rgba(108,99,255,0.4)] hover:shadow-[0_0_30px_rgba(108,99,255,0.7)] text-white';
+  const themeBlurBg1 = isPro ? 'bg-[#F5A524]/10' : 'bg-primary/10';
+  const themeBlurBg2 = isPro ? 'bg-[#F5A524]/5' : 'bg-primary/5';
+  const themeBlurBgHover = isPro ? 'bg-[#F5A524]' : 'bg-primary';
+  const themeFocusRing = isPro ? 'focus:ring-[#F5A524]/50 focus:border-[#F5A524]' : 'focus:ring-primary/50 focus:border-primary';
+  const themeBorderHoverLight = isPro ? 'hover:border-[#F5A524]/30' : 'hover:border-primary/30';
+  const themeRoleActiveViewer = isPro ? 'bg-[#F5A524]/20 border border-[#F5A524]/40 text-white shadow-[0_0_15px_rgba(245,165,36,0.3)] scale-[1.02]' : 'bg-primary/20 border border-primary/40 text-white shadow-[0_0_15px_rgba(108,99,255,0.3)] scale-[1.02]';
+  const themeRoleActiveEditor = isPro ? 'bg-[#F5A524]/20 border border-[#F5A524]/40 text-white shadow-[0_0_15px_rgba(245,165,36,0.3)] scale-[1.02]' : 'bg-secondary/20 border border-secondary/40 text-white shadow-[0_0_15px_rgba(0,212,170,0.3)] scale-[1.02]';
+  const themeEnterSessionBg = isPro ? 'from-[#F5A524] to-[#FFC107] hover:shadow-[0_0_20px_rgba(245,165,36,0.3)] text-black' : 'from-primary to-[#5a52d5] hover:shadow-[0_0_20px_rgba(108,99,255,0.3)] text-white';
+  // const themeDashboardWrapper = isPro ? 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#1F1707] via-black to-black' : 'bg-background';
+  const themeDashboardWrapper = isPro ? 'bg-gradient-to-tr from-[#0F0E0C] via-[#1A1610] to-[#B07A1A]' : 'bg-background';
+  const themeCardBorderGradient = isPro ? 'from-[#2A1F0D] to-[#0A0702]' : 'from-[#1C1C24] to-[#0A0A0F]';
+  const themeCardInnerBg = isPro ? 'bg-[#120D08]' : 'bg-[#0F0F16]';
+  // const themeCardInnerBg = isPro ? 'bg-yellow-500/30' : 'bg-[#0F0F16]';
+  const themeCardMetaBg = isPro ? 'bg-[#18120B]' : 'bg-[#15151E]';
+  const themeDashboardButton = isPro ? 'bg-yellow-500 hover:brightness-110 text-black font-extrabold' : 'bg-primary hover:brightness-110 text-black font-bold hover:font-extrabold'
+  const themeProfileButton = isPro ? 'bg-yellow-500 hover:brightness-110 font-extrabold' : 'bg-primary hover:brightness-110 text-black font-extrabold'
+
   let daysRemaining = null;
   if (isPro && user?.subscriptionExpiresAt) {
     const diffTime = new Date(user.subscriptionExpiresAt) - new Date();
@@ -40,7 +66,7 @@ function DashboardContent() {
     restoreSession();
   }, [restoreSession]);
 
-  
+
   useEffect(() => {
     if (isMounted) {
       const savedAlert = localStorage.getItem('dashboardAlert');
@@ -177,7 +203,7 @@ function DashboardContent() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="min-h-screen bg-background"
+      className={`min-h-screen ${themeDashboardWrapper}`}
     >
       {/* Top Bar */}
       <header className="h-16 border-b border-border px-8 flex items-center justify-between relative">
@@ -188,7 +214,7 @@ function DashboardContent() {
             onClick={() => router.push('/profile?returnUrl=/dashboard')}
             className="flex items-center cursor-pointer group"
           >
-            <div className="w-10 h-10 rounded-full text-black bg-yellow-500 hover:brightness-110 flex items-center justify-center font-bold text-sm border border-primary/30 overflow-hidden group-hover:border-primary transition-colors">
+            <div className={`w-10 h-10 rounded-full text-black ${themeProfileButton} flex items-center justify-center font-bold text-sm border border-primary/30 overflow-hidden group-hover:border-primary transition-colors`}>
               <User size={18} />
             </div>
           </div>
@@ -196,7 +222,7 @@ function DashboardContent() {
           {/* Dashboard Button */}
           <button
             onClick={() => router.push('/')}
-            className="h-9 px-4 rounded-xl bg-yellow-500 hover:brightness-110 text-black flex items-center justify-center font-extrabold text-sm tracking-wider cursor-pointer gap-2 transition-colors border border-transparent"
+            className={`h-9 ${themeDashboardButton} px-4 rounded-xl flex items-center justify-center text-sm tracking-wider cursor-pointer gap-2 transition-colors border border-transparent`}
           >
             <LayoutDashboard size={16} />
             Dashboard
@@ -223,7 +249,7 @@ function DashboardContent() {
 
           <button
             onClick={logout}
-            className="p-2.5 text-danger/70 cursor-pointer hover:text-red-400 transition-colors rounded-lg hover:bg-danger/40 border border-transparent flex-shrink-0"
+            className="p-2.5 bg-red-500/50 text-white/80 cursor-pointer hover:text-white transition-colors rounded-lg hover:bg-red-600 border border-transparent flex-shrink-0"
           >
             <LogOut size={18} />
           </button>
@@ -235,7 +261,7 @@ function DashboardContent() {
         {/* Header Section */}
         <div>
           <h2 className="text-3xl font-extrabold tracking-tight text-white mb-2 flex items-center gap-3">
-            <LayoutDashboard className="w-8 h-8 text-primary" /> Overview
+            <LayoutDashboard className={`w-8 h-8 ${themeText}`} /> Overview
           </h2>
           <p className="text-[#8B8B9E] font-medium text-sm">Manage your collaborative workspaces and active sessions globally.</p>
         </div>
@@ -244,10 +270,10 @@ function DashboardContent() {
 
 
           {/* Create Workspace */}
-          <div className="group relative bg-[#0F0F16] rounded-3xl border border-white/5 p-1 overflow-hidden hover:border-primary/50 transition-all duration-500 shadow-2xl hover:shadow-[0_20px_40px_rgba(108,99,255,0.15)] flex flex-col hover:!transform-none origin-right" style={{ transform: 'rotateY(10deg)', transformStyle: 'preserve-3d' }}>
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-2xl pointer-events-none"></div>
+          <div className={`group relative bg-[#0F0F16] rounded-3xl border border-white/5 p-1 overflow-hidden transition-all duration-500 shadow-2xl flex flex-col hover:!transform-none origin-right ${themeBorderHover} ${themeShadowHover}`} style={{ transform: 'rotateY(10deg)', transformStyle: 'preserve-3d' }}>
+            <div className={`absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-2xl pointer-events-none ${themeGradientFromVia} to-transparent`}></div>
             <div className="relative bg-[#0A0A0F] rounded-[22px] p-7 h-full flex flex-col z-10 border border-white/5">
-              <div className="w-12 h-12 rounded-2xl bg-[#151520] flex items-center justify-center mb-5 border border-white/10 text-primary group-hover:scale-110 group-hover:rotate-6 group-hover:bg-primary/20 group-hover:border-primary/40 transition-all duration-300 shadow-inner">
+              <div className={`w-12 h-12 rounded-2xl bg-[#151520] flex items-center justify-center mb-5 border border-white/10 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-inner ${themeIconGroup}`}>
                 <Plus className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Launch Workspace</h3>
@@ -257,7 +283,7 @@ function DashboardContent() {
                   router.refresh();
                   setIsCreateModalOpen(true);
                 }}
-                className="w-full cursor-pointer flex items-center justify-center gap-2 py-3.5 px-4 bg-gradient-to-r from-primary to-[#5a52d5] text-white rounded-xl font-bold text-sm tracking-wide hover:opacity-100 opacity-90 hover:-translate-y-0.5 active:translate-y-0 transition-all shadow-[0_0_20px_rgba(108,99,255,0.4)] hover:shadow-[0_0_30px_rgba(108,99,255,0.7)]"
+                className={`w-full cursor-pointer flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold text-sm tracking-wide hover:opacity-100 opacity-90 hover:-translate-y-0.5 active:translate-y-0 transition-all ${themeButtonBg}`}
               >
                 Initialize Session <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1.5 transition-transform" />
               </button>
@@ -283,9 +309,9 @@ function DashboardContent() {
           </div> */}
 
           {/* Join Session Card */}
-          <div className="group bg-[#0F0F16] rounded-3xl border border-white/5 p-7 shadow-xl hover:shadow-[0_20px_40px_rgba(108,99,255,0.1)] transition-all duration-500 hover:border-primary/30 relative overflow-hidden flex flex-col hover:!transform-none" style={{ transform: 'translateZ(10px)', transformStyle: 'preserve-3d' }}>
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-[40px] pointer-events-none rounded-full transition-opacity group-hover:opacity-100 opacity-0"></div>
-            <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-primary/5 blur-[50px] pointer-events-none rounded-full transition-opacity group-hover:opacity-100 opacity-0"></div>
+          <div className={`group bg-[#0F0F16] rounded-3xl border border-white/5 p-7 shadow-xl hover:shadow-[0_20px_40px_rgba(108,99,255,0.1)] transition-all duration-500 relative overflow-hidden flex flex-col hover:!transform-none ${themeBorderHoverLight}`} style={{ transform: 'translateZ(10px)', transformStyle: 'preserve-3d' }}>
+            <div className={`absolute top-0 right-0 w-32 h-32 blur-[40px] pointer-events-none rounded-full transition-opacity group-hover:opacity-100 opacity-0 ${themeBlurBg1}`}></div>
+            <div className={`absolute -bottom-10 -left-10 w-40 h-40 blur-[50px] pointer-events-none rounded-full transition-opacity group-hover:opacity-100 opacity-0 ${themeBlurBg2}`}></div>
             <h2 className="text-xl font-bold text-white mb-2">Connect to Session</h2>
             <p className="text-sm text-muted-foreground mb-6">Enter your secure 8-character access key.</p>
 
@@ -296,7 +322,7 @@ function DashboardContent() {
                 onClick={() => router.refresh()}
                 onChange={(e) => setJoinCode(e.target.value)}
                 placeholder="A 1 B 2 C 3 D 4"
-                className="w-full px-4 py-3.5 bg-[#050508] border border-[#2A2A35] rounded-xl text-white placeholder-[#8B8B9E]/30 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary uppercase tracking-[0.2em] font-mono text-sm transition-all shadow-inner group-hover:border-[#3A3A45]"
+                className={`w-full px-4 py-3.5 bg-[#050508] border border-[#2A2A35] rounded-xl text-white placeholder-[#8B8B9E]/30 focus:outline-none uppercase tracking-[0.2em] font-mono text-sm transition-all shadow-inner group-hover:border-[#3A3A45] ${themeFocusRing}`}
                 maxLength={8}
               />
 
@@ -322,7 +348,7 @@ function DashboardContent() {
                   <div
                     key={role}
                     onClick={() => setJoinRole(role)}
-                    className={`flex-1 text-center py-2.5 rounded-lg scale-[1.02] text-[11px] font-extrabold cursor-pointer transition-all uppercase tracking-widest ${joinRole === role ? 'bg-primary/20 border border-primary/40 text-white shadow-[0_0_15px_rgba(108,99,255,0.3)] scale-[1.02]' : 'text-[#8B8B9E] hover:text-white hover:bg-white/5'}`}
+                    className={`flex-1 text-center py-2.5 rounded-lg text-[11px] font-extrabold cursor-pointer transition-all uppercase tracking-widest ${joinRole === role ? (role === 'VIEWER' ? themeRoleActiveViewer : themeRoleActiveEditor) : 'text-[#8B8B9E] hover:text-white hover:bg-white/5'}`}
                   >
                     {role}
                   </div>
@@ -403,11 +429,12 @@ function DashboardContent() {
 
         {/* Historical Sessions */}
         <div className="flex items-center justify-between mt-20 mb-6">
-          <h3 className="text-xl font-bold text-white flex items-center gap-2">
-            <span className="text-3xl flex gap-3"> <span className='text-primary mt-2'><LucideActivity /></span>  Historical Sessions</span>
+          <h3 className="text-xl font-bold text-white items-center gap-2">
+            <span className="text-3xl flex gap-3"> <span className={`mt-2 ${themeText}`}><LucideActivity /></span>  Historical Sessions</span>
+            <span className="text-sm font-bold text-white/40">Access and Manage your recent session's history from here.</span>
           </h3>
           <span className="px-3 py-1 rounded-full bg-card border border-border text-xs font-bold text-muted-foreground">
-            {recentRooms.length} RECORDS
+            {recentRooms.length} / {isPro ? '20' : '10'} RECORDS
           </span>
         </div>
 
@@ -449,13 +476,13 @@ function DashboardContent() {
                 <motion.div
                   variants={itemVariants}
                   key={room.id}
-                  className={`group bg-gradient-to-b from-[#1C1C24] to-[#0A0A0F] border border-[#2A2A35] rounded-[24px] p-1.5 hover:border-primary/50 transition-all duration-500 hover:shadow-[0_15px_40px_-10px_rgba(108,99,255,0.25)] relative overflow-hidden flex flex-col hover:-translate-y-2 ${room.isActive ? 'cursor-pointer' : ''}`}
+                  className={`group bg-gradient-to-b ${themeCardBorderGradient} border border-[#2A2A35] rounded-[24px] p-1.5 transition-all duration-500 relative overflow-hidden flex flex-col hover:-translate-y-2 ${themeBorderHover} ${themeShadowHover} ${room.isActive ? 'cursor-pointer' : ''}`}
                   onClick={() => room.isActive && router.push(`/room/${room.id}`)}
                 >
-                  <div className="relative h-full w-full bg-[#0F0F16] rounded-[18px] p-6 flex flex-col overflow-hidden z-10">
+                  <div className={`relative h-full w-full ${themeCardInnerBg} rounded-[18px] p-6 flex flex-col overflow-hidden z-10`}>
 
                     {/* Ambient Glow */}
-                    <div className={`absolute -top-24 -right-24 w-48 h-48 blur-[70px] opacity-20 pointer-events-none transition-all duration-700 group-hover:opacity-40 group-hover:scale-150 ${room.isActive ? 'bg-success' : 'bg-primary'}`}></div>
+                    <div className={`absolute -top-24 -right-24 w-48 h-48 blur-[70px] opacity-20 pointer-events-none transition-all duration-700 group-hover:opacity-40 group-hover:scale-150 ${room.isActive ? 'bg-success' : themeBlurBgHover}`}></div>
 
                     {/* Header */}
                     <div className="flex justify-between items-start mb-6 relative z-10">
@@ -474,7 +501,7 @@ function DashboardContent() {
                             </span>
                           )}
                         </div>
-                        <h4 className="font-extrabold text-white text-xl tracking-tight truncate drop-shadow-sm group-hover:text-primary/90 transition-colors">
+                        <h4 className={`font-extrabold text-white text-xl tracking-tight truncate drop-shadow-sm transition-colors ${themeTextHover}`}>
                           {room.name || 'Untitled Workspace'}
                         </h4>
                         <div className="text-[11px] font-mono text-[#8B8B9E] bg-[#1A1A24] w-fit px-2.5 py-1 rounded-md border border-[#2A2A35] mt-2 shadow-inner">
@@ -492,7 +519,7 @@ function DashboardContent() {
                     </div>
 
                     {/* Middle Metadata */}
-                    <div className="grid grid-cols-2 gap-4 mb-6 flex-1 relative z-10 bg-[#15151E] rounded-xl p-4 border border-[#2A2A35] shadow-inner">
+                    <div className={`grid grid-cols-2 gap-4 mb-6 flex-1 relative z-10 ${themeCardMetaBg} rounded-xl p-4 border border-[#2A2A35] shadow-inner`}>
 
                       {/* Left: Limit */}
                       <div className="flex flex-col justify-center">
@@ -533,7 +560,7 @@ function DashboardContent() {
                       <div className="mt-auto relative z-10">
                         <button
                           onClick={(e) => { e.stopPropagation(); router.push(`/room/${room.id}`); }}
-                          className="w-full group/btn relative overflow-hidden rounded-xl bg-gradient-to-r from-primary to-[#5a52d5] p-[1px] transition-all hover:shadow-[0_0_20px_rgba(108,99,255,0.3)] hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                          className={`w-full group/btn relative overflow-hidden rounded-xl bg-gradient-to-r p-[1px] transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer ${themeEnterSessionBg}`}
                         >
                           <div className="absolute inset-0 bg-white/20 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
                           <div className="relative flex items-center justify-center gap-2 rounded-[11px] bg-[#111118] px-4 py-3 transition-all duration-300 group-hover/btn:bg-transparent">
@@ -552,7 +579,7 @@ function DashboardContent() {
           </motion.div>
         ) : (
           <div className="bg-card border border-border rounded-xl p-8 text-center text-muted-foreground">
-            No historical sessions found.
+            No Recent sessions found.
           </div>
         )}
       </main>

@@ -65,6 +65,21 @@ function ProfileContent() {
   
   const fileInputRef = useRef(null);
 
+  const isPro = user?.subscriptionType === 'PRO';
+  const themeText = isPro ? 'text-[#F5A524]' : 'text-primary';
+  const themeBlurHero = isPro ? 'bg-[#F5A524]/20' : 'bg-primary/20';
+  const themeBlurAvatar = isPro ? 'bg-[#F5A524]/20 group-hover:bg-[#F5A524]/30' : 'bg-primary/20 group-hover:bg-primary/30';
+  const themeSelection = isPro ? 'selection:bg-[#F5A524]/30' : 'selection:bg-primary/30';
+  const themeBorderFocus = isPro ? 'focus:border-[#F5A524]' : 'focus:border-primary';
+  const themeBorderFocusBorder = isPro ? 'border-[#F5A524]/50' : 'border-primary/50';
+  const themeBgButton = isPro ? 'bg-[#F5A524] hover:bg-[#F5A524]/80 text-black' : 'bg-primary hover:bg-primary/80 text-black';
+  const themeIconPrimary = isPro ? 'text-[#F5A524]' : 'text-primary';
+  const themeDropShadowRing = isPro ? 'drop-shadow-[0_0_15px_rgba(245,165,36,0.3)]' : 'drop-shadow-[0_0_15px_rgba(0,212,170,0.3)]';
+  const themeGradientBgFrom = isPro ? 'from-[#F5A524]/5' : 'from-primary/5';
+  const themeGradientRingFrom = isPro ? '#F5A524' : '#00D4AA';
+  const themeGradientRingTo = isPro ? '#FFC107' : '#3B82F6';
+  const themeLanguageBar = isPro ? 'bg-gradient-to-r from-[#F5A524]/50 to-[#F5A524]' : 'bg-gradient-to-r from-primary/50 to-primary';
+
   useEffect(() => {
     restoreSession();
   }, [restoreSession]);
@@ -254,7 +269,7 @@ function ProfileContent() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans selection:bg-primary/30 pb-24">
+    <div className={`min-h-screen bg-black text-white font-sans ${themeSelection} pb-24`}>
       
       {/* ======================= HERO BANNER ======================= */}
       <div className="h-[35vh] lg:h-[40vh] w-full relative overflow-hidden">
@@ -262,7 +277,7 @@ function ProfileContent() {
         <div className="absolute inset-0 bg-gradient-to-br from-blue-900/30 via-purple-900/20 to-black z-0" />
         <motion.div 
           animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }} transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[-20%] right-[-10%] w-[50%] h-[150%] bg-primary/20 blur-[120px] rounded-full z-0 pointer-events-none" 
+          className={`absolute top-[-20%] right-[-10%] w-[50%] h-[150%] blur-[120px] rounded-full z-0 pointer-events-none ${themeBlurHero}`}
         />
         
         {/* Blueprint Grid Pattern */}
@@ -294,7 +309,7 @@ function ProfileContent() {
               className="bg-[#0A0A0F]/90 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,1)] relative overflow-hidden group"
             >
               {/* Subtle hover glow */}
-              <div className="absolute -top-20 -left-20 w-48 h-48 bg-primary/20 blur-[60px] rounded-full group-hover:scale-150 group-hover:bg-primary/30 transition-all duration-700 pointer-events-none" />
+              <div className={`absolute -top-20 -left-20 w-48 h-48 blur-[60px] rounded-full group-hover:scale-150 transition-all duration-700 pointer-events-none ${themeBlurAvatar}`} />
               
               <div className="relative z-10">
                 {/* Avatar */}
@@ -326,13 +341,13 @@ function ProfileContent() {
                     )}
                   </div>
                   {!profileData.profilePicture && (
-                    <div className="absolute -bottom-3 -right-3 z-20 bg-primary w-10 h-10 rounded-xl border-4 border-[#0A0A0F] flex items-center justify-center text-black shadow-lg group-hover/container:scale-110 transition-transform cursor-pointer">
+                    <div className={`absolute -bottom-3 -right-3 z-20 w-10 h-10 rounded-xl border-4 border-[#0A0A0F] flex items-center justify-center shadow-lg group-hover/container:scale-110 transition-transform cursor-pointer ${themeBgButton}`}>
                       <Camera size={16} />
                     </div>
                   )}
                   {uploadingImage && (
                     <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 rounded-3xl">
-                      <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      <div className={`w-8 h-8 border-3 border-t-transparent rounded-full animate-spin ${themeBorderFocusBorder.replace('border-', 'border-').replace('/50', '')}`}></div>
                     </div>
                   )}
                   <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
@@ -347,9 +362,9 @@ function ProfileContent() {
                         onChange={(e) => setEditedName(e.target.value)} 
                         autoFocus
                         onKeyDown={(e) => { if (e.key === 'Enter') handleSaveName(); if (e.key === 'Escape') { setIsEditingName(false); setEditedName(profileData.name); } }}
-                        className="bg-[#1A1A24] border border-primary/50 text-white text-2xl md:text-3xl font-black tracking-tight rounded-xl px-4 py-1 w-48 md:w-64 text-center focus:outline-none focus:border-primary transition-colors"
+                        className={`bg-[#1A1A24] border ${themeBorderFocusBorder} text-white text-2xl md:text-3xl font-black tracking-tight rounded-xl px-4 py-1 w-48 md:w-64 text-center focus:outline-none ${themeBorderFocus} transition-colors`}
                       />
-                      <button onClick={handleSaveName} disabled={savingName} className="p-2 bg-primary rounded-xl text-black hover:bg-primary/80 transition-colors cursor-pointer disabled:opacity-50">
+                      <button onClick={handleSaveName} disabled={savingName} className={`p-2 rounded-xl transition-colors cursor-pointer disabled:opacity-50 ${themeBgButton}`}>
                         {savingName ? <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" /> : <Check size={20} />}
                       </button>
                       <button onClick={() => {setIsEditingName(false); setEditedName(profileData.name);}} className="p-2 bg-white/10 rounded-xl text-white hover:bg-white/20 transition-colors cursor-pointer">
@@ -371,9 +386,13 @@ function ProfileContent() {
                     <Mail size={16} />
                     <span className="font-bold text-sm tracking-wide">{profileData.email}</span>
                   </div>
-                  {user?.subscriptionType === 'PRO' && (
+                  {user?.subscriptionType === 'PRO' ? (
                     <div className="w-fit px-3 py-1.5 bg-[#F5A524]/10 border border-[#F5A524]/30 text-[#F5A524] rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-[0_0_20px_rgba(245,165,36,0.1)]">
                       <Zap size={12} /> CollabX PRO
+                    </div>
+                  ) : (
+                    <div className="w-fit px-3 py-1.5 bg-primary/10 border border-primary/30 text-primary rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-[0_0_20px_rgba(108,99,255,0.1)]">
+                      <Zap size={12} /> CollabX Free
                     </div>
                   )}
                 </div>
@@ -440,13 +459,13 @@ function ProfileContent() {
                 initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }}
                 className="md:col-span-5 bg-[#0A0A0F]/90 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/10 shadow-2xl flex flex-col items-center justify-center relative overflow-hidden min-h-[320px]"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent z-0" />
+                <div className={`absolute inset-0 bg-gradient-to-br ${themeGradientBgFrom} to-transparent z-0`} />
                 <h2 className="text-[10px] font-black tracking-[0.2em] text-white/30 uppercase absolute top-8 left-8 flex items-center gap-2">
-                  <Activity size={14} className="text-primary"/> Global Ranking
+                  <Activity size={14} className={`${themeIconPrimary}`}/> Global Ranking
                 </h2>
                 
                 <div className="relative w-48 h-48 mt-8 z-10">
-                  <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90 drop-shadow-[0_0_15px_rgba(0,212,170,0.3)]">
+                  <svg viewBox="0 0 100 100" className={`w-full h-full -rotate-90 ${themeDropShadowRing}`}>
                     <circle cx="50" cy="50" r="42" fill="none" stroke="#1A1A24" strokeWidth="4" />
                     <motion.circle 
                       cx="50" cy="50" r="42" fill="none" stroke="url(#ring-grad)" strokeWidth="6" strokeLinecap="round" 
@@ -456,8 +475,8 @@ function ProfileContent() {
                     />
                     <defs>
                       <linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#00D4AA" />
-                        <stop offset="100%" stopColor="#3B82F6" />
+                        <stop offset="0%" stopColor={themeGradientRingFrom} />
+                        <stop offset="100%" stopColor={themeGradientRingTo} />
                       </linearGradient>
                     </defs>
                   </svg>
@@ -522,7 +541,7 @@ function ProfileContent() {
             >
               <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[80px] rounded-full pointer-events-none" />
               <h2 className="text-[10px] font-black tracking-[0.2em] text-white/30 uppercase mb-8 flex items-center gap-2 relative z-10">
-                <Terminal size={14} className="text-primary"/> Language Matrix
+                <Terminal size={14} className={`${isPro ? 'text-[#F5A524]' : 'text-primary'}`}/> Language Matrix
               </h2>
               
               {languageStats.length === 0 ? (
@@ -535,13 +554,13 @@ function ProfileContent() {
                         <span className="font-bold text-white capitalize tracking-wide text-lg">{lang.name}</span>
                         <div className="text-right">
                           <span className="text-[9px] font-bold text-white/30 mr-3 tracking-[0.2em] uppercase">{lang.count} RUNS</span>
-                          <span className="font-black text-primary text-lg">{lang.percentage}%</span>
+                          <span className={`font-black ${isPro ? 'text-white' : 'text-primary'} text-lg`}>{lang.percentage}%</span>
                         </div>
                       </div>
                       <div className="w-full bg-[#1A1A24] h-3 rounded-full overflow-hidden relative border border-white/5">
                         <motion.div 
                           initial={{ width: 0 }} animate={{ width: `${lang.percentage}%` }} transition={{ duration: 1.5, delay: 0.1 * idx + 0.5, ease: "easeOut" }}
-                          className="bg-gradient-to-r from-primary/50 to-primary h-full rounded-full relative"
+                          className={`${themeLanguageBar} h-full rounded-full relative`}
                         >
                           {/* Inner glowing dot that moves with the bar */}
                           <div className="absolute top-0 right-0 bottom-0 w-4 bg-white/40 blur-[2px] rounded-full" />
