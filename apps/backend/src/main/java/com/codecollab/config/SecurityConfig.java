@@ -36,7 +36,7 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login").permitAll()
+                .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/check-email", "/api/v1/auth/reset-password").permitAll()
                 .requestMatchers("/ws/**").permitAll() // WebSocket handshake
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/error").permitAll()

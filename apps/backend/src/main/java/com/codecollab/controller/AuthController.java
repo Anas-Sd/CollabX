@@ -23,6 +23,21 @@ public class AuthController {
         return ResponseEntity.ok(authService.register(request));
     }
 
+    @GetMapping("/check-email")
+    public ResponseEntity<?> checkEmail(@RequestParam String email) {
+        boolean exists = authService.checkEmailExists(email);
+        if (exists) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", "Email is already in use"));
+        }
+        return ResponseEntity.ok(java.util.Map.of("message", "Email is available"));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody java.util.Map<String, String> request) {
+        authService.resetPassword(request.get("email"), request.get("newPassword"));
+        return ResponseEntity.ok(java.util.Map.of("message", "Password reset successfully"));
+    }
+
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));

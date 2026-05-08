@@ -19,6 +19,10 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
+    public boolean checkEmailExists(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email is already in use");
@@ -56,12 +60,18 @@ public class AuthService {
                 .user(mapToUserDto(user))
                 .build();
     }
-    
     public UserDto getCurrentUser(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         user = checkSubscriptionExpiration(user);
         return mapToUserDto(user);
+    }
+
+    public void resetPassword(String email, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
 
     private User checkSubscriptionExpiration(User user) {
