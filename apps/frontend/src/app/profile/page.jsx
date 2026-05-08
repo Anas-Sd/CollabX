@@ -166,10 +166,23 @@ function ProfileContent() {
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      useNotificationStore.getState().addNotification('Please fill in all password fields.', 'warning');
+    if (!currentPassword && !newPassword && !confirmPassword) {
+      useNotificationStore.getState().addNotification('Please enter all required password fields', 'warning');
       return;
     }
+    if (!currentPassword) {
+      useNotificationStore.getState().addNotification('Please enter your current password', 'warning');
+      return;
+    }
+    if (!newPassword) {
+      useNotificationStore.getState().addNotification('Please enter a new password', 'warning');
+      return;
+    }
+    if (!confirmPassword) {
+      useNotificationStore.getState().addNotification('Please confirm your new password', 'warning');
+      return;
+    }
+
     if (newPassword.length < 6) {
       useNotificationStore.getState().addNotification('New password must be at least 6 characters.', 'warning');
       return;
@@ -636,7 +649,7 @@ function ProfileContent() {
               <form onSubmit={handleChangePassword} noValidate className="space-y-4">
                 <div className="relative">
                   <label className="block text-sm text-muted-foreground mb-1">Current Password</label>
-                  <input type={showPassword.current ? "text" : "password"} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required
+                  <input type={showPassword.current ? "text" : "password"} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)}
                     className="w-full bg-[#1A1A24] border border-border rounded-lg px-4 py-2 pr-10 text-white focus:outline-none focus:border-primary transition-colors" />
                   <button type="button" onClick={() => setShowPassword({ ...showPassword, current: !showPassword.current })} className="absolute right-3 top-8 text-muted-foreground hover:text-white transition-colors cursor-pointer">
                     {showPassword.current ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -644,7 +657,7 @@ function ProfileContent() {
                 </div>
                 <div className="relative">
                   <label className="block text-sm text-muted-foreground mb-1">New Password</label>
-                  <input type={showPassword.new ? "text" : "password"} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required minLength={6}
+                  <input type={showPassword.new ? "text" : "password"} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required
                     className="w-full bg-[#1A1A24] border border-border rounded-lg px-4 py-2 pr-10 text-white focus:outline-none focus:border-primary transition-colors" />
                   <button type="button" onClick={() => setShowPassword({ ...showPassword, new: !showPassword.new })} className="absolute right-3 top-8 text-muted-foreground hover:text-white transition-colors cursor-pointer">
                     {showPassword.new ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -652,7 +665,7 @@ function ProfileContent() {
                 </div>
                 <div className="relative">
                   <label className="block text-sm text-muted-foreground mb-1">Confirm New Password</label>
-                  <input type={showPassword.confirm ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6}
+                  <input type={showPassword.confirm ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required
                     className="w-full bg-[#1A1A24] border border-border rounded-lg px-4 py-2 pr-10 text-white focus:outline-none focus:border-primary transition-colors" />
                   <button type="button" onClick={() => setShowPassword({ ...showPassword, confirm: !showPassword.confirm })} className="absolute right-3 top-8 text-muted-foreground hover:text-white transition-colors cursor-pointer">
                     {showPassword.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -755,3 +768,4 @@ export default function ProfilePage() {
     </Suspense>
   );
 }
+
