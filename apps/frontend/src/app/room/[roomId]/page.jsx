@@ -459,15 +459,47 @@ export default function RoomPage() {
 
           {/* Left Side: Loader & Message */}
           <div className="flex-1 flex flex-col items-center justify-center text-center">
-            <div className="flex justify-center mb-8 relative">
-              <div className="absolute w-32 h-32 rounded-full bg-primary/10 blur-2xl animate-pulse"></div>
-              <div className="relative flex items-center justify-center w-20 h-20">
-                <div className="absolute inset-0 rounded-full border border-white/[0.05] bg-card/50 backdrop-blur-sm"></div>
-                <div className="absolute inset-2 rounded-full border-2 border-primary border-t-transparent border-r-transparent animate-spin"></div>
-                <div className="absolute inset-3 rounded-full border border-white/10 border-b-transparent border-l-transparent animate-spin animation-delay-150" style={{ animationDirection: 'reverse' }}></div>
-                <div className="w-8 h-8 flex items-center justify-center">
-                  <div className="w-2 h-2 rounded-full bg-primary animate-ping"></div>
-                </div>
+            <div className="flex justify-center mb-10 relative">
+              <style>{`
+                @keyframes drawX {
+                  0% { stroke-dashoffset: 100; opacity: 0; }
+                  10% { opacity: 1; }
+                  40% { stroke-dashoffset: 0; filter: drop-shadow(0 0 10px rgba(245,165,36,0.8)); }
+                  60% { stroke-dashoffset: 0; filter: drop-shadow(0 0 10px rgba(245,165,36,0.8)); }
+                  90% { opacity: 1; }
+                  100% { stroke-dashoffset: -100; opacity: 0; }
+                }
+              `}</style>
+              
+              <div className="absolute w-32 h-32 bg-[#F5A524]/10 blur-[40px] rounded-full animate-pulse"></div>
+              
+              <div className="relative w-24 h-24 flex items-center justify-center">
+                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(245,165,36,0.3)]">
+                  <defs>
+                    <linearGradient id="xGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#F5A524" />
+                      <stop offset="50%" stopColor="#FFC107" />
+                      <stop offset="100%" stopColor="#ffffff" />
+                    </linearGradient>
+                  </defs>
+                  
+                  <path 
+                    d="M 25 25 L 75 75" 
+                    fill="none" 
+                    stroke="url(#xGradient)" 
+                    strokeWidth="10" 
+                    strokeLinecap="round" 
+                    style={{ strokeDasharray: 100, animation: 'drawX 2.5s ease-in-out infinite' }}
+                  />
+                  <path 
+                    d="M 75 25 L 25 75" 
+                    fill="none" 
+                    stroke="url(#xGradient)" 
+                    strokeWidth="10" 
+                    strokeLinecap="round" 
+                    style={{ strokeDasharray: 100, animation: 'drawX 2.5s ease-in-out infinite 0.4s' }}
+                  />
+                </svg>
               </div>
             </div>
 
