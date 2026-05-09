@@ -51,7 +51,19 @@ export const useVoice = (roomId, user, isActive = true) => {
         if (!mounted) return;
 
         // Use string user ID because we built the token using buildTokenWithUserAccount
-        await client.join(appId, roomId, token, user.id);
+        try {
+          await client.join(appId, roomId, token, user.id);
+        } catch (joinErr) {
+          if (joinErr?.code === 'UID_CONFLICT' || joinErr?.message?.includes('UID_CONFLICT')) {
+            console.warn('UID conflict detected (likely strict mode double mount). Retrying...');
+            await client.leave();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            if (!mounted) return;
+            await client.join(appId, roomId, token, user.id);
+          } else {
+            throw joinErr;
+          }
+        }
 
         if (!mounted) {
           await client.leave();
@@ -71,7 +83,15 @@ export const useVoice = (roomId, user, isActive = true) => {
         }
 
         if (mounted && localAudioTrack) {
-          await client.publish([localAudioTrack]);
+          try {
+            await client.publish([localAudioTrack]);
+          } catch (pubErr) {
+            if (!mounted || pubErr?.code === 'WS_ABORT' || pubErr?.message?.includes('WS_ABORT')) {
+              console.warn('Voice publish aborted (likely component unmounted).');
+            } else {
+              throw pubErr;
+            }
+          }
         } else if (!mounted && localAudioTrack) {
           localAudioTrack.close();
           await client.leave();
