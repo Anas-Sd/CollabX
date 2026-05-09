@@ -44,10 +44,9 @@ function DashboardContent() {
   const themeEnterSessionBg = isPro ? 'from-[#F5A524] to-[#FFC107] hover:shadow-[0_0_20px_rgba(245,165,36,0.3)] text-black' : 'from-primary to-[#5a52d5] hover:shadow-[0_0_20px_rgba(108,99,255,0.3)] text-white';
   // const themeDashboardWrapper = isPro ? 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#1F1707] via-black to-black' : 'bg-background';
   const themeDashboardWrapper = isPro ? 'bg-gradient-to-tr from-[#0F0E0C] via-[#1A1610] to-[#B07A1A]' : 'bg-background';
-  const themeCardBorderGradient = isPro ? 'from-[#2A1F0D] to-[#0A0702]' : 'from-[#1C1C24] to-[#0A0A0F]';
-  const themeCardInnerBg = isPro ? 'bg-[#120D08]' : 'bg-[#0F0F16]';
-  // const themeCardInnerBg = isPro ? 'bg-yellow-500/30' : 'bg-[#0F0F16]';
-  const themeCardMetaBg = isPro ? 'bg-[#18120B]' : 'bg-[#15151E]';
+  const themeCardBorderGradient = isPro ? 'from-[#F5A524]/30 to-[#0A0A0F]' : 'from-[#1C1C24] to-[#0A0A0F]';
+  const themeCardInnerBg = isPro ? 'bg-[#08080A]' : 'bg-[#0F0F16]';
+  const themeCardMetaBg = isPro ? 'bg-[#111115]' : 'bg-[#15151E]';
   const themeDashboardButton = isPro ? 'bg-yellow-500 hover:brightness-110 text-black font-extrabold' : 'bg-primary hover:brightness-110 text-black font-bold hover:font-extrabold'
   const themeProfileButton = isPro ? 'bg-yellow-500 hover:brightness-110 font-extrabold' : 'bg-primary hover:brightness-110 text-black font-extrabold'
 
@@ -586,7 +585,7 @@ function DashboardContent() {
                         >
                           <div className="absolute inset-0 bg-white/20 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
                           <div className="relative flex items-center justify-center gap-2 rounded-[11px] bg-[#111118] px-4 py-3 transition-all duration-300 group-hover/btn:bg-transparent">
-                            <span className="text-xs font-black uppercase tracking-[0.2em] text-white/90 group-hover/btn:text-white">
+                            <span className="text-xs font-black uppercase tracking-[0.2em] text-white/90 group-hover/btn:text-black">
                               Enter Session
                             </span>
                             <ArrowRight size={14} className="text-white/50 group-hover/btn:text-white group-hover/btn:translate-x-1.5 transition-all duration-300" />
