@@ -43,6 +43,11 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(request));
     }
 
+    @PostMapping("/google")
+    public ResponseEntity<AuthResponse> googleLogin(@RequestBody java.util.Map<String, String> request) {
+        return ResponseEntity.ok(authService.googleLogin(request.get("token")));
+    }
+
     @GetMapping("/me")
     public ResponseEntity<UserDto> getCurrentUser(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
