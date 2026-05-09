@@ -18,6 +18,7 @@ function DashboardContent() {
   const [joinRole, setJoinRole] = useState('VIEWER');
   const [loadingJoin, setLoadingJoin] = useState(false);
   const [recentRooms, setRecentRooms] = useState([]);
+  const [isLoadingRooms, setIsLoadingRooms] = useState(true);
   const [isProModalOpen, setIsProModalOpen] = useState(false);
 
   const router = useRouter();
@@ -107,6 +108,8 @@ function DashboardContent() {
       setRecentRooms(res.data);
     } catch (err) {
       console.error('Failed to fetch rooms', err);
+    } finally {
+      setIsLoadingRooms(false);
     }
   };
 
@@ -357,7 +360,7 @@ function DashboardContent() {
 
               <button
                 type="submit"
-                disabled={!joinCode || loadingJoin}
+                disabled={loadingJoin}
                 className="w-full flex items-center cursor-pointer justify-center gap-2 py-3.5 px-4 text-white bg-white/5 border border-white/10 rounded-xl font-bold tracking-wide hover:bg-white/10 hover:border-white/30 focus:ring-2 focus:ring-white/20 transition-all  group/btn hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:-translate-y-0.5 active:translate-y-0"
               >
                 {loadingJoin ? 'Connecting...' : 'Access Room'}
@@ -438,7 +441,26 @@ function DashboardContent() {
           </span>
         </div>
 
-        {recentRooms.length > 0 ? (
+        {isLoadingRooms ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className={`group bg-gradient-to-b ${themeCardBorderGradient} border border-[#2A2A35] rounded-[24px] p-1.5 overflow-hidden flex flex-col`}>
+                <div className={`flex flex-col h-full ${themeCardInnerBg} rounded-[20px] p-6 relative overflow-hidden animate-pulse`}>
+                  <div className="flex justify-between items-start mb-6">
+                    <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10"></div>
+                    <div className="w-16 h-6 rounded-full bg-white/5 border border-white/10"></div>
+                  </div>
+                  <div className="w-3/4 h-5 rounded bg-white/10 mb-3"></div>
+                  <div className="w-1/2 h-3 rounded bg-white/5 mb-6"></div>
+                  <div className="mt-auto pt-5 border-t border-white/5 flex items-center justify-between">
+                    <div className="w-20 h-3 rounded bg-white/5"></div>
+                    <div className="w-6 h-6 rounded-full bg-white/5"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : recentRooms.length > 0 ? (
           <motion.div
             variants={containerVariants}
             initial="hidden"

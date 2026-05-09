@@ -435,13 +435,58 @@ export default function RoomPage() {
   }, [currentUserParticipant?.role, roomId]);
 
   if (!isMounted || !user || isLoadingRoom) return (
-    <div className="min-h-screen bg-[#0A0A0F] flex items-center justify-center">
-      <div className="flex flex-col items-center justify-center relative">
-        <div className="w-16 h-16 rounded-full border border-[#2A2A35] flex items-center justify-center bg-[#13131A] shadow-[0_0_40px_rgba(108,99,255,0.15)] mb-6">
-           <div className="w-6 h-6 rounded border-2 border-primary border-t-transparent animate-spin"></div>
+    <div className="flex h-screen bg-[#050508] overflow-hidden select-none animate-pulse">
+      {/* SKELETON SIDEBAR */}
+      <div className="w-16 md:w-20 lg:w-64 bg-[#0A0A0F] border-r border-white/5 flex flex-col h-full shrink-0">
+        <div className="h-16 border-b border-white/5 flex items-center justify-center lg:justify-start px-4">
+          <div className="w-8 h-8 rounded-lg bg-white/10"></div>
+          <div className="hidden lg:block ml-3 w-24 h-5 rounded bg-white/5"></div>
         </div>
-        <h2 className="text-xl font-bold text-white mb-2 tracking-tight">Accessing Workspace</h2>
-        <p className="text-sm text-muted-foreground">Securely connecting to the host...</p>
+        <div className="p-4 space-y-4">
+          {[1,2,3,4,5].map(i => (
+            <div key={i} className="flex items-center justify-center lg:justify-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white/5"></div>
+              <div className="hidden lg:block w-32 h-4 rounded bg-white/5"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* SKELETON MAIN WORKSPACE */}
+      <div className="flex-1 flex flex-col h-screen min-w-0">
+        {/* Header */}
+        <div className="h-[60px] bg-[#0A0A0F] border-b border-white/5 flex items-center justify-between px-4 lg:px-6">
+          <div className="flex items-center gap-4">
+            <div className="w-32 h-6 rounded bg-white/5"></div>
+            <div className="w-16 h-5 rounded-full bg-white/10"></div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="w-24 h-8 rounded-lg bg-white/5"></div>
+            <div className="w-8 h-8 rounded-full bg-white/10"></div>
+          </div>
+        </div>
+        
+        {/* Content Area */}
+        <div className="flex-1 flex flex-col lg:flex-row bg-[#0A0A0F] p-2 gap-2 relative">
+          <div className="flex-[0.6] bg-black border border-white/5 rounded-2xl hidden lg:block"></div>
+          <div className="flex-[1.4] flex flex-col border border-white/5 rounded-2xl overflow-hidden bg-black">
+            <div className="h-12 border-b border-white/5 flex items-center px-4 gap-2">
+              <div className="w-20 h-6 rounded bg-white/5"></div>
+              <div className="w-20 h-6 rounded bg-white/5"></div>
+            </div>
+            <div className="flex-1 p-4 space-y-2">
+              <div className="w-full h-4 rounded bg-white/5"></div>
+              <div className="w-3/4 h-4 rounded bg-white/5"></div>
+              <div className="w-5/6 h-4 rounded bg-white/5"></div>
+              <div className="w-1/2 h-4 rounded bg-white/5"></div>
+            </div>
+            <div className="h-48 border-t border-white/5 bg-[#050508] p-4">
+              <div className="w-24 h-4 rounded bg-white/10 mb-4"></div>
+              <div className="w-full h-3 rounded bg-white/5"></div>
+              <div className="w-full h-3 rounded bg-white/5 mt-2"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
