@@ -88,14 +88,20 @@ function AuthContent() {
       login(res.data.user, res.data.token);
       router.push('/');
     } catch (err) {
-      useNotificationStore.getState().addNotification(err.response?.data?.message || 'Google Login failed.', 'error');
+      console.error('Google Login Error Details:', err);
+      if (err.response) {
+        console.error('Response Data:', err.response.data);
+      }
+      const errorMessage = err.response?.data?.message || err.response?.data?.error || err.message || 'Google Login failed.';
+      useNotificationStore.getState().addNotification(errorMessage, 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGoogleError = () => {
-    useNotificationStore.getState().addNotification('Google Login failed.', 'error');
+  const handleGoogleError = (err) => {
+    console.error('Google Login Popup Error:', err);
+    useNotificationStore.getState().addNotification('Google Login popup failed.', 'error');
   };
 
   const googleLoginAction = useGoogleLogin({
