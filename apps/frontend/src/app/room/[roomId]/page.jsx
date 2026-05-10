@@ -13,6 +13,7 @@ import api from '../../../lib/api';
 import { useNotificationStore } from '../../../store/notificationStore';
 import ProUpgradeModal from '../../../components/subscription/ProUpgradeModal';
 import Whiteboard from '../../../components/room/Whiteboard';
+import FeedbackButton from '../../../components/ui/FeedbackButton';
 
 const DEFAULT_CODE_TEMPLATES = {
   java: `public class Main {
@@ -596,16 +597,29 @@ export default function RoomPage() {
       {/* Header Island (Full Width) */}
       <div className="h-16 rounded-2xl border border-border flex items-center justify-between px-6 bg-card shrink-0 shadow-sm backdrop-blur-md bg-card/90 relative z-20">
         <div className="flex items-center gap-6">
-          <div className="tooltip">
-            <button
-              onClick={() => router.push(`/profile?returnUrl=/room/${roomId}`)}
-              className="p-2 cursor-pointer rounded-full w-9 text-white/50 h-9 bg-primary/20 text-muted-foreground hover:text-white transition-colors"
-            >
-              <User size={20} />
-            </button>
-            <div className="tooltip-content z-50">  
-              <div className="tooltip-box">View Profile</div>
-              <div className="tooltip-arrow"></div>
+          <div className="flex items-center gap-2">
+            <div className="tooltip">
+              <button
+                onClick={() => router.push(`/profile?returnUrl=/room/${roomId}`)}
+                className="p-2 cursor-pointer rounded-full w-9 flex items-center justify-center text-white/50 h-9 bg-primary/20 text-muted-foreground hover:text-white transition-colors"
+              >
+                <User size={18} />
+              </button>
+              <div className="tooltip-content z-50">  
+                <div className="tooltip-box">View Profile</div>
+                <div className="tooltip-arrow"></div>
+              </div>
+            </div>
+
+            <div className="tooltip">
+              <FeedbackButton 
+                context="Workspace Header" 
+                className="p-2 cursor-pointer rounded-full w-9 flex items-center justify-center text-white/50 h-9 bg-primary/20 text-muted-foreground hover:text-white transition-colors" 
+              />
+              <div className="tooltip-content z-50">  
+                <div className="tooltip-box">Give Feedback</div>
+                <div className="tooltip-arrow"></div>
+              </div>
             </div>
           </div>
 

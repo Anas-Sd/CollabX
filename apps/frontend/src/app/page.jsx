@@ -28,6 +28,7 @@ import Whiteboard from '../components/room/Whiteboard';
 import api from '../lib/api';
 import { useNotificationStore } from '../store/notificationStore';
 import { useRouter } from 'next/navigation';
+import FeedbackButton from '../components/ui/FeedbackButton';
 
 const FadeIn = ({ children, delay = 0, direction = "up", className = "" }) => {
   const ref = useRef(null);
@@ -214,6 +215,13 @@ export default function Home() {
               >
                 Dashboard <ArrowRight className="w-3 h-3" />
               </Link>
+              <div className="group relative">
+                  <FeedbackButton 
+                    context="Landing Page Footer" 
+                    className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:text-[#F5A623] hover:border-[#F5A623]/30 transition-all"
+                  />
+                  <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2.5 py-1 bg-[#111115] border border-white/10 text-white text-[10px] rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-xl z-50">Give Feedback</span>
+                </div>
               <button
                 onClick={() => {
                   logout();
@@ -221,7 +229,6 @@ export default function Home() {
                   useNotificationStore.getState().addNotification('Logged out successfully', 'success');
                 }}
                 className="p-2.5 text-white/50 hover:text-red-400 hover:bg-red-400/10 rounded-lg cursor-pointer transition-all"
-                title="Logout"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -719,10 +726,13 @@ export default function Home() {
                   <Mail className="w-3.5 h-3.5" />
                   <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2.5 py-1 bg-[#111115] border border-white/10 text-white text-[10px] rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-xl z-50">Email Us</span>
                 </a>
-                <a href="mailto:feedback.collabx@gmail.com" className="group relative w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:text-[#F5A623] hover:border-[#F5A623]/30 transition-all">
-                  <MessageSquare className="w-3.5 h-3.5" />
+                <div className="group relative">
+                  <FeedbackButton 
+                    context="Landing Page Footer" 
+                    className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:text-[#F5A623] hover:border-[#F5A623]/30 transition-all"
+                  />
                   <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2.5 py-1 bg-[#111115] border border-white/10 text-white text-[10px] rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-xl z-50">Give Feedback</span>
-                </a>
+                </div>
               </div>
             </div>
 

@@ -11,6 +11,7 @@ import CreateRoomModal from '../../components/room/CreateRoomModal';
 import api from '../../lib/api';
 import { useNotificationStore } from '../../store/notificationStore';
 import ProUpgradeModal from '../../components/subscription/ProUpgradeModal';
+import FeedbackButton from '../../components/ui/FeedbackButton';
 
 function DashboardContent() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -221,19 +222,24 @@ function DashboardContent() {
             </div>
           </div>
 
+          <FeedbackButton 
+            context="Dashboard Header" 
+            className={`w-10 h-10 ${themeDashboardButton} rounded-full flex items-center justify-center transition-colors border border-transparent`} 
+          />
+
           {/* Dashboard Button */}
           <button
             onClick={() => router.push('/')}
             className={`h-9 ${themeDashboardButton} px-4 rounded-xl flex items-center justify-center text-sm tracking-wider cursor-pointer gap-2 transition-colors border border-transparent`}
           >
             <LayoutDashboard size={16} />
-            Dashboard
+            Home
           </button>
         </div>
 
         {/* Center: CollabX Logo */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 text-white text-2xl">
-          <div className="flex items-center tracking-tighter cursor-pointer hover:opacity-80 transition-opacity" onClick={() => router.push('/')}>
+          <div className="flex items-center tracking-tighter hover:opacity-80 transition-opacity">
             <span className="font-black mr-2 text-white relative z-10">Collab</span>
             <span className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-[#FFC107] to-[#F5A623] drop-shadow-[0_0_10px_rgba(245,166,35,0.4)] relative z-0 -ml-2">X</span>
           </div>
