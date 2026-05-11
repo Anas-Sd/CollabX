@@ -2,53 +2,37 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Playfair_Display } from 'next/font/google';
+import { usePathname } from 'next/navigation';
 
 const playfair = Playfair_Display({ subsets: ['latin'], weight: '900', style: 'italic' });
 
 export default function IntroSplash() {
-  const [show, setShow] = useState(true);
-  const [isInitializing, setIsInitializing] = useState(true);
+  const pathname = usePathname();
+  // Only initialize to true if we are on the landing page
+  const [show, setShow] = useState(pathname === '/');
 
   useEffect(() => {
-    const isJustLoggedOut = sessionStorage.getItem('justLoggedOut');
-    const isJustLoggedIn = sessionStorage.getItem('justLoggedIn');
-    const isFirstVisit = !sessionStorage.getItem('introPlayed');
-    const isHomePage = window.location.pathname === '/';
-
-    let willShow = false;
-    if (isJustLoggedOut) {
-      sessionStorage.removeItem('justLoggedOut');
-      willShow = false;
-    } else if (isJustLoggedIn) {
-      sessionStorage.removeItem('justLoggedIn');
-      willShow = true;
-    } else if (isHomePage || isFirstVisit) {
-      willShow = true;
-    }
-
-    sessionStorage.setItem('introPlayed', 'true');
-
-    if (!willShow) {
+    if (pathname !== '/') {
       setShow(false);
-    } else {
-      // Hide main content until intro is done
-      document.body.classList.add('intro-playing');
-      const timer = setTimeout(() => {
-        setShow(false);
-        // Remove the class immediately so the dashboard is ready behind the fading splash screen
-        document.body.classList.remove('intro-playing');
-      }, 3250);
-      return () => {
-        clearTimeout(timer);
-        document.body.classList.remove('intro-playing');
-      };
+      return;
     }
-    setIsInitializing(false);
-  }, []);
 
-  // Prevent hydration mismatch by keeping initial render simple, but don't return null because that causes glimpses.
-  // Instead, the container itself blocks view if `show` is true.
-  if (!show && isInitializing) return null;
+    // On the landing page, show the intro and remove it after 3.25 seconds
+    setShow(true);
+    document.body.classList.add('intro-playing');
+    
+    const timer = setTimeout(() => {
+      setShow(false);
+      document.body.classList.remove('intro-playing');
+    }, 3250);
+    
+    return () => {
+      clearTimeout(timer);
+      document.body.classList.remove('intro-playing');
+    };
+  }, [pathname]);
+
+  if (!show) return null;
 
   const letterVariants = {
     hidden: { opacity: 0 },
