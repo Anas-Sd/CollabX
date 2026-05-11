@@ -408,7 +408,7 @@ function AuthContent() {
       
       {/* Return to Dashboard Button */}
       <Link href="/" className="absolute top-8 left-8 md:top-12 md:left-12 flex items-center gap-2 text-white/40 hover:text-white transition-colors text-[10px] font-bold uppercase tracking-widest z-50">
-        <ArrowLeft className="w-4 h-4" /> Return to Dashboard
+        <ArrowLeft className="w-4 h-4" /> Return to Home
       </Link>
 
       <motion.div 

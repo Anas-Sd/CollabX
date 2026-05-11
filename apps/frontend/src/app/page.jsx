@@ -22,7 +22,13 @@ import {
   Timer,
   Sparkles,
   Loader2,
-  LogOut
+  LogOut,
+  LucideFish,
+  LucideSettings,
+  LucideContainer,
+  LucideFishOff,
+  LucideFishSymbol,
+  LucideFishingHook
 } from 'lucide-react';
 import Whiteboard from '../components/room/Whiteboard';
 import api from '../lib/api';
@@ -559,6 +565,12 @@ export default function Home() {
               </span>
               <span className="flex items-center gap-2 text-white/20 hover:text-red-500 transition-colors duration-300 cursor-pointer">
                 <LucideMapPinCheckInside className="w-4 h-4" /> LWW Algorithm
+              </span>
+              <span className="flex items-center gap-2 text-white/20 hover:text-blue-500 transition-colors duration-300 cursor-pointer">
+                <LucideContainer className="w-4 h-4" /> Docker
+              </span>
+              <span className="flex items-center gap-2 text-white/20 hover:text-yellow-500 transition-colors duration-300 cursor-pointer">
+                <LucideSettings className="w-4 h-4" /> CI/CD
               </span>
             </div>
           ))}
