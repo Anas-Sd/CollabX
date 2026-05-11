@@ -77,7 +77,7 @@ export default function Home() {
   const handleUpgrade = async (e) => {
     e.preventDefault();
     if (!isAuthenticated) {
-      router.push('/register');
+      router.push('/login');
       return;
     }
     setLoadingPayment(true);
@@ -216,12 +216,12 @@ export default function Home() {
                 Dashboard <ArrowRight className="w-3 h-3" />
               </Link>
               <div className="group relative">
-                  <FeedbackButton 
-                    context="Landing Page Footer" 
-                    className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:text-[#F5A623] hover:border-[#F5A623]/30 transition-all"
-                  />
-                  <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2.5 py-1 bg-[#111115] border border-white/10 text-white text-[10px] rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-xl z-50">Give Feedback</span>
-                </div>
+                <FeedbackButton
+                  context="Landing Page Footer"
+                  className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:text-[#F5A623] hover:border-[#F5A623]/30 transition-all"
+                />
+                <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2.5 py-1 bg-[#111115] border border-white/10 text-white text-[10px] rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-xl z-50">Give Feedback</span>
+              </div>
               <button
                 onClick={() => {
                   logout();
@@ -580,7 +580,7 @@ export default function Home() {
                   <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#F5A623]/20 via-[#0A0A0F] to-black opacity-60 transition-opacity duration-700 group-hover:opacity-100" />
                   <div className="absolute -top-64 -right-64 w-[500px] h-[500px] bg-[#F5A623]/10 blur-[120px] rounded-full pointer-events-none" />
                   <div className="absolute -bottom-64 -left-64 w-[500px] h-[500px] bg-[#FFC107]/10 blur-[120px] rounded-full pointer-events-none" />
-                  
+
                   <div className="relative z-10 flex flex-col items-center max-w-2xl w-full">
                     <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F5A623]/10 border border-[#F5A623]/30 mb-8">
                       <div className="w-2 h-2 rounded-full bg-[#F5A623] shadow-[0_0_10px_rgba(245,166,35,0.8)] animate-pulse" />
@@ -633,12 +633,12 @@ export default function Home() {
                       ].map((feature, i) => {
                         const Icon = feature.icon;
                         return (
-                        <div key={i} className="flex items-center gap-4">
-                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#F5A623] text-black shadow-[0_0_10px_rgba(245,166,35,0.5)]">
-                            <Icon size={14} strokeWidth={3} />
+                          <div key={i} className="flex items-center gap-4">
+                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#F5A623] text-black shadow-[0_0_10px_rgba(245,166,35,0.5)]">
+                              <Icon size={14} strokeWidth={3} />
+                            </div>
+                            <span className="text-base font-medium text-white/90">{feature.name}</span>
                           </div>
-                          <span className="text-base font-medium text-white/90">{feature.name}</span>
-                        </div>
                         )
                       })}
                     </div>
@@ -674,7 +674,7 @@ export default function Home() {
                       )}
                       <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-shimmer pointer-events-none" />
                     </button>
-                    
+
                     <div className="flex flex-col items-center gap-2 text-xs text-white/30 text-center">
                       <p>Secured by Razorpay • Instant Activation</p>
                       <p>You can cancel anytime.</p>
@@ -727,8 +727,8 @@ export default function Home() {
                   <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2.5 py-1 bg-[#111115] border border-white/10 text-white text-[10px] rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-xl z-50">Email Us</span>
                 </a>
                 <div className="group relative">
-                  <FeedbackButton 
-                    context="Landing Page Footer" 
+                  <FeedbackButton
+                    context="Landing Page Footer"
                     className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:text-[#F5A623] hover:border-[#F5A623]/30 transition-all"
                   />
                   <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2.5 py-1 bg-[#111115] border border-white/10 text-white text-[10px] rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-xl z-50">Give Feedback</span>
