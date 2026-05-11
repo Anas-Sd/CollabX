@@ -131,15 +131,32 @@ function AuthContent() {
       } catch (checkErr) {
         if (checkErr.response?.status === 400) {
           const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
-          setLoginExpectedOtp(generatedOtp);
-          useNotificationStore.getState().addNotification('OTP sent to your email', 'success');
-          setLoginStep('FORGOT_OTP');
-          setLoginUserInputCode('');
-          fetch('/api/send-otp', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: forgotEmail, otp: generatedOtp })
-          }).catch(err => console.error("OTP send failed", err));
+          
+          try {
+            const sendRes = await fetch('/api/send-otp', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: forgotEmail, otp: generatedOtp, purpose: 'forgot_password' })
+            });
+            
+            if (!sendRes.ok) throw new Error('Failed to send email');
+            
+            const responseData = await sendRes.json();
+            
+            setLoginExpectedOtp(generatedOtp);
+            if (responseData.devFallback) {
+              useNotificationStore.getState().addNotification(`Email blocked by firewall. If on university Wi-Fi, please use a hotspot.`, 'error');
+              return; // Do not proceed to OTP step since they cannot receive it
+            } else {
+              useNotificationStore.getState().addNotification('OTP sent to your email', 'success');
+            }
+            
+            setLoginStep('FORGOT_OTP');
+            setLoginUserInputCode('');
+          } catch (err) {
+            console.error("OTP send failed", err);
+            useNotificationStore.getState().addNotification('Failed to send OTP email. Please check configuration.', 'error');
+          }
         } else {
           useNotificationStore.getState().addNotification('Failed to verify email. Try again later.', 'error');
         }
@@ -160,16 +177,21 @@ function AuthContent() {
     setLoginUserInputCode(newCode);
     
     if (value && index < 5) loginOtpRefs.current[index + 1]?.focus();
-    
-    if (newCode.length === 6 && newCode.indexOf('') === -1) {
-      if (newCode === loginExpectedOtp) {
-        useNotificationStore.getState().addNotification('OTP verified', 'success');
-        setLoginStep('FORGOT_RESET');
-      } else {
-        useNotificationStore.getState().addNotification('Invalid OTP code. Please try again.', 'error');
-      }
+  };
+
+  const handleVerifyForgotOtp = () => {
+    if (loginUserInputCode.length !== 6) {
+      useNotificationStore.getState().addNotification('Please enter the 6-digit code', 'warning');
+      return;
+    }
+    if (loginUserInputCode === loginExpectedOtp) {
+      useNotificationStore.getState().addNotification('OTP verified', 'success');
+      setLoginStep('FORGOT_RESET');
+    } else {
+      useNotificationStore.getState().addNotification('Invalid OTP code. Please try again.', 'error');
     }
   };
+
 
   const handleLoginOtpKeyDown = (index, e) => {
     if (e.key === 'Backspace' && !loginUserInputCode[index] && index > 0) {
@@ -238,6 +260,28 @@ function AuthContent() {
     if (value && index < 5) regOtpRefs.current[index + 1]?.focus();
   };
 
+  const handleVerifyRegOtp = async () => {
+    if (regUserInputCode.length !== 6) {
+      useNotificationStore.getState().addNotification('Please enter the 6-digit code', 'warning');
+      return;
+    }
+    if (regUserInputCode !== regExpectedCode) {
+      useNotificationStore.getState().addNotification('Invalid OTP code. Please try again.', 'error');
+      return;
+    }
+    // Proceed with registration
+    setLoading(true);
+    try {
+      const res = await api.post('/auth/register', { name: regName, email: regEmail, password: regPassword });
+      useNotificationStore.getState().addNotification('Registration successful! Please login.', 'success');
+      switchMode('login');
+    } catch (err) {
+      useNotificationStore.getState().addNotification(err.response?.data?.message || 'Registration failed.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleRegOtpKeyDown = (index, e) => {
     if (e.key === 'Backspace' && !regUserInputCode[index] && index > 0) {
       regOtpRefs.current[index - 1]?.focus();
@@ -291,12 +335,29 @@ function AuthContent() {
     setRegExpectedCode(code);
     try {
       if (selectedMethod === 'OTP') {
-        setRegStep(3);
-        fetch('/api/send-otp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: regEmail, otp: code })
-        }).catch(err => console.error('Failed to send OTP', err));
+        try {
+          const sendRes = await fetch('/api/send-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: regEmail, otp: code, purpose: 'registration' })
+          });
+          
+          if (!sendRes.ok) throw new Error('Failed to send email');
+          
+          const responseData = await sendRes.json();
+          
+          if (responseData.devFallback) {
+            useNotificationStore.getState().addNotification(`Email blocked by firewall. If on university Wi-Fi, please use a hotspot.`, 'error');
+            return; // Do not proceed to OTP step since they cannot receive it
+          } else {
+            useNotificationStore.getState().addNotification('OTP sent to your email', 'success');
+          }
+          
+          setRegStep(3);
+        } catch (err) {
+          console.error('Failed to send OTP', err);
+          useNotificationStore.getState().addNotification('Failed to send OTP email. Please check configuration.', 'error');
+        }
       } else if (selectedMethod === 'QR') {
         const res = await fetch('/api/generate-qr', {
           method: 'POST',
@@ -610,13 +671,16 @@ function AuthContent() {
                     </button>
                     <div className="mb-8">
                       <h2 className="text-2xl font-bold text-white mb-2">Verify Email</h2>
-                      <p className="text-white/40 text-xs uppercase tracking-widest leading-relaxed">Enter the 6-digit code sent to <span className="text-white">{forgotEmail}</span></p>
+                      <p className="text-white/40 text-xs uppercase tracking-widest leading-relaxed">Enter the 6-digit code sent to <span className="text-white lowercase text-[0.39cm]">{forgotEmail}</span></p>
                     </div>
                     <div className="flex items-center justify-center gap-2 mb-6">
                       {Array.from({ length: 6 }).map((_, idx) => (
-                        <input key={idx} ref={(el) => (loginOtpRefs.current[idx] = el)} type="text" maxLength={1} value={loginUserInputCode[idx] || ''} onChange={(e) => handleLoginOtpChange(idx, e.target.value)} onKeyDown={(e) => handleLoginOtpKeyDown(idx, e)} className="w-10 h-12 md:w-12 md:h-14 text-center text-xl font-bold font-mono bg-black border border-white/20 rounded-xl text-white focus:outline-none focus:border-white/50 transition-all shadow-inner" />
+                        <input key={idx} ref={(el) => (loginOtpRefs.current[idx] = el)} type="text" maxLength={1} value={loginUserInputCode[idx] || ''} onChange={(e) => handleLoginOtpChange(idx, e.target.value)} onKeyDown={(e) => handleLoginOtpKeyDown(idx, e)} className="w-10 h-12 md:w-12 md:h-14 text-center text-xl font-bold font-mono bg-black border border-white/20 rounded-xl text-white focus:outline-none focus:border-[#F5A623]/50 transition-all shadow-inner" />
                       ))}
                     </div>
+                    <button type="button" onClick={handleVerifyForgotOtp} disabled={loginUserInputCode.length !== 6} className="w-full py-4 mt-2 bg-white/80 hover:bg-white cursor-pointer text-black disabled:cursor-not-allowed font-bold rounded-xl transition-all uppercase tracking-widest text-xs flex items-center justify-center gap-2 disabled:opacity-50">
+                      Verify Code
+                    </button>
                     </motion.div>
                   )}
 
@@ -630,17 +694,17 @@ function AuthContent() {
                       <div>
                         <label className="block text-[10px] font-bold text-white/50 mb-2 uppercase tracking-widest">New Password</label>
                         <div className="relative">
-                          <input type={showPassword ? "text" : "password"} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-3 bg-black border border-white/10 rounded-xl text-white focus:outline-none focus:border-white/30 transition-all pr-12 placeholder:text-white/20 text-sm" placeholder="••••••••" />
-                          <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-colors p-1 cursor-pointer">
+                          <input type={showPassword ? "text" : "password"} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-3 bg-black border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#F5A623]/50 transition-all pr-12 placeholder:text-white/20 text-sm shadow-inner" placeholder="••••••••" />
+                          <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-[#F5A623] transition-colors p-1 cursor-pointer">
                             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                           </button>
                         </div>
                       </div>
                       <div>
                         <label className="block text-[10px] font-bold text-white/50 mb-2 uppercase tracking-widest">Confirm Password</label>
-                        <input type={showPassword ? "text" : "password"} value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)} className="w-full px-4 py-3 bg-black border border-white/10 rounded-xl text-white focus:outline-none focus:border-white/30 transition-all placeholder:text-white/20 text-sm" placeholder="••••••••" />
+                        <input type={showPassword ? "text" : "password"} value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)} className="w-full px-4 py-3 bg-black border border-white/10 rounded-xl text-white focus:outline-none focus:border-[#F5A623]/50 transition-all placeholder:text-white/20 text-sm shadow-inner" placeholder="••••••••" />
                       </div>
-                      <button type="submit" disabled={loading} className="w-full py-4 mt-2 bg-white hover:bg-gray-200 text-black font-bold rounded-xl transition-all uppercase tracking-widest text-xs flex items-center justify-center gap-2 disabled:opacity-50">
+                      <button type="submit" disabled={loading} className="w-full py-4 mt-2 bg-[#F5A623]/90 hover:bg-[#F5A623] cursor-pointer text-black font-bold rounded-xl transition-all uppercase tracking-widest text-xs flex items-center justify-center gap-2 disabled:opacity-50">
                         {loading ? <Loader2 className="animate-spin w-4 h-4 text-black" /> : 'Confirm Reset'}
                       </button>
                     </form>
@@ -765,7 +829,7 @@ function AuthContent() {
                         <>
                           <div className="mb-8">
                             <h2 className="text-2xl font-bold text-white mb-2">Verify Email</h2>
-                            <p className="text-white/40 text-xs uppercase tracking-widest leading-relaxed">Enter the 6-digit code sent to <span className="text-white">{regEmail}</span></p>
+                            <p className="text-white/40 text-xs uppercase tracking-widest leading-relaxed">Enter the 6-digit code sent to <span className="text-white lowercase text-[0.39cm]">{regEmail}</span></p>
                           </div>
                           <div className="flex items-center justify-center gap-2 mb-6">
                             {Array.from({ length: 6 }).map((_, idx) => (
@@ -774,7 +838,7 @@ function AuthContent() {
                           </div>
                         </>
                       )}
-                      <button type="submit" disabled={loading || regUserInputCode.length !== 6} className="w-full py-4 mt-2 bg-white/80 disabled:cursor-not-allowed cursor-pointer hover:bg-white text-black font-bold rounded-xl transition-all uppercase tracking-widest text-xs flex items-center justify-center gap-2 disabled:opacity-50">
+                      <button type="button" onClick={handleVerifyRegOtp} disabled={loading || regUserInputCode.length !== 6} className="w-full py-4 mt-2 bg-[#F5A623]/90 disabled:cursor-not-allowed cursor-pointer hover:bg-[#F5A623] text-black font-bold rounded-xl transition-all uppercase tracking-widest text-xs flex items-center justify-center gap-2 disabled:opacity-50">
                         {loading ? <Loader2 className="animate-spin w-4 h-4 text-black" /> : 'Complete Registration'}
                       </button>
                     </form>
