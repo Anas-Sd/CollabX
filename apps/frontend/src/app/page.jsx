@@ -587,7 +587,10 @@ export default function Home() {
 
           <div className="flex justify-center mt-12 w-full">
             <FadeIn delay={0.1} className="w-full">
-              {isPro ? (
+              {!mounted ? (
+                <div className="relative w-full max-w-5xl mx-auto overflow-hidden rounded-3xl border border-white/5 bg-[#0A0A0F] shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center min-h-[400px] p-8 md:p-12 text-center animate-pulse">
+                </div>
+              ) : isPro ? (
                 <div className="relative w-full max-w-5xl mx-auto overflow-hidden rounded-3xl border border-[#F5A623]/30 bg-black shadow-[0_0_50px_rgba(245,166,35,0.15)] flex flex-col items-center justify-center min-h-[400px] p-8 md:p-12 text-center group">
                   <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#F5A623]/20 via-[#0A0A0F] to-black opacity-60 transition-opacity duration-700 group-hover:opacity-100" />
                   <div className="absolute -top-64 -right-64 w-[500px] h-[500px] bg-[#F5A623]/10 blur-[120px] rounded-full pointer-events-none" />

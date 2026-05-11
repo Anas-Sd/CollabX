@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Playfair_Display } from 'next/font/google';
 import { usePathname } from 'next/navigation';
@@ -8,16 +8,39 @@ const playfair = Playfair_Display({ subsets: ['latin'], weight: '900', style: 'i
 
 export default function IntroSplash() {
   const pathname = usePathname();
-  // Only initialize to true if we are on the landing page
-  const [show, setShow] = useState(pathname === '/');
+  const [show, setShow] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  const isMountRef = useRef(true);
 
   useEffect(() => {
-    if (pathname !== '/') {
+    setIsClient(true);
+    let shouldPlay = false;
+
+    const isFirstVisit = !sessionStorage.getItem('introPlayed');
+    const justLoggedOut = sessionStorage.getItem('justLoggedOut') === 'true';
+    
+    // We only care if it's an actual browser refresh (type === 'reload') 
+    // AND this component is literally mounting right now (isMountRef.current)
+    const navEntries = performance.getEntriesByType('navigation');
+    const isActualReload = navEntries.length > 0 && navEntries[0].type === 'reload' && isMountRef.current;
+
+    if (justLoggedOut) {
+      sessionStorage.removeItem('justLoggedOut');
+      shouldPlay = true; // Rule 3: After logout redirect
+    } else if (isFirstVisit) {
+      sessionStorage.setItem('introPlayed', 'true');
+      shouldPlay = true; // Rule 1: First visit ever in session
+    } else if (isActualReload && pathname === '/') {
+      shouldPlay = true; // Rule 2: Refresh, but ONLY on the '/' page
+    }
+
+    isMountRef.current = false;
+
+    if (!shouldPlay) {
       setShow(false);
       return;
     }
 
-    // On the landing page, show the intro and remove it after 3.25 seconds
     setShow(true);
     document.body.classList.add('intro-playing');
     
@@ -31,6 +54,11 @@ export default function IntroSplash() {
       document.body.classList.remove('intro-playing');
     };
   }, [pathname]);
+
+  if (!isClient) {
+    // SSR fallback to prevent flashing. If we are on landing page, block UI until client decides.
+    return pathname === '/' ? <div className="fixed inset-0 z-[999999] bg-[#050505]" /> : null;
+  }
 
   if (!show) return null;
 
@@ -70,7 +98,6 @@ export default function IntroSplash() {
             {/* X hitting effect */}
             <div className="relative flex items-center justify-center -ml-1 md:-ml-2 w-12 h-16 md:w-16 md:h-20">
               
-              {/* Glitch Layer 1 (Bright Gold) */}
               <motion.div
                 initial={{ opacity: 0, x: -20, scale: 1.5 }}
                 animate={{ opacity: [0, 1, 0], x: [-20, 10, 0], scale: [1.5, 1, 1] }}
@@ -80,7 +107,6 @@ export default function IntroSplash() {
                 X
               </motion.div>
 
-              {/* Glitch Layer 2 (White) */}
               <motion.div
                 initial={{ opacity: 0, x: 20, scale: 1.5 }}
                 animate={{ opacity: [0, 1, 0], x: [20, -10, 0], scale: [1.5, 1, 1] }}
@@ -90,7 +116,6 @@ export default function IntroSplash() {
                 X
               </motion.div>
 
-              {/* Final Solid Layer (Premium Gold Gradient) */}
               <motion.div
                 initial={{ opacity: 0, scale: 4 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -100,7 +125,6 @@ export default function IntroSplash() {
                 X
               </motion.div>
 
-              {/* Impact Flash */}
               <motion.div
                  initial={{ opacity: 0, scale: 0 }}
                  animate={{ opacity: [0, 0.8, 0], scale: [0, 1.5, 2] }}
