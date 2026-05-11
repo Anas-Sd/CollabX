@@ -533,43 +533,43 @@ export default function Home() {
         <div className="absolute left-0 top-0 w-32 h-full bg-gradient-to-r from-[#0A0A0F] to-transparent z-10 pointer-events-none"></div>
         <div className="absolute right-0 top-0 w-32 h-full bg-gradient-to-l from-[#0A0A0F] to-transparent z-10 pointer-events-none"></div>
 
-        <div className="flex w-[200%] animate-marquee group-hover:[animation-play-state:paused] text-[11px] font-bold tracking-widest uppercase items-center">
+        <div className="flex w-max animate-marquee group-hover:[animation-play-state:paused] text-[11px] font-bold tracking-widest uppercase items-center">
           {[1, 2].map(i => (
-            <div key={i} className="flex w-1/2 justify-around items-center">
-              <span className="flex items-center gap-2 text-white/20 hover:text-white transition-colors duration-300 cursor-pointer">
+            <div key={i} className="flex gap-24 px-12 items-center">
+              <span className="flex items-center gap-2 text-white/20 hover:text-white transition-colors duration-300 cursor-pointer whitespace-nowrap">
                 <Globe className="w-4 h-4" /> Next.js
               </span>
-              <span className="flex items-center gap-2 text-white/20 hover:text-[#6DB33F] transition-colors duration-300 cursor-pointer">
+              <span className="flex items-center gap-2 text-white/20 hover:text-[#6DB33F] transition-colors duration-300 cursor-pointer whitespace-nowrap">
                 <Server className="w-4 h-4" /> Spring Boot
               </span>
-              <span className="flex items-center gap-2 text-white/20 hover:text-[#F5A623] transition-colors duration-300 cursor-pointer">
+              <span className="flex items-center gap-2 text-white/20 hover:text-[#F5A623] transition-colors duration-300 cursor-pointer whitespace-nowrap">
                 <Zap className="w-4 h-4" /> WebSockets
               </span>
-              <span className="flex items-center gap-2 text-white/20 hover:text-[#336791] transition-colors duration-300 cursor-pointer">
+              <span className="flex items-center gap-2 text-white/20 hover:text-[#336791] transition-colors duration-300 cursor-pointer whitespace-nowrap">
                 <Database className="w-4 h-4" /> PostgreSQL
               </span>
-              <span className="flex items-center gap-2 text-white/20 hover:text-green-600 transition-colors duration-300 cursor-pointer">
+              <span className="flex items-center gap-2 text-white/20 hover:text-green-600 transition-colors duration-300 cursor-pointer whitespace-nowrap">
                 <Banknote className="w-4 h-4" /> Razorpay
               </span>
-              <span className="flex items-center gap-2 text-white/20 hover:text-blue-400 transition-colors duration-300 cursor-pointer">
+              <span className="flex items-center gap-2 text-white/20 hover:text-blue-400 transition-colors duration-300 cursor-pointer whitespace-nowrap">
                 <Terminal className="w-4 h-4" /> Judge0 API
               </span>
-              <span className="flex items-center gap-2 text-white/20 hover:text-cyan-400 transition-colors duration-300 cursor-pointer">
+              <span className="flex items-center gap-2 text-white/20 hover:text-cyan-400 transition-colors duration-300 cursor-pointer whitespace-nowrap">
                 <Mic className="w-4 h-4" /> Agora RTC
               </span>
-              <span className="flex items-center gap-2 text-white/20 hover:text-white transition-colors duration-300 cursor-pointer">
+              <span className="flex items-center gap-2 text-white/20 hover:text-white transition-colors duration-300 cursor-pointer whitespace-nowrap">
                 <Book className="w-4 h-4" /> excalidraw
               </span>
-              <span className="flex items-center gap-2 text-white/20 hover:text-sky-400 transition-colors duration-300 cursor-pointer">
+              <span className="flex items-center gap-2 text-white/20 hover:text-sky-400 transition-colors duration-300 cursor-pointer whitespace-nowrap">
                 <LucideClipboardEdit className="w-4 h-4" /> Monaco Editor
               </span>
-              <span className="flex items-center gap-2 text-white/20 hover:text-red-500 transition-colors duration-300 cursor-pointer">
+              <span className="flex items-center gap-2 text-white/20 hover:text-red-500 transition-colors duration-300 cursor-pointer whitespace-nowrap">
                 <LucideMapPinCheckInside className="w-4 h-4" /> LWW Algorithm
               </span>
-              <span className="flex items-center gap-2 text-white/20 hover:text-blue-500 transition-colors duration-300 cursor-pointer">
+              <span className="flex items-center gap-2 text-white/20 hover:text-blue-500 transition-colors duration-300 cursor-pointer whitespace-nowrap">
                 <LucideContainer className="w-4 h-4" /> Docker
               </span>
-              <span className="flex items-center gap-2 text-white/20 hover:text-yellow-500 transition-colors duration-300 cursor-pointer">
+              <span className="flex items-center gap-2 text-white/20 hover:text-yellow-500 transition-colors duration-300 cursor-pointer whitespace-nowrap">
                 <LucideSettings className="w-4 h-4" /> CI/CD
               </span>
             </div>
@@ -611,7 +611,7 @@ export default function Home() {
 
                     <button
                       onClick={() => router.push('/dashboard')}
-                      className="group relative flex items-center justify-center gap-3 overflow-hidden rounded-xl bg-gradient-to-r from-[#F5A623] to-[#FFC107] px-8 py-5 text-sm md:text-base font-black text-black transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(245,166,35,0.4)]"
+                      className="group cursor-pointer relative flex items-center justify-center gap-3 overflow-hidden rounded-xl bg-gradient-to-r from-[#F5A623] to-[#FFC107] px-8 py-5 text-sm md:text-base font-black text-black transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(245,166,35,0.4)]"
                     >
                       <span>LAUNCH WORKSPACE</span>
                       <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
