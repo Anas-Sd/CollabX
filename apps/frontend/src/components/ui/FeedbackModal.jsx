@@ -116,7 +116,7 @@ export default function FeedbackModal({ isOpen, onClose, context = 'General' }) 
                     type="text" 
                     // value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="You can be Anonymous if you want!!"
+                    placeholder="You could be completely Anonymous if you wish!!"
                     className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#F5A623]/50 transition-colors"
                   />
                 </div>
