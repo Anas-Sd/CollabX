@@ -15,6 +15,7 @@ import { useUserStore } from '../../store/userStore';
 import { useNotificationStore } from '../../store/notificationStore';
 import { AnimatePresence } from 'framer-motion';
 import { Suspense } from 'react';
+import FeedbackButton from '../../components/ui/FeedbackButton';
 
 function CountUp({ to, duration = 2, decimals = 0 }) {
   const [count, setCount] = useState(0);
@@ -488,6 +489,11 @@ function ProfileContent() {
                 <Settings size={14} className="text-gray-400"/> System Operations
               </h2>
               <div className="flex flex-col gap-2">
+                <FeedbackButton 
+                  context="Profile Page" 
+                  showLabel={true}
+                  className="w-full !justify-start px-5 py-4 bg-white/5 hover:bg-white/10 rounded-xl text-white text-[11px] font-bold tracking-widest uppercase transition-colors" 
+                />
                 <button onClick={() => setShowPasswordModal(true)} className="w-full text-left px-5 py-4 bg-white/5 hover:bg-white/10 rounded-xl text-white text-[11px] font-bold tracking-widest uppercase transition-colors cursor-pointer">
                   Change Password
                 </button>
