@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Play, Copy, Check, TerminalSquare, ChevronDown, Clock, Sparkles, Zap, User } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useRoomStore } from '../../../store/roomStore';
 import { useUserStore } from '../../../store/userStore';
 import { useWebSocket } from '../../../hooks/useWebSocket';
@@ -47,6 +48,7 @@ export default function RoomPage() {
   const [activeSidebarTab, setActiveSidebarTab] = useState('USERS');
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [isProModalOpen, setIsProModalOpen] = useState(false);
+  const [isRoomDetailsOpen, setIsRoomDetailsOpen] = useState(false);
   const [roomAlert, setRoomAlert] = useState(null);
   const langMenuRef = useRef(null);
 
@@ -614,7 +616,9 @@ export default function RoomPage() {
               </div>
             </div>
 
-            <div className="tooltip">
+            <div className="h-8 ml-2 w-px bg-border"></div>
+
+            {/* <div className="tooltip">
               <FeedbackButton 
                 context="Workspace Header" 
                 className="p-2 cursor-pointer rounded-full w-9 flex items-center justify-center text-white/50 h-9 bg-primary/20 text-muted-foreground hover:text-white transition-colors" 
@@ -623,16 +627,35 @@ export default function RoomPage() {
                 <div className="tooltip-box">Give Feedback</div>
                 <div className="tooltip-arrow"></div>
               </div>
-            </div>
+            </div> */}
           </div>
 
-          <div className="flex flex-col justify-center">
-            <span className="text-sm font-bold text-white leading-tight">{roomName || 'Untitled Workspace'}</span>
-            <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-mono mt-0.5">
-              <span className="bg-background px-1.5 rounded border border-border">{roomId}</span>
-              <button onClick={handleCopyLink} className="hover:text-white hover:cursor-pointer transition-colors">
-                {copied ? <Check size={12} className="text-success" /> : <Copy size={12} />}
-              </button>
+          <div 
+            onClick={() => setIsRoomDetailsOpen(true)}
+            className="relative flex flex-col justify-center cursor-pointer hover:bg-white/5 p-1.5 -ml-1.5 rounded-lg transition-colors group min-w-[80px]"
+          >
+            {/* Hover State Overlay */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
+               <span className="text-[11px] font-black text-[#F5A623] uppercase tracking-widest text-center flex items-center gap-1.5 drop-shadow-md">
+                 Tap for Details
+               </span>
+            </div>
+
+            {/* Default State (Fades out on hover) */}
+            <div className="flex flex-col justify-center transition-all duration-300 group-hover:opacity-0 group-hover:blur-sm">
+              <span className="text-sm font-bold text-white leading-tight">{roomName || 'Untitled Workspace'}</span>
+              <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-mono mt-0.5">
+                <span className="-ml-1 bg-background px-1.5 rounded border border-border">{roomId}</span>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCopyLink();
+                  }} 
+                  className="hover:text-white hover:cursor-pointer transition-colors relative z-20 pointer-events-auto"
+                >
+                  {copied ? <Check size={12} className="text-success" /> : <Copy size={12} />}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1008,6 +1031,64 @@ export default function RoomPage() {
           </div>
         </div>
       )}
+      {/* Room Details Modal */}
+      <AnimatePresence>
+        {isRoomDetailsOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            onClick={() => setIsRoomDetailsOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-[#0F0F16] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-[40px] pointer-events-none"></div>
+              
+              <h3 className="text-xl font-bold text-white mb-1">Workspace Details</h3>
+              <p className="text-sm text-muted-foreground mb-6">Share this access code with your team to invite them.</p>
+
+              <div className="space-y-4">
+                <div className="bg-black/50 border border-white/5 rounded-xl p-4">
+                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest block mb-1">Workspace Name</label>
+                  <div className="text-white font-semibold">{roomName || 'Untitled Workspace'}</div>
+                </div>
+
+                <div className="bg-black/50 border border-white/5 rounded-xl p-4 flex items-center justify-between">
+                  <div>
+                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest block mb-1">Access Code (Room ID)</label>
+                    <div className="text-white font-mono text-lg tracking-widest">{roomId}</div>
+                  </div>
+                  <button 
+                    onClick={handleCopyLink}
+                    className="p-3 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl transition-colors cursor-pointer"
+                  >
+                    {copied ? <Check size={20} /> : <Copy size={20} />}
+                  </button>
+                </div>
+                
+                <div className="flex items-center gap-2 p-3 bg-[#F5A623]/10 border border-[#F5A623]/20 text-[#F5A623] rounded-xl text-xs font-medium">
+                  <Sparkles size={16} className="shrink-0" />
+                  <p>Maximum capacity is currently set to 10 participants per room by the host.</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsRoomDetailsOpen(false)}
+                className="w-full mt-6 py-3 cursor-pointer bg-white hover:bg-gray-200 text-black font-bold rounded-xl transition-colors uppercase tracking-widest text-xs"
+              >
+                Close
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <ProUpgradeModal isOpen={isProModalOpen} onClose={() => setIsProModalOpen(false)} />
     </div>
   );
