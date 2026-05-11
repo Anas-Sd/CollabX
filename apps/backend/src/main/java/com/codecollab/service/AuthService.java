@@ -42,6 +42,7 @@ public class AuthService {
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .build();
 
+        user.setLastLoginAt(java.time.LocalDateTime.now());
         user = userRepository.save(user);
         String token = jwtUtil.generateToken(user.getEmail());
 
@@ -53,13 +54,15 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+                .orElseThrow(() -> new RuntimeException("No user found with this email address"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new RuntimeException("Invalid email or password");
+            throw new RuntimeException("Incorrect password");
         }
 
         user = checkSubscriptionExpiration(user);
+        user.setLastLoginAt(java.time.LocalDateTime.now());
+        user = userRepository.save(user);
 
         String token = jwtUtil.generateToken(user.getEmail());
 
@@ -95,6 +98,9 @@ public class AuthService {
                 });
 
                 user = checkSubscriptionExpiration(user);
+                user.setLastLoginAt(java.time.LocalDateTime.now());
+                user = userRepository.save(user);
+                
                 String token = jwtUtil.generateToken(user.getEmail());
 
                 return AuthResponse.builder()

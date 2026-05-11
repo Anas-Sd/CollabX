@@ -41,6 +41,9 @@ public class User {
     
     @Column(name = "profile_picture", columnDefinition = "TEXT")
     private String profilePicture;
+
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
     
     @PrePersist
     protected void onCreate() {
