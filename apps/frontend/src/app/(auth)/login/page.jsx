@@ -23,7 +23,7 @@ function AuthContent() {
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   
   useEffect(() => { restoreSession(); }, [restoreSession]);
-  useEffect(() => { if (isAuthenticated) router.push('/'); }, [isAuthenticated, router]);
+  useEffect(() => { if (isAuthenticated) router.push('/dashboard'); }, [isAuthenticated, router]);
 
   const switchMode = (newMode) => {
     setMode(newMode);
@@ -72,7 +72,7 @@ function AuthContent() {
       const res = await api.post('/auth/login', { email: loginEmail, password: loginPassword });
       useNotificationStore.getState().addNotification('Logged in successfully', 'success');
       login(res.data.user, res.data.token);
-      router.push('/');
+      router.push('/dashboard');
     } catch (err) {
       useNotificationStore.getState().addNotification(err.response?.data?.message || 'Login failed. Please check your credentials.', 'error');
     } finally {
@@ -86,7 +86,7 @@ function AuthContent() {
       const res = await api.post('/auth/google', { token: tokenResponse.access_token });
       useNotificationStore.getState().addNotification('Logged in with Google successfully', 'success');
       login(res.data.user, res.data.token);
-      router.push('/');
+      router.push('/dashboard');
     } catch (err) {
       console.error('Google Login Error Details:', err);
       if (err.response) {
@@ -388,7 +388,7 @@ function AuthContent() {
       const res = await api.post('/auth/register', { name: regName, email: regEmail, password: regPassword });
       login(res.data.user, res.data.token);
       useNotificationStore.getState().addNotification('Account verified & created successfully', 'success');
-      router.push('/');
+      router.push('/dashboard');
     } catch (err) {
       useNotificationStore.getState().addNotification(err.response?.data?.message || 'Registration failed.', 'error');
     } finally {
