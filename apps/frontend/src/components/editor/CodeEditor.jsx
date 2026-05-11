@@ -126,10 +126,38 @@ export default function CodeEditor({ wsHook }) {
       />
       <style jsx global>{`
         .remote-cursor {
-          border-left: 2px solid #00D4AA;
+          border-left: 2px solid #F5A623;
           position: absolute;
           z-index: 10;
+          padding-right: 8px; /* Creates an invisible hit area for easier hovering */
+          cursor: pointer;
         }
+        
+        /* Dynamic Cursor Tooltips */
+        ${Object.entries(cursors).map(([userId, cursorInfo]) => `
+          .remote-cursor-${userId}::before {
+             content: '${cursorInfo.userName}';
+             position: absolute;
+             top: -22px;
+             left: -2px;
+             background: ${cursorInfo.color || '#F5A623'};
+             color: black;
+             font-size: 10px;
+             font-weight: bold;
+             font-family: sans-serif;
+             padding: 2px 6px;
+             border-radius: 4px;
+             border-bottom-left-radius: 0;
+             white-space: nowrap;
+             opacity: 0;
+             transition: opacity 0.2s ease-in-out;
+             pointer-events: none;
+             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+          }
+          .remote-cursor-${userId}:hover::before {
+             opacity: 1;
+          }
+        `).join('\n')}
       `}</style>
     </div>
   );
