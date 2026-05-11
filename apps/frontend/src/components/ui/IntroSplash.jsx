@@ -55,12 +55,22 @@ export default function IntroSplash() {
     };
   }, [pathname]);
 
+  // Synchronous read to prevent 1-frame flash of the landing page before useEffect catches it
+  let blockUI = false;
+  if (isClient && pathname === '/') {
+    try {
+      if (sessionStorage.getItem('justLoggedOut') === 'true' || !sessionStorage.getItem('introPlayed')) {
+        blockUI = true;
+      }
+    } catch(e) {}
+  }
+
   if (!isClient) {
     // SSR fallback to prevent flashing. If we are on landing page, block UI until client decides.
     return pathname === '/' ? <div className="fixed inset-0 z-[999999] bg-[#050505]" /> : null;
   }
 
-  if (!show) return null;
+  if (!show && !blockUI) return null;
 
   const letterVariants = {
     hidden: { opacity: 0 },
@@ -69,7 +79,7 @@ export default function IntroSplash() {
 
   return (
     <AnimatePresence>
-      {show && (
+      {(show || blockUI) && (
         <motion.div
           key="intro-splash"
           initial={{ opacity: 1 }}
