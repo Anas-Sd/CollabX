@@ -262,17 +262,20 @@ export default function RoomPage() {
     };
 
     let interval;
+    let isRedirecting = false;
     const updateTimer = () => {
+      if (isRedirecting) return;
       const currentRemaining = calculateTimeLeft();
       setTimeLeft(currentRemaining);
 
       if (currentRemaining <= 0) {
+        isRedirecting = true;
+        if (interval) clearInterval(interval);
         localStorage.setItem('dashboardAlert', JSON.stringify({
           title: "Time Expired",
           message: "The Workspace Session has reached its maximum preset duration limit and is permanently closed."
         }));
-        window.location.href = '/dashboard';
-        if (interval) clearInterval(interval);
+        router.replace('/dashboard');
       } else if (currentRemaining === 300 && !hasWarnedRef.current) {
         useNotificationStore.getState().addNotification('Warning: Session will expire in 5 minutes!', 'warning');
         hasWarnedRef.current = true;

@@ -73,6 +73,7 @@ function DashboardContent() {
       const savedAlert = localStorage.getItem('dashboardAlert');
       if (savedAlert) {
         setAlertModalConfig({ ...JSON.parse(savedAlert), isOpen: true });
+        localStorage.removeItem('dashboardAlert');
       } else {
         const alertParam = searchParams.get('alert');
         if (alertParam === 'kicked') {
