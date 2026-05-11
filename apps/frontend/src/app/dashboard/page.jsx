@@ -329,7 +329,7 @@ function DashboardContent() {
                 type="text"
                 value={joinCode}
                 onClick={() => router.refresh()}
-                onChange={(e) => setJoinCode(e.target.value)}
+                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                 placeholder="A 1 B 2 C 3 D 4"
                 className={`w-full px-4 py-3.5 bg-[#050508] border border-[#2A2A35] rounded-xl text-white placeholder-[#8B8B9E]/30 focus:outline-none uppercase tracking-[0.2em] font-mono text-sm transition-all shadow-inner group-hover:border-[#3A3A45] ${themeFocusRing}`}
                 maxLength={8}
