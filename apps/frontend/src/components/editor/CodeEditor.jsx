@@ -89,9 +89,8 @@ export default function CodeEditor({ wsHook }) {
       decorations.push({
         range: new monacoRef.current.Range(cursorInfo.line, cursorInfo.column, cursorInfo.line, cursorInfo.column),
         options: {
-          className: 'remote-cursor',
+          className: `remote-cursor remote-cursor-${userId}`,
           hoverMessage: { value: cursorInfo.userName },
-          beforeContentClassName: 'remote-cursor-label',
         }
       });
     });
