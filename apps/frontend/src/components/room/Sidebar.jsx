@@ -142,10 +142,12 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
           >
             <Users size={20} />
           </button>
-          <div className="tooltip-content">
-            <div className="tooltip-box">Participants</div>
-            <div className="tooltip-arrow"></div>
-          </div>
+          {activeTab !== 'USERS' && (
+            <div className="tooltip-content">
+              <div className="tooltip-box">Participants</div>
+              <div className="tooltip-arrow"></div>
+            </div>
+          )}
         </div>
 
         <div className="tooltip">
@@ -160,10 +162,12 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
               </span>
             )}
           </button>
-          <div className="tooltip-content">
-            <div className="tooltip-box">Chat</div>
-            <div className="tooltip-arrow"></div>
-          </div>
+          {activeTab !== 'CHAT' && (
+            <div className="tooltip-content">
+              <div className="tooltip-box">Chat</div>
+              <div className="tooltip-arrow"></div>
+            </div>
+          )}
         </div>
 
         {isHost && isActive && (
@@ -179,10 +183,12 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
                 </span>
               )}
             </button>
-            <div className="tooltip-content">
-              <div className="tooltip-box">Waiting List</div>
-              <div className="tooltip-arrow"></div>
-            </div>
+              {activeTab !== 'WAITLIST' && (
+                <div className="tooltip-content">
+                  <div className="tooltip-box">Waiting List</div>
+                  <div className="tooltip-arrow"></div>
+                </div>
+              )}
           </div>
         )}
 
@@ -194,10 +200,12 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
             >
               <Shield size={20} />
             </button>
-            <div className="tooltip-content">
-              <div className="tooltip-box">Audit Logs</div>
-              <div className="tooltip-arrow"></div>
-            </div>
+              {activeTab !== 'LOGS' && (
+                <div className="tooltip-content">
+                  <div className="tooltip-box">Audit Logs</div>
+                  <div className="tooltip-arrow"></div>
+                </div>
+              )}
           </div>
         )}
 
@@ -215,10 +223,12 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
             >
               <PenTool size={20} />
             </button>
-            <div className="tooltip-content">
-              <div className="tooltip-box">Blackboard</div>
-              <div className="tooltip-arrow"></div>
-            </div>
+              {!isWhiteboardOpen && (
+                <div className="tooltip-content">
+                  <div className="tooltip-box">Blackboard</div>
+                  <div className="tooltip-arrow"></div>
+                </div>
+              )}
           </div>
         )}
       </div>
