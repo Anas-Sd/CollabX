@@ -191,6 +191,12 @@ public class RoomService {
         if (existingOpt.isPresent()) {
             RoomMember exist = existingOpt.get();
             if ("LEFT".equals(exist.getStatus()) || "KICKED".equals(exist.getStatus()) || "REJECTED".equals(exist.getStatus())) {
+                long activeCount = existingMembers.stream()
+                        .filter(m -> "APPROVED".equals(m.getStatus()) || "HOST".equals(m.getRole()))
+                        .count();
+                if (activeCount >= room.getMaxMembers()) {
+                    throw new RuntimeException("Room is full");
+                }
                 exist.setStatus("PENDING");
                 exist.setRole("EDITOR".equalsIgnoreCase(requestedRole) ? "EDITOR" : "VIEWER");
                 roomMemberRepository.save(exist);
@@ -204,7 +210,7 @@ public class RoomService {
             }
         } else {
             long activeCount = existingMembers.stream()
-                    .filter(m -> "APPROVED".equals(m.getStatus()) || "PENDING".equals(m.getStatus()) || "HOST".equals(m.getRole()))
+                    .filter(m -> "APPROVED".equals(m.getStatus()) || "HOST".equals(m.getRole()))
                     .count();
             if (activeCount >= room.getMaxMembers()) {
                 throw new RuntimeException("Room is full");
@@ -535,6 +541,15 @@ public class RoomService {
         RoomMember member = roomMemberRepository.findByRoomAndUser(room, targetUser).orElseThrow();
         
         if (accept) {
+            List<RoomMember> allMembers = roomMemberRepository.findByRoom(room);
+            long activeCount = allMembers.stream()
+                    .filter(m -> "APPROVED".equals(m.getStatus()) || "HOST".equals(m.getRole()))
+                    .count();
+                    
+            if (activeCount >= room.getMaxMembers()) {
+                throw new RuntimeException("Cannot accept. Room is already full.");
+            }
+
             member.setStatus("APPROVED");
             roomMemberRepository.save(member);
             RoomMemberResponse broadcastMember = RoomMemberResponse.builder()
@@ -547,11 +562,29 @@ public class RoomService {
                     .profilePicture(member.getUser().getProfilePicture())
                     .build();
             logActivity(room, requester, "Accepted " + targetUser.getName());
+            
+            // Auto reject other pending users if the room just became full
+            if (activeCount + 1 >= room.getMaxMembers()) {
+                allMembers.stream()
+                        .filter(m -> "PENDING".equals(m.getStatus()) && !m.getId().equals(member.getId()))
+                        .forEach(m -> {
+                            m.setStatus("REJECTED");
+                            roomMemberRepository.save(m);
+                            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                                @Override
+                                public void afterCommit() {
+                                    roomSocketHandler.broadcastToUser(room.getId().toString(), m.getUser().getId().toString(), "waitlist.status", "REJECTED");
+                                }
+                            });
+                        });
+            }
+
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
                     roomSocketHandler.broadcastToRoom(room.getId().toString(), "members.join", broadcastMember);
                     roomSocketHandler.broadcastToUser(room.getId().toString(), userId, "waitlist.status", "ACCEPTED");
+                    roomSocketHandler.broadcastToRoom(room.getId().toString(), "waitlist", "UPDATE"); // To refresh waitlist UI
                 }
             });
         } else {
