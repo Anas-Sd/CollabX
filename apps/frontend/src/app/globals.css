@@ -108,3 +108,15 @@ body.intro-playing #app-content {
   opacity: 0;
   pointer-events: none;
 }
+
+/* ── Monaco read-only overlay: flip tooltip to appear BELOW cursor ── */
+/* Hide the downward-pointing top anchor (default: box above cursor)  */
+.monaco-editor-overlaymessage .anchor.top {
+  display: none !important;
+}
+/* Show the upward-pointing bottom anchor (box below cursor)           */
+.monaco-editor-overlaymessage .anchor.bottom {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
