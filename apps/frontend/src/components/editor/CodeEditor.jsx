@@ -151,6 +151,28 @@ export default function CodeEditor({ wsHook }) {
         model.getValueInRange(new monaco.Range(1, 1, sel.startLineNumber, sel.startColumn))
       );
     });
+
+    // Override Monaco's native "Cannot edit in read-only editor" text only
+    const domNode = editor.getDomNode();
+    if (domNode) {
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((m) => {
+          m.addedNodes.forEach((node) => {
+            if (node.nodeType !== 1) return;
+            const overlay = node.classList?.contains('monaco-editor-overlaymessage')
+              ? node
+              : node.querySelector?.('.monaco-editor-overlaymessage');
+            if (!overlay) return;
+            const textEl = overlay.querySelector('.message');
+            if (textEl) {
+              const active = useRoomStore.getState().isActive;
+              textEl.textContent = active ? 'Viewers cannot edit' : 'Workspace ended \u2014 cannot edit';
+            }
+          });
+        });
+      });
+      observer.observe(domNode, { childList: true, subtree: true });
+    }
   };
 
   const handleEditorChange = (value) => {
@@ -159,15 +181,6 @@ export default function CodeEditor({ wsHook }) {
     wsHook?.sendCodeChange(value, language);
   };
 
-  useEffect(() => {
-    if (!editorRef.current) return;
-    const d = editorRef.current.onDidAttemptReadOnlyEdit(() => {
-      import('../../store/notificationStore').then(({ useNotificationStore }) => {
-        useNotificationStore.getState().addNotification('You do not have permission to edit code', 'error');
-      });
-    });
-    return () => d.dispose();
-  }, []);
 
   // Apply Monaco decorations for every remote cursor (skip own)
   useEffect(() => {
