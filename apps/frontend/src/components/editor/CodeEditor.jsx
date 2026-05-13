@@ -4,7 +4,6 @@ import Editor from '@monaco-editor/react';
 import { useRoomStore } from '../../store/roomStore';
 import { useUserStore } from '../../store/userStore';
 
-// Color palette for remote cursors — one per user, consistent via hash
 const CURSOR_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#F5A623', '#DDA0DD', '#98FB98', '#F08080'];
 
 function getUserColor(userId) {
@@ -19,12 +18,25 @@ export default function CodeEditor({ wsHook }) {
   const monacoRef = useRef(null);
   const cursorDecorationsRef = useRef([]);
   const styleElRef = useRef(null);
+  const idleTimersRef = useRef({});
 
-  const currentUserParticipant = useRoomStore((state) => state.participants.find(p => p.id === user?.id));
+  // ── Refs to prevent stale closures inside Monaco event handlers ──
+  const wsHookRef = useRef(wsHook);
+  const userRef = useRef(user);
+  const isViewerRef = useRef(false);
+
+  const currentUserParticipant = useRoomStore(
+    (state) => state.participants.find((p) => p.id === user?.id)
+  );
   const isActive = useRoomStore((state) => state.isActive);
   const isViewer = !isActive || currentUserParticipant?.role === 'VIEWER';
 
-  // Create a real <style> tag in document.head so CSS actually reaches Monaco's DOM
+  // Keep refs in sync with latest values every render
+  useEffect(() => { wsHookRef.current = wsHook; }, [wsHook]);
+  useEffect(() => { userRef.current = user; }, [user]);
+  useEffect(() => { isViewerRef.current = isViewer; }, [isViewer]);
+
+  // Inject a real <style> element into document.head (JSX style tags don't reach Monaco DOM)
   useEffect(() => {
     const style = document.createElement('style');
     style.id = 'collabx-remote-cursors';
@@ -37,45 +49,69 @@ export default function CodeEditor({ wsHook }) {
     };
   }, []);
 
-  // Rebuild CSS whenever cursors map changes
+  // Rebuild CSS whenever cursors change (includes idle flag)
   useEffect(() => {
     if (!styleElRef.current) return;
-
-    const css = Object.entries(cursors).map(([userId, cursorInfo]) => {
-      const color = getUserColor(userId);
-      // Escape single quotes in names for CSS content property
-      const name = (cursorInfo.userName || 'Unknown').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-      return `
-        /* Cursor line for user ${userId} */
-        .rcursor-${userId} {
-          border-left: 2px solid ${color} !important;
-          margin-left: -1px;
-          position: relative;
-        }
-        /* Name badge shown always (not just on hover) */
-        .rcursor-label-${userId}::after {
-          content: '${name}';
-          position: absolute;
-          top: -20px;
-          left: -1px;
-          background-color: ${color};
-          color: #000000;
-          font-size: 10px;
-          font-weight: 700;
-          font-family: 'Inter', sans-serif;
-          padding: 1px 7px;
-          border-radius: 4px 4px 4px 0px;
-          white-space: nowrap;
-          pointer-events: none;
-          z-index: 9999;
-          line-height: 18px;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-        }
-      `;
-    }).join('\n');
-
+    const css = Object.entries(cursors)
+      .filter(([userId]) => String(userId) !== String(user?.id))
+      .map(([userId, info]) => {
+        const color = getUserColor(userId);
+        const name = (info.userName || 'Unknown').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        return `
+          .rcursor-${userId} {
+            border-left: 2px solid ${color} !important;
+            margin-left: -1px;
+            position: relative;
+          }
+          .rcursor-label-${userId}::after {
+            content: '${name}';
+            position: absolute;
+            top: -20px;
+            left: -1px;
+            background-color: ${color};
+            color: #000;
+            font-size: 10px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            padding: 1px 7px;
+            border-radius: 4px 4px 4px 0;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 9999;
+            line-height: 18px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            opacity: ${info.isIdle ? 0 : 1};
+            transition: opacity 0.4s ease;
+          }
+        `;
+      }).join('\n');
     styleElRef.current.textContent = css;
-  }, [cursors]);
+  }, [cursors, user]);
+
+  // 3-second idle detection: hide label after inactivity, show on next move
+  useEffect(() => {
+    Object.entries(cursors).forEach(([userId, info]) => {
+      if (String(userId) === String(user?.id)) return;
+      if (info.isIdle) return; // already idle, don't restart timer
+
+      if (idleTimersRef.current[userId]) clearTimeout(idleTimersRef.current[userId]);
+
+      idleTimersRef.current[userId] = setTimeout(() => {
+        const latest = useRoomStore.getState().cursors[userId];
+        if (latest && !latest.isIdle) {
+          useRoomStore.getState().updateCursor(userId, { ...latest, isIdle: true });
+        }
+      }, 3000);
+    });
+
+    // Clean up timers for users who left
+    Object.keys(idleTimersRef.current).forEach((userId) => {
+      if (!cursors[userId]) {
+        clearTimeout(idleTimersRef.current[userId]);
+        delete idleTimersRef.current[userId];
+      }
+    });
+  }, [cursors, user]);
 
   const handleEditorDidMount = (editor, monaco) => {
     editorRef.current = editor;
@@ -90,27 +126,30 @@ export default function CodeEditor({ wsHook }) {
         'editor.lineHighlightBackground': '#111118',
         'editorLineNumber.foreground': '#6B6B80',
         'editorIndentGuide.background': '#1E1E2E',
-      }
+      },
     });
     monaco.editor.setTheme('collabx-dark');
 
-    // Broadcast own cursor position on every move
+    // Use refs — not closure variables — so these always read the latest values
     editor.onDidChangeCursorPosition((e) => {
-      if (isViewer) return;
+      if (isViewerRef.current) return;
       const { lineNumber, column } = e.position;
-      wsHook?.sendCursorMove(lineNumber, column, user?.name || 'Anonymous', getUserColor(user?.id));
+      wsHookRef.current?.sendCursorMove(
+        lineNumber,
+        column,
+        userRef.current?.name || 'Anonymous',
+        getUserColor(userRef.current?.id)
+      );
     });
 
-    // Track selection for SQL/code execution helpers
     editor.onDidChangeCursorSelection((e) => {
-      const selection = e.selection;
       const model = editor.getModel();
       if (!model) return;
-      const selectedText = model.getValueInRange(selection);
-      const precedingRange = new monaco.Range(1, 1, selection.startLineNumber, selection.startColumn);
-      const precedingText = model.getValueInRange(precedingRange);
-      useRoomStore.getState().setSelectedCode(selectedText);
-      useRoomStore.getState().setPrecedingCode(precedingText);
+      const sel = e.selection;
+      useRoomStore.getState().setSelectedCode(model.getValueInRange(sel));
+      useRoomStore.getState().setPrecedingCode(
+        model.getValueInRange(new monaco.Range(1, 1, sel.startLineNumber, sel.startColumn))
+      );
     });
   };
 
@@ -120,37 +159,35 @@ export default function CodeEditor({ wsHook }) {
     wsHook?.sendCodeChange(value, language);
   };
 
-  // Read-only edit notification
   useEffect(() => {
     if (!editorRef.current) return;
-    const disposable = editorRef.current.onDidAttemptReadOnlyEdit(() => {
+    const d = editorRef.current.onDidAttemptReadOnlyEdit(() => {
       import('../../store/notificationStore').then(({ useNotificationStore }) => {
         useNotificationStore.getState().addNotification('You do not have permission to edit code', 'error');
       });
     });
-    return () => disposable.dispose();
+    return () => d.dispose();
   }, []);
 
-  // Apply Monaco decorations for each remote cursor
+  // Apply Monaco decorations for every remote cursor (skip own)
   useEffect(() => {
     if (!editorRef.current || !monacoRef.current) return;
 
     const decorations = Object.entries(cursors)
       .filter(([userId]) => String(userId) !== String(user?.id))
-      .map(([userId, cursorInfo]) => {
-        const line = Math.max(1, cursorInfo.line || 1);
-        const col = Math.max(1, cursorInfo.column || 1);
-        return {
-          range: new monacoRef.current.Range(line, col, line, col),
-          options: {
-            // Draws the colored vertical bar
-            className: `rcursor-${userId}`,
-            // Draws the name badge above via CSS ::after
-            afterContentClassName: `rcursor-label-${userId}`,
-            stickiness: monacoRef.current.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
-          }
-        };
-      });
+      .map(([userId, info]) => ({
+        range: new monacoRef.current.Range(
+          Math.max(1, info.line || 1),
+          Math.max(1, info.column || 1),
+          Math.max(1, info.line || 1),
+          Math.max(1, info.column || 1)
+        ),
+        options: {
+          className: `rcursor-${userId}`,
+          afterContentClassName: `rcursor-label-${userId}`,
+          stickiness: monacoRef.current.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+        },
+      }));
 
     cursorDecorationsRef.current = editorRef.current.deltaDecorations(
       cursorDecorationsRef.current,
