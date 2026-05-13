@@ -195,7 +195,8 @@ export default function RoomPage() {
         return;
       }
       
-      const hasFreeUsers = useRoomStore.getState().participants.some(p => p.subscriptionType !== 'PRO');
+      const activeParticipants = useRoomStore.getState().participants.filter(p => p.status === 'APPROVED');
+      const hasFreeUsers = activeParticipants.some(p => p.subscriptionType?.toUpperCase() !== 'PRO');
       if (hasFreeUsers) {
         setRoomAlert({
           title: "Pro Language Restriction",
@@ -784,7 +785,7 @@ export default function RoomPage() {
         </>
       ) : (
         <>
-          <Check size={16} />
+          <Play size={16} />
           Execute Selected
         </>
       )}
@@ -821,7 +822,11 @@ export default function RoomPage() {
         </>
       ) : (
         <>
-          <Check size={16} />
+          <span className="flex items-center -space-x-1.5">
+            <Play size={12} className="opacity-50" />
+            <Play size={12} className="opacity-75" />
+            <Play size={12} />
+          </span>
           Execute All
         </>
       )}
@@ -864,7 +869,7 @@ export default function RoomPage() {
                     </>
                   ) : (
                     <>
-                      <Check size={16} />
+                      <Play size={16} />
                       Execute Code (Tests: {testCases.length})
                     </>
                   )}

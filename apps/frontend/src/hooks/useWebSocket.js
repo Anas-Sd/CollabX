@@ -101,6 +101,9 @@ export const useWebSocket = (roomId) => {
             localStorage.setItem('dashboardAlert', JSON.stringify({ title: 'You were kicked', message: 'The host has removed you from the workspace.' }));
             setTimeout(() => { window.location.href = '/dashboard'; }, 1500);
           } else {
+            // Immediately remove from local store so UI updates instantly
+            useRoomStore.getState().removeParticipant(body);
+            useRoomStore.getState().removeCursor(body);
             setTimeout(fetchRoomMembers, 500);
           }
         }
