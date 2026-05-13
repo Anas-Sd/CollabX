@@ -1,26 +1,86 @@
 'use client';
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
 import { useRoomStore } from '../../store/roomStore';
 import { useUserStore } from '../../store/userStore';
+
+// Color palette for remote cursors — one per user, consistent via hash
+const CURSOR_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#F5A623', '#DDA0DD', '#98FB98', '#F08080'];
+
+function getUserColor(userId) {
+  const hash = String(userId).split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+  return CURSOR_COLORS[hash % CURSOR_COLORS.length];
+}
 
 export default function CodeEditor({ wsHook }) {
   const { code, setCode, language, cursors } = useRoomStore();
   const { user } = useUserStore();
   const editorRef = useRef(null);
   const monacoRef = useRef(null);
-  const debounceTimerRef = useRef(null);
   const cursorDecorationsRef = useRef([]);
+  const styleElRef = useRef(null);
 
   const currentUserParticipant = useRoomStore((state) => state.participants.find(p => p.id === user?.id));
   const isActive = useRoomStore((state) => state.isActive);
   const isViewer = !isActive || currentUserParticipant?.role === 'VIEWER';
 
+  // Create a real <style> tag in document.head so CSS actually reaches Monaco's DOM
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.id = 'collabx-remote-cursors';
+    document.head.appendChild(style);
+    styleElRef.current = style;
+    return () => {
+      if (styleElRef.current && document.head.contains(styleElRef.current)) {
+        document.head.removeChild(styleElRef.current);
+      }
+    };
+  }, []);
+
+  // Rebuild CSS whenever cursors map changes
+  useEffect(() => {
+    if (!styleElRef.current) return;
+
+    const css = Object.entries(cursors).map(([userId, cursorInfo]) => {
+      const color = getUserColor(userId);
+      // Escape single quotes in names for CSS content property
+      const name = (cursorInfo.userName || 'Unknown').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      return `
+        /* Cursor line for user ${userId} */
+        .rcursor-${userId} {
+          border-left: 2px solid ${color} !important;
+          margin-left: -1px;
+          position: relative;
+        }
+        /* Name badge shown always (not just on hover) */
+        .rcursor-label-${userId}::after {
+          content: '${name}';
+          position: absolute;
+          top: -20px;
+          left: -1px;
+          background-color: ${color};
+          color: #000000;
+          font-size: 10px;
+          font-weight: 700;
+          font-family: 'Inter', sans-serif;
+          padding: 1px 7px;
+          border-radius: 4px 4px 4px 0px;
+          white-space: nowrap;
+          pointer-events: none;
+          z-index: 9999;
+          line-height: 18px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        }
+      `;
+    }).join('\n');
+
+    styleElRef.current.textContent = css;
+  }, [cursors]);
+
   const handleEditorDidMount = (editor, monaco) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
 
-    // Define custom dark theme
     monaco.editor.defineTheme('collabx-dark', {
       base: 'vs-dark',
       inherit: true,
@@ -34,22 +94,21 @@ export default function CodeEditor({ wsHook }) {
     });
     monaco.editor.setTheme('collabx-dark');
 
-    // Handle cursor moves
+    // Broadcast own cursor position on every move
     editor.onDidChangeCursorPosition((e) => {
-      if (isViewer) return; // Viewers shouldn't broadcast cursor unless desired, but usually they don't edit
-      const position = e.position;
-      wsHook.sendCursorMove(position.lineNumber, position.column, user?.name || 'Anonymous', '#6C63FF');
+      if (isViewer) return;
+      const { lineNumber, column } = e.position;
+      wsHook?.sendCursorMove(lineNumber, column, user?.name || 'Anonymous', getUserColor(user?.id));
     });
 
-    // Handle text selection for SQL execution
+    // Track selection for SQL/code execution helpers
     editor.onDidChangeCursorSelection((e) => {
       const selection = e.selection;
-      const selectedText = editor.getModel().getValueInRange(selection);
-      
-      // Get everything from line 1, col 1 up to the start of the selection
-      const precedingRange = new monacoRef.current.Range(1, 1, selection.startLineNumber, selection.startColumn);
-      const precedingText = editor.getModel().getValueInRange(precedingRange);
-
+      const model = editor.getModel();
+      if (!model) return;
+      const selectedText = model.getValueInRange(selection);
+      const precedingRange = new monaco.Range(1, 1, selection.startLineNumber, selection.startColumn);
+      const precedingText = model.getValueInRange(precedingRange);
       useRoomStore.getState().setSelectedCode(selectedText);
       useRoomStore.getState().setPrecedingCode(precedingText);
     });
@@ -57,43 +116,41 @@ export default function CodeEditor({ wsHook }) {
 
   const handleEditorChange = (value) => {
     if (isViewer) return;
-    
     setCode(value);
-
-    // Immediate sync as requested
-    wsHook.sendCodeChange(value, language);
+    wsHook?.sendCodeChange(value, language);
   };
 
+  // Read-only edit notification
   useEffect(() => {
-    if (!editorRef.current || !monacoRef.current) return;
-    
-    // Add event listener for attempted edits in read-only mode
+    if (!editorRef.current) return;
     const disposable = editorRef.current.onDidAttemptReadOnlyEdit(() => {
       import('../../store/notificationStore').then(({ useNotificationStore }) => {
         useNotificationStore.getState().addNotification('You do not have permission to edit code', 'error');
       });
     });
-
     return () => disposable.dispose();
   }, []);
 
-  // Render remote cursors
+  // Apply Monaco decorations for each remote cursor
   useEffect(() => {
     if (!editorRef.current || !monacoRef.current) return;
 
-    const decorations = [];
-
-    Object.entries(cursors).forEach(([userId, cursorInfo]) => {
-      if (userId === user?.id?.toString()) return; // Don't render own cursor
-
-      decorations.push({
-        range: new monacoRef.current.Range(cursorInfo.line, cursorInfo.column, cursorInfo.line, cursorInfo.column),
-        options: {
-          className: `remote-cursor remote-cursor-${userId}`,
-          hoverMessage: { value: cursorInfo.userName },
-        }
+    const decorations = Object.entries(cursors)
+      .filter(([userId]) => String(userId) !== String(user?.id))
+      .map(([userId, cursorInfo]) => {
+        const line = Math.max(1, cursorInfo.line || 1);
+        const col = Math.max(1, cursorInfo.column || 1);
+        return {
+          range: new monacoRef.current.Range(line, col, line, col),
+          options: {
+            // Draws the colored vertical bar
+            className: `rcursor-${userId}`,
+            // Draws the name badge above via CSS ::after
+            afterContentClassName: `rcursor-label-${userId}`,
+            stickiness: monacoRef.current.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+          }
+        };
       });
-    });
 
     cursorDecorationsRef.current = editorRef.current.deltaDecorations(
       cursorDecorationsRef.current,
@@ -123,41 +180,6 @@ export default function CodeEditor({ wsHook }) {
           cursorSmoothCaretAnimation: 'on',
         }}
       />
-      <style jsx global>{`
-        .remote-cursor {
-          border-left: 2px solid #F5A623;
-          position: absolute;
-          z-index: 10;
-          padding-right: 8px; /* Creates an invisible hit area for easier hovering */
-          cursor: pointer;
-        }
-        
-        /* Dynamic Cursor Tooltips */
-        ${Object.entries(cursors).map(([userId, cursorInfo]) => `
-          .remote-cursor-${userId}::before {
-             content: '${cursorInfo.userName}';
-             position: absolute;
-             top: -22px;
-             left: -2px;
-             background: ${cursorInfo.color || '#F5A623'};
-             color: black;
-             font-size: 10px;
-             font-weight: bold;
-             font-family: sans-serif;
-             padding: 2px 6px;
-             border-radius: 4px;
-             border-bottom-left-radius: 0;
-             white-space: nowrap;
-             opacity: 0;
-             transition: opacity 0.2s ease-in-out;
-             pointer-events: none;
-             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-          }
-          .remote-cursor-${userId}:hover::before {
-             opacity: 1;
-          }
-        `).join('\n')}
-      `}</style>
     </div>
   );
 }
