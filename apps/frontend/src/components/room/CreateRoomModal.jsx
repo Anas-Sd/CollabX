@@ -133,7 +133,7 @@ export default function CreateRoomModal({ isOpen, onClose }) {
             </div>
             <div>
               <h2 className="text-2xl font-black text-white tracking-tight">Launch Workspace</h2>
-              <p className="text-sm text-muted-foreground font-medium">Configure your real-time session</p>
+              <p className="text-sm text-muted-foreground font-medium">Configure your real-time workspace</p>
             </div>
           </div>
 
@@ -160,7 +160,7 @@ export default function CreateRoomModal({ isOpen, onClose }) {
             {/* Session Duration */}
             <div className="space-y-2.5">
               <label className="block text-xs font-bold text-[#8B8B9E] mb-2 tracking-widest uppercase">
-                Session Duration
+                Workspace Duration
               </label>
               <div className="flex gap-1 bg-[#050508] border border-[#2A2A35] rounded-xl p-1 shadow-inner relative z-20">
                 {[
