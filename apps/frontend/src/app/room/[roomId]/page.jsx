@@ -45,6 +45,7 @@ export default function RoomPage() {
   const { user, isAuthenticated, restoreSession } = useUserStore();
   const { roomName, expiresAt, isActive, setRoomInfo, language, setLanguage, testCases, participants, setParticipants, sessionEndedReason, roleChangeAlert, hostTransferAlert, isExecuting, showOutputPanel, setShowOutputPanel, selectedCode, isWhiteboardOpen } = useRoomStore();
   const [copied, setCopied] = useState(false);
+  const [maxMembers, setMaxMembers] = useState(null);
   const [activeSidebarTab, setActiveSidebarTab] = useState('USERS');
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [isProModalOpen, setIsProModalOpen] = useState(false);
@@ -119,6 +120,7 @@ export default function RoomPage() {
       try {
         const res = await api.post(`/rooms/${roomId}/join`, { role: 'VIEWER' });
         setRoomInfo(res.data.id || roomId, res.data.name, res.data.expiresAt, res.data.isActive);
+        if (res.data.maxMembers) setMaxMembers(res.data.maxMembers);
         if (res.data.members) {
           setParticipants(res.data.members);
         }
@@ -147,7 +149,9 @@ export default function RoomPage() {
           useRoomStore.getState().setLogs(res.data.logs);
         }
         if (res.data.isWhiteboardOpen !== undefined) {
-          useRoomStore.getState().setIsWhiteboardOpen(res.data.isWhiteboardOpen);
+          // For ended rooms, always default to IDE view, never whiteboard
+          const roomIsActive = res.data.isActive !== false;
+          useRoomStore.getState().setIsWhiteboardOpen(roomIsActive ? res.data.isWhiteboardOpen : false);
         }
         if (res.data.whiteboardData !== undefined) {
           useRoomStore.getState().setWhiteboardData(res.data.whiteboardData);
@@ -601,7 +605,7 @@ export default function RoomPage() {
     <div className="h-screen w-screen flex flex-col p-4 gap-4 overflow-hidden bg-[#0A0A0F]">
 
       {/* Header Island (Full Width) */}
-      <div className="h-16 rounded-2xl border border-border flex items-center justify-between px-6 bg-card shrink-0 shadow-sm backdrop-blur-md bg-card/90 relative z-20">
+      <div className="h-16 rounded-2xl border border-border flex items-center justify-between px-6 bg-card shrink-0 shadow-sm backdrop-blur-md bg-card/90 relative z-50">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <div className="tooltip">
@@ -662,10 +666,17 @@ export default function RoomPage() {
 
           <div className="h-8 w-px bg-border"></div>
 
-          <div className="flex items-center gap-2 bg-success/10 border border-success/20 px-3 py-1.5 rounded-full">
-            <div className="w-2 h-2 rounded-full bg-success animate-pulse"></div>
-            <span className="text-[10px] font-bold text-success tracking-widest uppercase">SYNC</span>
-          </div>
+          {isActive ? (
+            <div className="flex items-center gap-2 bg-success/10 border border-success/20 px-3 py-1.5 rounded-full">
+              <div className="w-2 h-2 rounded-full bg-success animate-pulse"></div>
+              <span className="text-[10px] font-bold text-success tracking-widest uppercase">SYNC</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 bg-danger/10 border border-danger/30 px-3 py-1.5 rounded-full">
+              <div className="w-2 h-2 rounded-full bg-danger"></div>
+              <span className="text-[10px] font-bold text-danger tracking-widest uppercase">ENDED</span>
+            </div>
+          )}
 
           {timeLeft !== null && timeLeft > 0 && (
             <div className={`flex items-center gap-2 border px-3 py-1.5 rounded-full text-[10px] font-mono font-bold transition-colors ${timeLeft <= 300 ? 'text-danger border-danger/30 bg-danger/10 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.3)]' : 'text-primary border-primary/30 bg-primary/10'
@@ -1079,7 +1090,7 @@ export default function RoomPage() {
                 
                 <div className="flex items-center gap-2 p-3 bg-[#F5A623]/10 border border-[#F5A623]/20 text-[#F5A623] rounded-xl text-xs font-medium">
                   <Sparkles size={16} className="shrink-0" />
-                  <p>Maximum capacity is currently set to 10 participants per room by the host.</p>
+                  <p>Maximum capacity is currently set to <strong>{maxMembers ?? '—'}</strong> participants per room by the host.</p>
                 </div>
               </div>
 

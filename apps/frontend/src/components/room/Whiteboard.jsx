@@ -75,7 +75,7 @@ export default function Whiteboard({ wsHook }) {
   };
 
   return (
-    <div className="absolute inset-0 z-40 bg-[#0A0A0F]" style={{ width: '100%', height: '100%' }}>
+    <div className="absolute inset-0 bg-[#0A0A0F]" style={{ width: '100%', height: '100%' }}>
       <Excalidraw
         excalidrawAPI={(api) => setExcalidrawAPI(api)}
         initialData={initialData}
