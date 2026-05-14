@@ -273,8 +273,9 @@ function AuthContent() {
     setLoading(true);
     try {
       const res = await api.post('/auth/register', { name: regName, email: regEmail, password: regPassword });
-      useNotificationStore.getState().addNotification('Registration successful! Please login.', 'success');
-      switchMode('login');
+      login(res.data.user, res.data.token);
+      useNotificationStore.getState().addNotification('Account created successfully! Welcome to CollabX.', 'success');
+      router.push('/dashboard');
     } catch (err) {
       useNotificationStore.getState().addNotification(err.response?.data?.message || 'Registration failed.', 'error');
     } finally {
