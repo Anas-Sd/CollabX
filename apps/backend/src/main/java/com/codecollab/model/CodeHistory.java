@@ -29,6 +29,9 @@ public class CodeHistory {
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
+    @Column(name = "user_name", length = 100)
+    private String userName;
+
     @Column(name = "code_snapshot", columnDefinition = "TEXT")
     private String codeSnapshot;
 

@@ -31,6 +31,9 @@ public class RoomMember {
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
+    @Column(name = "user_name", length = 100)
+    private String userName;
+
     @Column(nullable = false, length = 10)
     private String role;
 

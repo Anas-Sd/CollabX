@@ -31,12 +31,18 @@ public class VoicePermission {
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
+    @Column(name = "user_name", length = 100)
+    private String userName;
+
     @Column(name = "is_muted")
     private Boolean isMuted;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "muted_by", referencedColumnName = "id")
     private User mutedBy;
+
+    @Column(name = "muted_by_name", length = 100)
+    private String mutedByName;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;

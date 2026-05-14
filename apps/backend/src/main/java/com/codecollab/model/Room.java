@@ -28,6 +28,9 @@ public class Room {
     @JoinColumn(name = "host_id", referencedColumnName = "id")
     private User host;
 
+    @Column(name = "host_name", length = 100)
+    private String hostName;
+
     @Column(name = "is_active")
     private Boolean isActive;
 

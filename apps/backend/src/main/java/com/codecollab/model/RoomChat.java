@@ -29,6 +29,9 @@ public class RoomChat {
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     private User user;
 
+    @Column(name = "user_name", length = 100)
+    private String userName;
+
     @Column(nullable = false, length = 1000)
     private String message;
 

@@ -26,6 +26,9 @@ public class RoomLog {
     @JoinColumn(name = "user_id")
     private User user; // Nullable if system action
 
+    @Column(name = "user_name", length = 100)
+    private String userName; // Nullable if system action
+
     @Column(nullable = false, length = 200)
     private String action;
 
