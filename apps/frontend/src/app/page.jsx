@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
-import { motion, useScroll, useTransform, useInView } from 'framer-motion';
+import { motion, useScroll, useTransform, useInView, useSpring, animate } from 'framer-motion';
 import { useUserStore } from '../store/userStore';
 import {
   Code2, Users, Zap, Shield, PlayCircle, Mic, Terminal, Globe, ArrowRight,
@@ -38,16 +38,13 @@ import FeedbackButton from '../components/ui/FeedbackButton';
 
 const FadeIn = ({ children, delay = 0, direction = "up", className = "" }) => {
   const ref = useRef(null);
-  // Trigger when element is 15% into the viewport, and allow re-triggering
   const isInView = useInView(ref, { once: false, margin: "-15%" });
-
   const directions = {
     up: { y: 50, x: 0 },
     down: { y: -50, x: 0 },
     left: { x: 100, y: 0 },
     right: { x: -100, y: 0 }
   };
-
   return (
     <motion.div
       ref={ref}
@@ -59,6 +56,44 @@ const FadeIn = ({ children, delay = 0, direction = "up", className = "" }) => {
       {children}
     </motion.div>
   );
+};
+
+// Word-by-word blur reveal
+const ScrollReveal = ({ text, className = "", delay = 0 }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: false, margin: "-10%" });
+  return (
+    <span ref={ref} className={className}>
+      {text.split(" ").map((word, i) => (
+        <motion.span
+          key={i}
+          initial={{ opacity: 0, y: 20, filter: "blur(6px)" }}
+          animate={isInView
+            ? { opacity: 1, y: 0, filter: "blur(0px)" }
+            : { opacity: 0, y: 20, filter: "blur(6px)" }}
+          transition={{ duration: 0.5, delay: delay + i * 0.07, ease: [0.21, 0.47, 0.32, 0.98] }}
+          className="inline-block mr-[0.3em]"
+        >{word}</motion.span>
+      ))}
+    </span>
+  );
+};
+
+// Animated counter
+const Counter = ({ from = 0, to, prefix = "", suffix = "", className = "" }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-10%" });
+  const [val, setVal] = useState(from);
+  useEffect(() => {
+    if (!isInView) return;
+    const controls = animate(from, to, {
+      duration: 1.6,
+      ease: [0.21, 0.47, 0.32, 0.98],
+      onUpdate: (v) => setVal(Math.round(v)),
+    });
+    return () => controls.stop();
+  }, [isInView]);
+  return <span ref={ref} className={className}>{prefix}{val}{suffix}</span>;
 };
 
 export default function Home() {
@@ -185,6 +220,8 @@ export default function Home() {
   const workflowLeftX = useTransform(workflowProgress, [0, 1], ["-200px", "0px"]);
   const workflowRightX = useTransform(workflowProgress, [0, 1], ["200px", "0px"]);
   const workflowOpacity = useTransform(workflowProgress, [0, 0.8], [0, 1]);
+  // Dedicated line scale — runs 0→1 across the full workflow scroll range
+  const workflowLineScale = useTransform(workflowProgress, [0, 1], [0, 1]);
 
   const textOpacity = useTransform(heroProgress, [0, 0.4], [1, 0]);
   const textY = useTransform(heroProgress, [0, 0.4], [0, -100]);
@@ -194,8 +231,105 @@ export default function Home() {
   const mockupY = useTransform(heroProgress, [0, 0.8], [150, -50]);
   const mockupOpacity = useTransform(heroProgress, [0, 0.1, 0.8, 1], [0.5, 1, 1, 0]);
 
+  // Hero extra parallax layers
+  const heroOrb1Y = useTransform(heroProgress, [0, 1], ["0%", "30%"]);
+  const heroOrb2Y = useTransform(heroProgress, [0, 1], ["0%", "-20%"]);
+  const heroGlowScale = useTransform(heroProgress, [0, 1], [1, 1.6]);
+
+  // Global scroll progress bar
+  const { scrollYProgress: pageProgress } = useScroll();
+  const scaleX = useSpring(pageProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
+
+  // Metrics section
+  const metricsRef = useRef(null);
+
+  // Pricing section
+  const pricingRef = useRef(null);
+  const { scrollYProgress: pricingProgress } = useScroll({
+    target: pricingRef,
+    offset: ["start end", "center center"]
+  });
+  const pricingScale = useTransform(pricingProgress, [0, 0.6], [0.88, 1]);
+  const pricingOpacity = useTransform(pricingProgress, [0, 0.4], [0, 1]);
+  const pricingY = useTransform(pricingProgress, [0, 0.6], [60, 0]);
+
+  // CTA section
+  const ctaRef = useRef(null);
+  const { scrollYProgress: ctaProgress } = useScroll({
+    target: ctaRef,
+    offset: ["start end", "center center"]
+  });
+  const ctaY = useTransform(ctaProgress, [0, 1], [80, 0]);
+  const ctaOpacity = useTransform(ctaProgress, [0, 0.6], [0, 1]);
+
   return (
     <div className="bg-[#020202] text-white selection:bg-[#F5A623]/30 font-sans">
+
+      {/* ── Landing-page JSON-LD: FAQ + rich snippet data ─────────────────── */}
+      {/* Googlebot executes JavaScript — this WILL be indexed                */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@graph': [
+              {
+                '@type': 'FAQPage',
+                mainEntity: [
+                  {
+                    '@type': 'Question',
+                    name: 'What is CollabX?',
+                    acceptedAnswer: {
+                      '@type': 'Answer',
+                      text: 'CollabX is a real-time collaborative IDE that lets developers code together in a shared workspace with voice communication, a collaborative whiteboard, and instant multi-language code execution — all in the browser.',
+                    },
+                  },
+                  {
+                    '@type': 'Question',
+                    name: 'Is CollabX free to use?',
+                    acceptedAnswer: {
+                      '@type': 'Answer',
+                      text: 'Yes. CollabX has a free plan with core collaborative features. A Pro plan at ₹499/month unlocks extended session durations, up to 20 participants, niche languages, and premium visual effects.',
+                    },
+                  },
+                  {
+                    '@type': 'Question',
+                    name: 'Which programming languages does CollabX support?',
+                    acceptedAnswer: {
+                      '@type': 'Answer',
+                      text: 'CollabX supports Python, Java, C++, JavaScript (Node.js), and SQL through Judge0 API. More languages are available on the Pro plan.',
+                    },
+                  },
+                  {
+                    '@type': 'Question',
+                    name: 'Can I use CollabX for technical interviews?',
+                    acceptedAnswer: {
+                      '@type': 'Answer',
+                      text: 'Yes. CollabX is ideal for remote technical interviews. Share a workspace code, assign the candidate as Editor and yourself as Host, then code, run test cases, and communicate via built-in voice — no external tools needed.',
+                    },
+                  },
+                  {
+                    '@type': 'Question',
+                    name: 'What makes CollabX different from other online IDEs?',
+                    acceptedAnswer: {
+                      '@type': 'Answer',
+                      text: 'CollabX combines real-time code collaboration (sub-100ms sync via WebSockets), built-in voice communication (WebRTC via Agora), a collaborative whiteboard, role-based access control, and session persistence — all in a single browser-based platform with no installation required.',
+                    },
+                  },
+                  {
+                    '@type': 'Question',
+                    name: 'How many people can collaborate at once in CollabX?',
+                    acceptedAnswer: {
+                      '@type': 'Answer',
+                      text: 'The free plan supports up to 5 collaborators per workspace. The Pro plan expands this to 20+ participants for larger team sessions.',
+                    },
+                  },
+                ],
+              },
+            ],
+          }),
+        }}
+      />
 
       <style dangerouslySetInnerHTML={{
         __html: `
@@ -256,7 +390,19 @@ export default function Home() {
       <section ref={heroRef} className="relative h-[200vh]">
         <div className="sticky top-0 h-screen w-full flex flex-col items-center justify-center overflow-hidden [perspective:1000px]">
 
-          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#F5A623]/10 rounded-full blur-[120px] pointer-events-none" />
+          {/* Hero parallax depth orbs */}
+          <motion.div
+            style={{ y: heroOrb1Y, scale: heroGlowScale }}
+            className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#F5A623]/10 rounded-full blur-[120px] pointer-events-none"
+          />
+          <motion.div
+            style={{ y: heroOrb2Y }}
+            className="absolute top-[20%] left-[15%] w-[280px] h-[280px] bg-purple-500/5 rounded-full blur-[90px] pointer-events-none"
+          />
+          <motion.div
+            style={{ y: heroOrb1Y }}
+            className="absolute bottom-[20%] right-[12%] w-[220px] h-[220px] bg-blue-500/5 rounded-full blur-[80px] pointer-events-none"
+          />
 
           <motion.div style={{ opacity: textOpacity, y: textY }} className="absolute top-[25vh] text-center z-20 px-4 w-full">
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-4">
@@ -332,10 +478,12 @@ export default function Home() {
       </section>
 
       {/* ---------------- 1.5 METRICS SECTION ---------------- */}
-      <section className="py-24 bg-[#020202] border-y border-white/5 relative z-40">
+      <section ref={metricsRef} className="py-24 bg-[#020202] border-y border-white/5 relative z-40">
         <div className="max-w-6xl mx-auto px-6">
           <FadeIn className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-black mb-4 tracking-tight">Built for scale. <span className="text-white/60">Engineered for speed.</span></h2>
+            <h2 className="text-3xl md:text-5xl font-black mb-4 tracking-tight">
+              <ScrollReveal text="Built for scale." /> <span className="text-white/60"><ScrollReveal text="Engineered for speed." delay={0.3} /></span>
+            </h2>
             <p className="text-white/50 text-sm md:text-base max-w-xl mx-auto">CollabX handles the heavy lifting so you can focus on writing code with your team.</p>
           </FadeIn>
 
@@ -344,7 +492,7 @@ export default function Home() {
             {/* Metric 1 */}
             <FadeIn delay={0.1} className="col-span-2 lg:col-span-2 bg-[#050508] border border-white/5 rounded-3xl p-6 relative overflow-hidden group hover:border-white/10 transition-colors">
               <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 blur-[40px] rounded-full group-hover:bg-green-500/20 transition-all"></div>
-              <div className="text-4xl font-black text-[#6DB33F] mb-2">&lt;100ms</div>
+              <div className="text-4xl font-black text-[#6DB33F] mb-2"><Counter from={0} to={99} prefix="<" suffix="ms" /></div>
               <div className="text-sm font-bold text-white/90 mb-1">Global Sync Latency</div>
               <p className="text-[10px] text-white/40 leading-relaxed">Real-time WebSocket propagation across regions.</p>
             </FadeIn>
@@ -352,7 +500,7 @@ export default function Home() {
             {/* Metric 2 */}
             <FadeIn delay={0.2} className="col-span-2 lg:col-span-2 bg-[#050508] border border-white/5 rounded-3xl p-6 relative overflow-hidden group hover:border-white/10 transition-colors">
               <div className="absolute bottom-0 left-0 w-32 h-32 bg-[#F5A623]/10 blur-[40px] rounded-full group-hover:bg-[#F5A623]/20 transition-all"></div>
-              <div className="text-4xl font-black text-white mb-2">20<span className="text-2xl text-[#F5A623]">+</span></div>
+              <div className="text-4xl font-black text-white mb-2"><Counter from={0} to={20} /><span className="text-2xl text-[#F5A623]">+</span></div>
               <div className="text-sm font-bold text-white/90 mb-1">Users per Room</div>
               <p className="text-[10px] text-white/40 leading-relaxed">Concurrent editors with distinct cursors.</p>
             </FadeIn>
@@ -360,7 +508,7 @@ export default function Home() {
             {/* Metric 3 */}
             <FadeIn delay={0.3} className="col-span-2 lg:col-span-2 bg-[#050508] border border-white/5 rounded-3xl p-6 relative overflow-hidden group hover:border-white/10 transition-colors">
               <div className="absolute top-0 left-0 w-32 h-32 bg-blue-500/10 blur-[40px] rounded-full group-hover:bg-blue-500/20 transition-all"></div>
-              <div className="text-4xl font-black text-blue-400 mb-2">200<span className="text-white text-2xl">+</span></div>
+              <div className="text-4xl font-black text-blue-400 mb-2"><Counter from={0} to={200} /><span className="text-white text-2xl">+</span></div>
               <div className="text-sm font-bold text-white/90 mb-1">Concurrent Sockets</div>
               <p className="text-[10px] text-white/40 leading-relaxed">Sustained active connections per server instance.</p>
             </FadeIn>
@@ -368,7 +516,7 @@ export default function Home() {
             {/* Metric 4 */}
             <FadeIn delay={0.4} className="col-span-2 lg:col-span-3 bg-[#050508] border border-white/5 rounded-3xl p-6 relative overflow-hidden group hover:border-white/10 transition-colors flex justify-between items-center">
               <div>
-                <div className="text-4xl font-black text-white mb-2">5<span className="text-[#F5A623] text-2xl">+</span></div>
+                <div className="text-4xl font-black text-white mb-2"><Counter from={0} to={5} /><span className="text-[#F5A623] text-2xl">+</span></div>
                 <div className="text-sm font-bold text-white/90 mb-1">Languages Supported</div>
                 <p className="text-[10px] text-white/40 leading-relaxed max-w-[200px]">Java, Python, C++, Node.js, SQL, and more via Judge0.</p>
               </div>
@@ -392,70 +540,117 @@ export default function Home() {
       <section ref={featuresRef} id="features" className="relative h-[350vh] bg-[#020202] z-40">
         <div className="sticky top-0 h-screen w-full flex items-center overflow-hidden">
 
-          <div className="absolute top-[20vh] left-6 md:left-24 z-10 w-full pr-6">
-            <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-2">No Compromises.</h2>
-            <p className="text-white/50 text-sm md:text-base font-medium tracking-tight">Keep scrolling to explore the architecture.</p>
-          </div>
+          <motion.div
+            style={{ opacity: featuresOpacity }}
+            className="absolute top-[20vh] left-6 md:left-24 z-10 w-full pr-6"
+          >
+            <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-2">
+              <ScrollReveal text="No Compromises." />
+            </h2>
+            <p className="text-white/50 text-sm md:text-base font-medium tracking-tight">
+              <ScrollReveal text="Keep scrolling to explore the architecture." delay={0.2} />
+            </p>
+          </motion.div>
 
           <motion.div style={{ x: xTransform }} className="flex gap-8 px-[10vw] mt-26 items-center will-change-transform">
 
             {/* Card 4: Role-Based Sessions */}
-            <div className="w-[85vw] md:w-[400px] h-[320px] shrink-0 bg-[#0A0A0F] border border-white/5 rounded-[24px] p-8 flex flex-col justify-center relative overflow-hidden group hover:border-white/10 transition-colors">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 20 }}
+              whileInView={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.55, ease: [0.21, 0.47, 0.32, 0.98] }}
+              viewport={{ once: false, margin: "0px -80px 0px -80px" }}
+              className="w-[85vw] md:w-[400px] h-[320px] shrink-0 bg-[#0A0A0F] border border-white/5 rounded-[24px] p-8 flex flex-col justify-center relative overflow-hidden group hover:border-white/10 transition-colors"
+            >
               <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/5 blur-[60px] rounded-full group-hover:bg-purple-500/10 transition-colors pointer-events-none"></div>
               <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center mb-6 text-purple-400"><Shield className="w-6 h-6" /></div>
               <h3 className="text-xl font-bold mb-3 tracking-tight text-white/90">Role-Based Sessions.</h3>
               <p className="text-xs md:text-sm text-white/50 leading-relaxed font-medium">Assign Host, Editor, or Viewer roles dynamically. Take control of execution privileges and mute specific participants.</p>
-            </div>
+            </motion.div>
 
             {/* Card 1: Real-Time Collaboration */}
-            <div className="w-[85vw] md:w-[400px] h-[320px] shrink-0 bg-[#0A0A0F] border border-white/5 rounded-[24px] p-8 flex flex-col justify-center relative overflow-hidden group hover:border-white/10 transition-colors">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 20 }}
+              whileInView={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.55, ease: [0.21, 0.47, 0.32, 0.98] }}
+              viewport={{ once: false, margin: "0px -80px 0px -80px" }}
+              className="w-[85vw] md:w-[400px] h-[320px] shrink-0 bg-[#0A0A0F] border border-white/5 rounded-[24px] p-8 flex flex-col justify-center relative overflow-hidden group hover:border-white/10 transition-colors"
+            >
               <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/5 blur-[60px] rounded-full group-hover:bg-blue-500/10 transition-colors pointer-events-none"></div>
               <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center mb-6 text-blue-400"><Zap className="w-6 h-6" /></div>
               <h3 className="text-xl font-bold mb-3 tracking-tight text-white/90">Real-Time Collaboration.</h3>
               <p className="text-xs md:text-sm text-white/50 leading-relaxed font-medium">Sub-100ms cursor tracking and code syncing via Spring WebSockets. Experience true multiplayer editing.</p>
-            </div>
+            </motion.div>
 
             {/* Card 3: Multi-Language Execution */}
-            <div className="w-[85vw] md:w-[400px] h-[320px] shrink-0 bg-[#0A0A0F] border border-white/5 rounded-[24px] p-8 flex flex-col justify-center relative overflow-hidden group hover:border-white/10 transition-colors">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 20 }}
+              whileInView={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.55, ease: [0.21, 0.47, 0.32, 0.98] }}
+              viewport={{ once: false, margin: "0px -80px 0px -80px" }}
+              className="w-[85vw] md:w-[400px] h-[320px] shrink-0 bg-[#0A0A0F] border border-white/5 rounded-[24px] p-8 flex flex-col justify-center relative overflow-hidden group hover:border-white/10 transition-colors"
+            >
               <div className="absolute top-0 right-0 w-48 h-48 bg-green-500/5 blur-[60px] rounded-full group-hover:bg-green-500/10 transition-colors pointer-events-none"></div>
               <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center mb-6 text-green-400"><Terminal className="w-6 h-6" /></div>
               <h3 className="text-xl font-bold mb-3 tracking-tight text-white/90">Multi-Language Execution.</h3>
               <p className="text-xs md:text-sm text-white/50 leading-relaxed font-medium">Compile and run Python, Java, C++, JS, and SQL instantly inside isolated secure containers via Judge0 API.</p>
-            </div>
-
+            </motion.div>
 
             {/* Card 5: Refresh-Safe Recovery */}
-            <div className="w-[85vw] md:w-[400px] h-[320px] shrink-0 bg-[#0A0A0F] border border-white/5 rounded-[24px] p-8 flex flex-col justify-center relative overflow-hidden group hover:border-white/10 transition-colors">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 20 }}
+              whileInView={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.55, ease: [0.21, 0.47, 0.32, 0.98] }}
+              viewport={{ once: false, margin: "0px -80px 0px -80px" }}
+              className="w-[85vw] md:w-[400px] h-[320px] shrink-0 bg-[#0A0A0F] border border-white/5 rounded-[24px] p-8 flex flex-col justify-center relative overflow-hidden group hover:border-white/10 transition-colors"
+            >
               <div className="absolute top-0 right-0 w-48 h-48 bg-[#F5A623]/5 blur-[60px] rounded-full group-hover:bg-[#F5A623]/10 transition-colors pointer-events-none"></div>
               <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center mb-6 text-[#F5A623]"><Database className="w-6 h-6" /></div>
               <h3 className="text-xl font-bold mb-3 tracking-tight text-white/90">Refresh-Safe Recovery.</h3>
               <p className="text-xs md:text-sm text-white/50 leading-relaxed font-medium">Automatic state persistence via database ensures that if you drop connection or refresh, you immediately rejoin exactly where you left off.</p>
-            </div>
+            </motion.div>
 
             {/* Card 7: Collaborative Whiteboard */}
-            <div className="w-[85vw] md:w-[400px] h-[320px] shrink-0 bg-[#0A0A0F] border border-white/5 rounded-[24px] p-8 flex flex-col justify-center relative overflow-hidden group hover:border-white/10 transition-colors">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 20 }}
+              whileInView={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.55, ease: [0.21, 0.47, 0.32, 0.98] }}
+              viewport={{ once: false, margin: "0px -80px 0px -80px" }}
+              className="w-[85vw] md:w-[400px] h-[320px] shrink-0 bg-[#0A0A0F] border border-white/5 rounded-[24px] p-8 flex flex-col justify-center relative overflow-hidden group hover:border-white/10 transition-colors"
+            >
               <div className="absolute top-0 right-0 w-48 h-48 bg-teal-500/5 blur-[60px] rounded-full group-hover:bg-teal-500/10 transition-colors pointer-events-none"></div>
               <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center mb-6 text-teal-400"><Pencil className="w-6 h-6" /></div>
               <h3 className="text-xl font-bold mb-3 tracking-tight text-white/90">Collaborative Whiteboard.</h3>
               <p className="text-xs md:text-sm text-white/50 leading-relaxed font-medium">Sketch architecture diagrams, algorithm logic, and notes in real-time. Built right into the editor for seamless brainstorming.</p>
-            </div>
+            </motion.div>
 
             {/* Card 2: Voice Communication */}
-            <div className="w-[85vw] md:w-[400px] h-[320px] shrink-0 bg-[#0A0A0F] border border-white/5 rounded-[24px] p-8 flex flex-col justify-center relative overflow-hidden group hover:border-white/10 transition-colors">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 20 }}
+              whileInView={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.55, ease: [0.21, 0.47, 0.32, 0.98] }}
+              viewport={{ once: false, margin: "0px -80px 0px -80px" }}
+              className="w-[85vw] md:w-[400px] h-[320px] shrink-0 bg-[#0A0A0F] border border-white/5 rounded-[24px] p-8 flex flex-col justify-center relative overflow-hidden group hover:border-white/10 transition-colors"
+            >
               <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/5 blur-[60px] rounded-full group-hover:bg-cyan-500/10 transition-colors pointer-events-none"></div>
               <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center mb-6 text-cyan-400"><Mic className="w-6 h-6" /></div>
               <h3 className="text-xl font-bold mb-3 tracking-tight text-white/90">Voice Communication.</h3>
               <p className="text-xs md:text-sm text-white/50 leading-relaxed font-medium">Talk directly inside the IDE using WebRTC voice channels powered by Agora. Leave external meeting apps behind.</p>
-            </div>
-
+            </motion.div>
 
             {/* Card 6: Pro Features */}
-            <div className="w-[85vw] md:w-[400px] h-[320px] shrink-0 bg-[#0A0A0F] border border-white/5 rounded-[24px] p-8 flex flex-col justify-center relative overflow-hidden group hover:border-white/10 transition-colors">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 20 }}
+              whileInView={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.55, ease: [0.21, 0.47, 0.32, 0.98] }}
+              viewport={{ once: false, margin: "0px -80px 0px -80px" }}
+              className="w-[85vw] md:w-[400px] h-[320px] shrink-0 bg-[#0A0A0F] border border-white/5 rounded-[24px] p-8 flex flex-col justify-center relative overflow-hidden group hover:border-white/10 transition-colors"
+            >
               <div className="absolute top-0 right-0 w-48 h-48 bg-pink-500/5 blur-[60px] rounded-full group-hover:bg-pink-500/10 transition-colors pointer-events-none"></div>
               <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center mb-6 text-pink-400"><Code2 className="w-6 h-6" /></div>
               <h3 className="text-xl font-bold mb-3 tracking-tight text-white/90">Pro Features.</h3>
-              <p className="text-xs md:text-sm text-white/50 leading-relaxed font-medium">Unlock extended multi-hour sessions, participants limit, niche languages, Enhanced Background & Glowing effects</p>
-            </div>
+              <p className="text-xs md:text-sm text-white/50 leading-relaxed font-medium">Unlock extended multi-hour sessions, participants limit, niche languages, Enhanced Background &amp; Glowing effects</p>
+            </motion.div>
 
 
             <div className="w-[10vw] shrink-0"></div>
@@ -471,28 +666,30 @@ export default function Home() {
               <h2 className="text-3xl md:text-4xl font-black mb-4">Workflow Simplified.</h2>
               <p className="text-white/50 text-sm md:text-base mb-10 max-w-md">We removed all the friction. From creating an account to collaborating in a live session takes less than 30 seconds.</p>
 
-              <div className="space-y-6">
-                <div className="flex gap-5">
-                  <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center font-black text-sm text-[#F5A623] shrink-0">1</div>
-                  <div>
-                    <h4 className="text-base font-bold mb-1 text-white/90">Create a Workspace</h4>
-                    <p className="text-white/50 text-xs md:text-sm leading-relaxed max-w-sm">Log into your dashboard and launch a new session in one click. An isolated environment is provisioned instantly.</p>
-                  </div>
-                </div>
-                <div className="flex gap-5">
-                  <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center font-black text-sm text-[#F5A623] shrink-0">2</div>
-                  <div>
-                    <h4 className="text-base font-bold mb-1 text-white/90">Share the Access Code</h4>
-                    <p className="text-white/50 text-xs md:text-sm leading-relaxed max-w-sm">Send the unique 8-character code to your peers. They can join immediately and connect to the voice channel.</p>
-                  </div>
-                </div>
-                <div className="flex gap-5">
-                  <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center font-black text-sm text-[#F5A623] shrink-0">3</div>
-                  <div>
-                    <h4 className="text-base font-bold mb-1 text-white/90">Code, Execute, Discuss</h4>
-                    <p className="text-white/50 text-xs md:text-sm leading-relaxed max-w-sm">Write code collaboratively, run it against test cases, draw on the whiteboard, and review together.</p>
-                  </div>
-                </div>
+              <div className="space-y-6 relative">
+
+                {[{
+                  n: 1, title: 'Create a Workspace',
+                  desc: 'Log into your dashboard and launch a new workspace in one click. An isolated environment is provisioned instantly.'
+                }, {
+                  n: 2, title: 'Share the Access Code',
+                  desc: 'Send the unique 8-character code to your peers. They can join immediately and connect to the voice channel.'
+                }, {
+                  n: 3, title: 'Code, Execute, Discuss',
+                  desc: 'Write code collaboratively, run it against test cases, draw on the whiteboard, and review together.'
+                }].map(({ n, title, desc }, i) => (
+                  <motion.div
+                    key={n}
+                    className="flex gap-5"
+                    style={{ opacity: workflowOpacity, x: workflowLeftX }}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center font-black text-sm text-[#F5A623] shrink-0 relative z-10">{n}</div>
+                    <div>
+                      <h4 className="text-base font-bold mb-1 text-white/90">{title}</h4>
+                      <p className="text-white/50 text-xs md:text-sm leading-relaxed max-w-sm">{desc}</p>
+                    </div>
+                  </motion.div>
+                ))}
               </div>
             </motion.div>
 
@@ -578,8 +775,8 @@ export default function Home() {
       </section>
 
       {/* ---------------- 5. PRICING ---------------- */}
-      <section id="pricing" className="py-24 bg-[#020202] relative z-40">
-        <div className="max-w-5xl mx-auto px-6">
+      <section ref={pricingRef} id="pricing" className="py-24 bg-[#020202] relative z-40">
+        <motion.div style={{ scale: pricingScale, opacity: pricingOpacity, y: pricingY }} className="max-w-5xl mx-auto px-6">
           <FadeIn className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-black mb-3 tracking-tight">Simple Pricing.</h2>
             <p className="text-white/50 text-sm md:text-base">Start for free. Upgrade when your team grows.</p>
@@ -699,23 +896,41 @@ export default function Home() {
               )}
             </FadeIn>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ---------------- 6. CTA SECTION ---------------- */}
-      <section className="py-24 px-6 bg-[#020202] relative overflow-hidden flex items-center justify-center text-center z-40 border-white/5">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl h-[300px] bg-[#F5A623]/5 blur-[100px] rounded-full pointer-events-none" />
-
-        <div className="relative z-10 max-w-xl">
-          <h2 className="text-3xl md:text-5xl font-black mb-4 tracking-tight">Ready to redefine teamwork?</h2>
-          <p className="text-white/40 mb-8 text-sm md:text-base">Join thousands of developers building the future.</p>
-          <Link
-            href={mounted && isAuthenticated ? "/dashboard" : "/register"}
-            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-black font-extrabold rounded-xl hover:scale-105 transition-transform text-xs md:text-sm shadow-[0_0_20px_rgba(255,255,255,0.1)]"
+      <section ref={ctaRef} className="py-24 px-6 bg-[#020202] relative overflow-hidden flex items-center justify-center text-center z-40 border-white/5">
+        <motion.div
+          style={{ scale: heroGlowScale }}
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl h-[300px] bg-[#F5A623]/5 blur-[100px] rounded-full pointer-events-none"
+        />
+        <motion.div style={{ y: ctaY, opacity: ctaOpacity }} className="relative z-10 max-w-xl">
+          <h2 className="text-3xl md:text-5xl font-black mb-4 tracking-tight">
+            <ScrollReveal text="Ready to redefine teamwork?" />
+          </h2>
+          <motion.p
+            className="text-white/40 mb-8 text-sm md:text-base"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.8 }}
+            viewport={{ once: false }}
           >
-            Start your session <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
+            Join thousands of developers building the future.
+          </motion.p>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+          >
+            <Link
+              href={mounted && isAuthenticated ? "/dashboard" : "/register"}
+              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-black font-extrabold rounded-xl text-xs md:text-sm shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_40px_rgba(255,255,255,0.2)] transition-shadow"
+            >
+              Start your workspace <ArrowRight className="w-4 h-4" />
+            </Link>
+          </motion.div>
+        </motion.div>
       </section>
 
 

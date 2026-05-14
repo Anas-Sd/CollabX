@@ -15,17 +15,235 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
+// ─── Change this to your production domain ───────────────────────────────────
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://collabx.live';
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const metadata = {
-  title: "CollabX",
-  description: "Real-time collaborative coding platform",
+  metadataBase: new URL(SITE_URL),
+
+  title: {
+    default: 'CollabX — Real-Time Collaborative IDE & Pair Programming Platform',
+    template: '%s | CollabX',
+  },
+
+  description:
+    'CollabX is a real-time collaborative IDE for developers. Code together, execute code in 5+ languages, whiteboard, and voice chat — all in one shared workspace. The ultimate pair programming and remote technical interview platform.',
+
+  keywords: [
+    // Primary — high-volume collaborative IDE terms
+    'collaborative IDE',
+    'real-time code collaboration',
+    'collaborative code editor',
+    'pair programming platform',
+    'online collaborative IDE',
+    'multiplayer code editor',
+    // Secondary — use-case terms
+    'code together online',
+    'collaborative coding platform',
+    'remote pair programming',
+    'team coding platform',
+    'code collaboration tool',
+    'shared code editor',
+    'collaborative development environment',
+    'online pair programming',
+    'technical interview platform',
+    'remote code interview',
+    'coding interview tool',
+    // Long-tail
+    'real time collaborative coding',
+    'code with friends online',
+    'browser based IDE collaboration',
+    'collaborative Java Python C++ editor',
+    'CollabX',
+    'live coding platform',
+    'online coding workspace',
+    'collaborative coding interview',
+    'real-time code sharing',
+  ],
+
+  authors: [{ name: 'CollabX', url: SITE_URL }],
+  creator: 'CollabX',
+  publisher: 'CollabX',
+
+  // ── Robots directives ──────────────────────────────────────────────────────
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+
+  // ── Open Graph (Facebook, LinkedIn, WhatsApp, Slack, Discord) ─────────────
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: SITE_URL,
+    siteName: 'CollabX',
+    title: 'CollabX — Real-Time Collaborative IDE & Pair Programming Platform',
+    description:
+      'Code together in real-time. CollabX gives your team a shared IDE with voice chat, collaborative whiteboard, instant code execution, and role-based access — all in the browser.',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'CollabX — Real-Time Collaborative IDE',
+        type: 'image/png',
+      },
+    ],
+  },
+
+  // ── Twitter / X Cards ─────────────────────────────────────────────────────
+  twitter: {
+    card: 'summary_large_image',
+    site: '@CollabX',
+    creator: '@CollabX',
+    title: 'CollabX — Real-Time Collaborative IDE',
+    description:
+      'Code together in real-time. Shared editor, voice chat, whiteboard & instant code execution in one workspace.',
+    images: ['/og-image.png'],
+  },
+
+  // ── Canonical URL ──────────────────────────────────────────────────────────
+  alternates: {
+    canonical: SITE_URL,
+  },
+
+  // ── Search engine verification ───────────────────────────────────────────
+  // Google: verified via DNS TXT record in Hostinger ✅
+  // Bing: verified via import from Google Search Console ✅
+  // No HTML meta tag verification codes needed
+
+  category: 'technology',
+
+  // ── Favicon / App Icons ────────────────────────────────────────────────────
   icons: {
     icon: '/collabx_logo.svg',
+    shortcut: '/collabx_logo.svg',
+    apple: '/collabx_logo.svg',
   },
+
+  // ── App metadata ───────────────────────────────────────────────────────────
+  applicationName: 'CollabX',
+  referrer: 'origin-when-cross-origin',
+  colorScheme: 'dark',
+  themeColor: '#F5A623',
+  viewport: 'width=device-width, initial-scale=1',
+};
+
+// ── JSON-LD Structured Data (server-rendered — read by ALL search engines) ──
+const organizationJsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': `${SITE_URL}/#organization`,
+      name: 'CollabX',
+      url: SITE_URL,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE_URL}/collabx_logo.svg`,
+        width: 200,
+        height: 200,
+      },
+      sameAs: ['https://github.com/Anas-Sd/CollabX'],
+      contactPoint: {
+        '@type': 'ContactPoint',
+        email: 'office.collabx@gmail.com',
+        contactType: 'customer support',
+        availableLanguage: 'English',
+      },
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: 'CollabX',
+      description:
+        'Real-time collaborative IDE for developer teams — code, execute, whiteboard, and voice chat together.',
+      publisher: { '@id': `${SITE_URL}/#organization` },
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: `${SITE_URL}/login`,
+        },
+        'query-input': 'required name=search_term_string',
+      },
+    },
+    {
+      '@type': 'SoftwareApplication',
+      '@id': `${SITE_URL}/#app`,
+      name: 'CollabX',
+      alternateName: ['CollabX IDE', 'CollabX Collaborative Coding Platform'],
+      url: SITE_URL,
+      applicationCategory: 'DeveloperApplication',
+      applicationSubCategory: 'Integrated Development Environment',
+      operatingSystem: 'Web Browser (Chrome, Firefox, Edge, Safari)',
+      browserRequirements: 'Requires JavaScript',
+      description:
+        'CollabX is a real-time collaborative IDE enabling developers to code, run, and review code together with voice communication and whiteboard — in the browser.',
+      screenshot: `${SITE_URL}/og-image.png`,
+      featureList: [
+        'Real-time collaborative code editing with sub-100ms sync',
+        'Multi-language code execution: Python, Java, C++, JavaScript, SQL',
+        'Built-in WebRTC voice communication via Agora',
+        'Collaborative whiteboard for architecture diagrams',
+        'Role-based access: Host, Editor, Viewer',
+        'Session persistence — rejoin exactly where you left off',
+        'Historical workspace records',
+        'Pro plan with extended sessions and expanded limits',
+      ],
+      offers: [
+        {
+          '@type': 'Offer',
+          name: 'Free Plan',
+          price: '0',
+          priceCurrency: 'INR',
+          description: 'Free collaborative workspace with core features',
+          availability: 'https://schema.org/InStock',
+        },
+        {
+          '@type': 'Offer',
+          name: 'Pro Plan',
+          price: '499',
+          priceCurrency: 'INR',
+          description:
+            'Full-featured workspace with extended sessions, 20+ users, and premium effects',
+          availability: 'https://schema.org/InStock',
+          billingIncrement: 'P1M',
+        },
+      ],
+      publisher: { '@id': `${SITE_URL}/#organization` },
+    },
+  ],
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>
+        {/* Bing: verified via GSC import — no meta tag needed */}
+
+        {/* ── DNS prefetch for third-party origins ── */}
+        <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="//www.google-analytics.com" />
+
+        {/* ── Server-rendered JSON-LD Structured Data ─────────────────────── */}
+        {/* This runs BEFORE JavaScript — guaranteed read by all search bots  */}
+        <script
+          id="structured-data"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+      </head>
+
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased text-white min-h-screen flex flex-col`}>
         {/* Mobile Blocker Overlay */}
         <div className="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#0A0A0F] p-8 text-center md:hidden">
@@ -43,7 +261,7 @@ export default function RootLayout({ children }) {
           </p>
           <div className="w-16 h-1 bg-border rounded-full mb-8"></div>
           <p className="text-xs text-muted-foreground/50 font-mono tracking-widest uppercase">
-            Please switch to a computer or  turn on desktop mode in your mobile
+            Please switch to a computer or turn on desktop mode in your mobile
           </p>
         </div>
 
