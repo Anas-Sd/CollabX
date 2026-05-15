@@ -134,11 +134,16 @@ export const useWebSocket = (roomId) => {
           }
         }
         else if (destination === 'end' && body === 'ROOM_ENDED_BY_HOST') {
-          localStorage.setItem('dashboardAlert', JSON.stringify({
-            title: "Workspace Terminated",
-            message: "The Host has forcefully closed this Workspace for all members."
-          }));
-          setTimeout(() => { window.location.href = '/dashboard'; }, 1000);
+          // Guard: if user is already off the room page (i.e. the host who redirected
+          // themselves), skip — otherwise a full reload wipes the popup on the dashboard.
+          setTimeout(() => {
+            if (!window.location.pathname.startsWith('/room/')) return;
+            localStorage.setItem('dashboardAlert', JSON.stringify({
+              title: "Workspace Terminated",
+              message: "The Host has forcefully closed this Workspace for all members."
+            }));
+            window.location.href = '/dashboard';
+          }, 1000);
         }
         else if (destination === 'time.extended') {
           useRoomStore.getState().setExpiresAt(body);
