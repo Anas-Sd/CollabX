@@ -430,7 +430,7 @@ function ProfileContent() {
                     </div>
                   ) : (
                     <div className="flex items-center gap-3 group/edit">
-                      <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white">{profileData.name}</h1>
+                      <h1 className="text-3xl md:text-4xl uppercase font-black tracking-tight text-white">{profileData.name}</h1>
                       <button onClick={() => setIsEditingName(true)} className="text-white/0 group-hover/edit:text-white/50 hover:!text-white transition-colors cursor-pointer">
                         <Edit2 size={20} />
                       </button>
