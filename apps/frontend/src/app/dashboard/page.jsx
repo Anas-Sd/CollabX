@@ -27,7 +27,7 @@ function DashboardContent() {
   const searchParams = useSearchParams();
   const isPro = user?.subscriptionType === 'PRO';
 
-  // Dynamic Theme Colors
+  // Dynamic Theme Colors — FREE: primary/dark theme | PRO: goldish theme
   const themeText = isPro ? 'text-[#F5A524]' : 'text-primary';
   const themeTextHover = isPro ? 'group-hover:text-[#F5A524]/90' : 'group-hover:text-primary/90';
   const themeBorderHover = isPro ? 'hover:border-[#F5A524]/50' : 'hover:border-primary/50';
@@ -40,18 +40,15 @@ function DashboardContent() {
   const themeBlurBgHover = isPro ? 'bg-[#F5A524]' : 'bg-primary';
   const themeFocusRing = isPro ? 'focus:ring-[#F5A524]/50 focus:border-[#F5A524]' : 'focus:ring-primary/50 focus:border-primary';
   const themeBorderHoverLight = isPro ? 'hover:border-[#F5A524]/30' : 'hover:border-primary/30';
-  const themeRoleActiveViewer = isPro ? 'bg-[#F5A524]/20 border border-[#F5A524]/40 text-white shadow-[0_0_15px_rgba(245,165,36,0.3)] scale-[1.02]' : 'bg-primary/20 border border-primary/40 text-white shadow-[0_0_15px_rgba(108,99,255,0.3)] scale-[1.02]';
-  const themeRoleActiveEditor = isPro ? 'bg-[#F5A524]/20 border border-[#F5A524]/40 text-white shadow-[0_0_15px_rgba(245,165,36,0.3)] scale-[1.02]' : 'bg-primary/20 border border-primary/40 text-white shadow-[0_0_15px_rgba(108,99,255,0.3)] scale-[1.02]';
+  const themeRoleActiveViewer = isPro ? 'bg-[#F5A524]/20 border border-[#F5A524]/40 text-white' : 'bg-primary/20 border border-primary/40 text-white';
+  const themeRoleActiveEditor = isPro ? 'bg-[#F5A524]/20 border border-[#F5A524]/40 text-white' : 'bg-primary/20 border border-primary/40 text-white';
   const themeEnterSessionBg = isPro ? 'from-[#F5A524] to-[#FFC107] hover:shadow-[0_0_20px_rgba(245,165,36,0.3)] text-black' : 'from-primary to-[#5a52d5] hover:shadow-[0_0_20px_rgba(108,99,255,0.3)] text-white';
-  // const themeDashboardWrapper = isPro ? 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#1F1707] via-black to-black' : 'bg-background';
-  // const themeDashboardWrapper = isPro ? 'bg-gradient-to-tr from-[#0F0E0C] via-[#1A1610] to-[#B07A1A]' : 'bg-[#050508]';
-  // const themeDashboardWrapper = isPro ? 'bg-gradient-to-tr from-[#0F0E0C] via-[#1A1610] to-[#B07A1A]' : 'bg-gradient-to-tr from-[#0F0E0C] via-primary/5 to-primary/70';
-  const themeDashboardWrapper = isPro ? 'bg-gradient-to-tr from-[#0F0E0C] via-[#1A1610] to-[#B07A1A]' : 'bg-gradient-to-tr from-black via-white/18 to-black';
+  const themeDashboardWrapper = isPro ? 'bg-gradient-to-tr from-[#2A1D08]/50 via-[#6B4A15] to-[#D4A020]' : 'bg-gradient-to-tr from-black via-white/18 to-black';
   const themeCardBorderGradient = isPro ? 'from-[#F5A524]/30 to-[#0A0A0F]' : 'from-[#1C1C24] to-[#0A0A0F]';
   const themeCardInnerBg = isPro ? 'bg-[#08080A]' : 'bg-[#0F0F16]';
   const themeCardMetaBg = isPro ? 'bg-[#111115]' : 'bg-[#15151E]';
-  const themeDashboardButton = isPro ? 'bg-yellow-500 hover:brightness-110 text-black font-extrabold' : 'bg-primary hover:brightness-110 text-black font-bold'
-  const themeProfileButton = isPro ? 'bg-yellow-500 hover:brightness-110 font-extrabold' : 'bg-primary hover:brightness-110 text-black font-extrabold'
+  const themeDashboardButton = isPro ? 'bg-yellow-500 hover:brightness-110 text-black font-extrabold' : 'bg-primary hover:brightness-110 text-black font-bold';
+  const themeProfileButton = isPro ? 'bg-yellow-500 hover:brightness-110 text-black font-extrabold' : 'bg-primary hover:brightness-110 text-black font-extrabold';
 
   let daysRemaining = null;
   if (isPro && user?.subscriptionExpiresAt) {
@@ -213,51 +210,20 @@ function DashboardContent() {
     >
       {/* Fixed background — stays locked to viewport on scroll */}
       <div aria-hidden="true" className={`fixed inset-0 -z-10 ${themeDashboardWrapper}`} />
-      {/* Background X watermark */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none select-none fixed inset-0 flex items-center justify-center z-0 overflow-hidden"
-      >
-        {isPro ? (
-          // PRO: painted gold X with glow + dark contrast shadow
-          <span
-            className="text-[55vw] font-black leading-none tracking-tighter text-[#F5A524]"
+      {/* FREE users: subtle white ambient glow — the "white light" on the dark bg */}
+      {!isPro && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none select-none fixed inset-0 flex items-center justify-center z-0"
+        >
+          <div
+            className="absolute w-[65vw] h-[65vw] rounded-full"
             style={{
-              userSelect: 'none',
-              opacity: 0.12,
-              filter: [
-                'blur(0.5px)',
-                'drop-shadow(0 0 40px #F5A524cc)',   // close bright glow
-                'drop-shadow(0 0 120px #F5A52466)',  // wide ambient glow
-                'drop-shadow(0 8px 32px #00000099)', // dark shadow for depth
-              ].join(' '),
+              background: 'radial-gradient(circle, rgba(255,255,255,0.07) 0%, rgba(108,99,255,0.05) 45%, transparent 70%)',
             }}
-          >
-            X
-          </span>
-        ) : (
-          // Free: glowing purple X on dark canvas
-          <>
-            {/* Radial ambient glow behind X */}
-            {/* <div
-              className="absolute w-[60vw] h-[60vw] rounded-full"
-              style={{
-                background: 'radial-gradient(circle, rgba(108,99,255,0.07) 0%, transparent 70%)',
-              }}
-            /> */}
-            {/* <span
-              className="relative text-[55vw] font-black leading-none tracking-tighter text-primary"
-              style={{
-                userSelect: 'none',
-                opacity: 0.06,
-                filter: 'blur(0.5px) drop-shadow(0 0 60px rgba(108,99,255,0.5)) drop-shadow(0 0 120px rgba(108,99,255,0.25))',
-              }}
-            >
-              X
-            </span> */}
-          </>
-        )}
-      </div>
+          />
+        </div>
+      )}
       {/* Top Bar */}
       <header className="h-16 border-b border-border px-8 flex items-center justify-between relative">
 
@@ -280,7 +246,7 @@ function DashboardContent() {
           {/* Dashboard Button */}
           <button
             onClick={() => router.push('/')}
-            className={`h-9 ${themeDashboardButton} px-4 rounded-xl hover:scale-105 flex items-center justify-center text-sm tracking-wider cursor-pointer gap-2 transition-colors border border-transparent`}
+            className={`h-9 ${themeDashboardButton} px-4 rounded-lg hover:scale-105 flex items-center justify-center text-sm tracking-wider cursor-pointer gap-2 transition-colors border border-transparent`}
           >
             <LayoutDashboard size={16} />
             Home
@@ -343,7 +309,7 @@ function DashboardContent() {
                 }}
                 className={`w-full cursor-pointer flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold text-sm tracking-wide hover:opacity-100 opacity-90 hover:-translate-y-0.5 active:translate-y-0 transition-all ${themeButtonBg}`}
               >
-                Initialize Session <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1.5 transition-transform" />
+                Initialize Workspace <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1.5 transition-transform" />
               </button>
             </div>
           </div>
