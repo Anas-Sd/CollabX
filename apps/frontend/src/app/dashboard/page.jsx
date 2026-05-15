@@ -44,11 +44,13 @@ function DashboardContent() {
   const themeRoleActiveEditor = isPro ? 'bg-[#F5A524]/20 border border-[#F5A524]/40 text-white shadow-[0_0_15px_rgba(245,165,36,0.3)] scale-[1.02]' : 'bg-primary/20 border border-primary/40 text-white shadow-[0_0_15px_rgba(108,99,255,0.3)] scale-[1.02]';
   const themeEnterSessionBg = isPro ? 'from-[#F5A524] to-[#FFC107] hover:shadow-[0_0_20px_rgba(245,165,36,0.3)] text-black' : 'from-primary to-[#5a52d5] hover:shadow-[0_0_20px_rgba(108,99,255,0.3)] text-white';
   // const themeDashboardWrapper = isPro ? 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#1F1707] via-black to-black' : 'bg-background';
-  const themeDashboardWrapper = isPro ? 'bg-gradient-to-tr from-[#0F0E0C] via-[#1A1610] to-[#B07A1A]' : 'bg-background';
+  // const themeDashboardWrapper = isPro ? 'bg-gradient-to-tr from-[#0F0E0C] via-[#1A1610] to-[#B07A1A]' : 'bg-[#050508]';
+  // const themeDashboardWrapper = isPro ? 'bg-gradient-to-tr from-[#0F0E0C] via-[#1A1610] to-[#B07A1A]' : 'bg-gradient-to-tr from-[#0F0E0C] via-primary/5 to-primary/70';
+  const themeDashboardWrapper = isPro ? 'bg-gradient-to-tr from-[#0F0E0C] via-[#1A1610] to-[#B07A1A]' : 'bg-gradient-to-tr from-black via-white/18 to-black';
   const themeCardBorderGradient = isPro ? 'from-[#F5A524]/30 to-[#0A0A0F]' : 'from-[#1C1C24] to-[#0A0A0F]';
   const themeCardInnerBg = isPro ? 'bg-[#08080A]' : 'bg-[#0F0F16]';
   const themeCardMetaBg = isPro ? 'bg-[#111115]' : 'bg-[#15151E]';
-  const themeDashboardButton = isPro ? 'bg-yellow-500 hover:brightness-110 text-black font-extrabold' : 'bg-primary hover:brightness-110 text-black font-bold hover:font-extrabold'
+  const themeDashboardButton = isPro ? 'bg-yellow-500 hover:brightness-110 text-black font-extrabold' : 'bg-primary hover:brightness-110 text-black font-bold'
   const themeProfileButton = isPro ? 'bg-yellow-500 hover:brightness-110 font-extrabold' : 'bg-primary hover:brightness-110 text-black font-extrabold'
 
   let daysRemaining = null;
@@ -176,7 +178,7 @@ function DashboardContent() {
       if (!err.response || err.response.status >= 500) {
         console.error('Failed to join room', err);
       }
-      let errorMsg = "An error occurred while joining the room.";
+      let errorMsg = "An error occurred while joining the workspace.";
       if (err.response?.data) {
         errorMsg = typeof err.response.data === 'string' ? err.response.data : (err.response.data.message || err.response.data.error || "Cannot join room. It might be full.");
       }
@@ -207,8 +209,55 @@ function DashboardContent() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className={`min-h-screen ${themeDashboardWrapper}`}
+      className={`min-h-screen relative overflow-hidden`}
     >
+      {/* Fixed background — stays locked to viewport on scroll */}
+      <div aria-hidden="true" className={`fixed inset-0 -z-10 ${themeDashboardWrapper}`} />
+      {/* Background X watermark */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none select-none fixed inset-0 flex items-center justify-center z-0 overflow-hidden"
+      >
+        {isPro ? (
+          // PRO: painted gold X with glow + dark contrast shadow
+          <span
+            className="text-[55vw] font-black leading-none tracking-tighter text-[#F5A524]"
+            style={{
+              userSelect: 'none',
+              opacity: 0.12,
+              filter: [
+                'blur(0.5px)',
+                'drop-shadow(0 0 40px #F5A524cc)',   // close bright glow
+                'drop-shadow(0 0 120px #F5A52466)',  // wide ambient glow
+                'drop-shadow(0 8px 32px #00000099)', // dark shadow for depth
+              ].join(' '),
+            }}
+          >
+            X
+          </span>
+        ) : (
+          // Free: glowing purple X on dark canvas
+          <>
+            {/* Radial ambient glow behind X */}
+            {/* <div
+              className="absolute w-[60vw] h-[60vw] rounded-full"
+              style={{
+                background: 'radial-gradient(circle, rgba(108,99,255,0.07) 0%, transparent 70%)',
+              }}
+            /> */}
+            {/* <span
+              className="relative text-[55vw] font-black leading-none tracking-tighter text-primary"
+              style={{
+                userSelect: 'none',
+                opacity: 0.06,
+                filter: 'blur(0.5px) drop-shadow(0 0 60px rgba(108,99,255,0.5)) drop-shadow(0 0 120px rgba(108,99,255,0.25))',
+              }}
+            >
+              X
+            </span> */}
+          </>
+        )}
+      </div>
       {/* Top Bar */}
       <header className="h-16 border-b border-border px-8 flex items-center justify-between relative">
 
@@ -218,20 +267,20 @@ function DashboardContent() {
             onClick={() => router.push('/profile?returnUrl=/dashboard')}
             className="flex items-center cursor-pointer group"
           >
-            <div className={`w-10 h-10 rounded-full text-black ${themeProfileButton} flex items-center justify-center font-bold text-sm border border-primary/30 overflow-hidden group-hover:border-primary transition-colors`}>
+            <div className={`w-10 h-10 rounded-full hover:scale-105 text-black ${themeProfileButton} flex items-center justify-center font-bold text-sm border border-primary/30 overflow-hidden group-hover:border-primary transition-colors`}>
               <User size={18} />
             </div>
           </div>
 
-          <FeedbackButton 
-            context="Dashboard Header" 
-            className={`w-10 h-10 ${themeDashboardButton} rounded-full flex items-center justify-center transition-colors border border-transparent`} 
+          <FeedbackButton
+            context="Dashboard Header"
+            className={`w-10 h-10 ${themeDashboardButton} hover:scale-105 rounded-full flex items-center justify-center transition-colors border border-transparent`}
           />
 
           {/* Dashboard Button */}
           <button
             onClick={() => router.push('/')}
-            className={`h-9 ${themeDashboardButton} px-4 rounded-xl flex items-center justify-center text-sm tracking-wider cursor-pointer gap-2 transition-colors border border-transparent`}
+            className={`h-9 ${themeDashboardButton} px-4 rounded-xl hover:scale-105 flex items-center justify-center text-sm tracking-wider cursor-pointer gap-2 transition-colors border border-transparent`}
           >
             <LayoutDashboard size={16} />
             Home
@@ -250,7 +299,7 @@ function DashboardContent() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 bg-card border border-border rounded-full py-1.5 px-3 transition-colors hover:border-primary/50 cursor-default">
             <div className={`w-2 h-2 rounded-full ${isPro ? 'bg-[#F5A524] shadow-[0_0_10px_rgba(245,165,36,0.8)]' : 'bg-success'}`}></div>
-            <span className={`text-sm font-medium ${isPro ? 'text-transparent bg-clip-text bg-gradient-to-r from-[#F5A524] to-[#FFC107] drop-shadow-[0_0_5px_rgba(245,165,36,0.5)]' : 'text-white'}`}>{user.name}</span>
+            <span className={`text-sm uppercase ${isPro ? 'text-transparent font-extrabold bg-clip-text bg-gradient-to-r from-[#F5A524] to-[#FFC107] drop-shadow-[0_0_5px_rgba(245,165,36,0.5)]' : 'text-white font-medium uppercase'}`}>{user.name}</span>
             <span className={`text-xs px-2 py-0.5 rounded-full uppercase border ${isPro ? 'bg-[#F5A524]/10 text-[#F5A524] border-[#F5A524]/30' : 'bg-muted text-muted-foreground border-border'}`}>
               {user.subscriptionType || 'FREE'}
             </span>
@@ -258,7 +307,7 @@ function DashboardContent() {
 
           <button
             onClick={logout}
-            className="p-2.5 bg-red-500/50 text-white/80 cursor-pointer hover:text-white transition-colors rounded-lg hover:bg-red-600 border border-transparent flex-shrink-0"
+            className="p-2.5 bg-red-500/50 text-white/80 hover:scale-105 cursor-pointer hover:text-white transition-colors rounded-lg hover:bg-red-600 border border-transparent flex-shrink-0"
           >
             <LogOut size={18} />
           </button>
@@ -321,7 +370,7 @@ function DashboardContent() {
           <div className={`group bg-[#0F0F16] rounded-3xl border border-white/5 p-7 shadow-xl hover:shadow-[0_20px_40px_rgba(108,99,255,0.1)] transition-all duration-500 relative overflow-hidden flex flex-col hover:!transform-none ${themeBorderHoverLight}`} style={{ transform: 'translateZ(10px)', transformStyle: 'preserve-3d' }}>
             <div className={`absolute top-0 right-0 w-32 h-32 blur-[40px] pointer-events-none rounded-full transition-opacity group-hover:opacity-100 opacity-0 ${themeBlurBg1}`}></div>
             <div className={`absolute -bottom-10 -left-10 w-40 h-40 blur-[50px] pointer-events-none rounded-full transition-opacity group-hover:opacity-100 opacity-0 ${themeBlurBg2}`}></div>
-            <h2 className="text-xl font-bold text-white mb-2">Connect to Session</h2>
+            <h2 className="text-xl font-bold text-white mb-2">Connect to Workspace</h2>
             <p className="text-sm text-muted-foreground mb-6">Enter your secure 8-character access key.</p>
 
             <form onSubmit={handleJoin} className="space-y-4  flex-1 flex flex-col justify-end relative z-10">
@@ -369,7 +418,7 @@ function DashboardContent() {
                 disabled={loadingJoin}
                 className="w-full flex items-center cursor-pointer justify-center gap-2 py-3.5 px-4 text-white bg-white/5 border border-white/10 rounded-xl font-bold tracking-wide hover:bg-white/10 hover:border-white/30 focus:ring-2 focus:ring-white/20 transition-all  group/btn hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:-translate-y-0.5 active:translate-y-0"
               >
-                {loadingJoin ? 'Connecting...' : 'Access Room'}
+                {loadingJoin ? 'Connecting...' : 'Access Workspace'}
               </button>
             </form>
           </div>
@@ -416,8 +465,8 @@ function DashboardContent() {
                     </div>
                     <Crown className="absolute -bottom-10 -right-5 w-48 h-48 text-[#F5A524] opacity-5 -rotate-12 pointer-events-none group-hover:rotate-0 transition-transform duration-700" />
                   </>
-
-                  <div className="w-12 h-12 rounded-2xl bg-[#151520] border border-white/10 flex items-center justify-center mb-5 text-[#F5A524] shadow-[0_0_20px_rgba(245,165,36,0.1)] group-hover:bg-[#F5A524]/10 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 z-10 relative">
+                  {/* <div className="w-12 h-12 rounded-2xl bg-[#F5A524]/10 border border-[#F5A524]/30 flex items-center justify-center mb-5 text-[#F5A524] shadow-[0_0_20px_rgba(245,165,36,0.2)] group-hover:shadow-[0_0_20px_rgba(245,165,36,0.5)] group-hover:scale-110 group-hover:rotate-6 transition-all duration-300"> */}
+                  <div className="w-12 h-12 rounded-2xl bg-[#F5A524]/10 border border-white/10 flex items-center justify-center mb-5 text-[#F5A524] shadow-[0_0_20px_rgba(245,165,36,0.05)] group-hover:bg-[#F5A524]/10 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 z-10 relative">
                     <Crown className="w-6 h-6" />
                   </div>
                   <span className="px-3 py-1 rounded-full bg-background border border-border text-xs font-bold text-muted-foreground uppercase">
@@ -425,10 +474,10 @@ function DashboardContent() {
                   </span>
                 </div>
                 <h2 className="text-xl font-bold text-white mb-2">Subscription</h2>
-                <p className="text-sm text-muted-foreground mb-8 flex-grow">Your collaborative engine is restricted. Elevate to unlock real-time elasticity and session retention.</p>
+                <p className="text-sm text-muted-foreground mb-8 flex-grow">Your collaborative engine is restricted. Elevate to unlock real-time elasticity and workspace retention.</p>
                 <button
                   onClick={() => setIsProModalOpen(true)}
-                  className="w-full flex items-center justify-center gap-2 cursor-pointer py-3.5 bg-gradient-to-r from-[#F5A524] to-[#F5D547] text-[#0A0A0F] rounded-xl font-extrabold tracking-widest text-[11px] uppercase shadow-[0_0_15px_rgba(245,165,36,0.3)] hover:shadow-[0_0_25px_rgba(245,165,36,0.6)] transition-all z-10 relative">
+                  className="w-full flex items-center justify-center gap-2 cursor-pointer py-3.5 bg-gradient-to-r from-[#F5A524] to-[#F5D547] text-[#0A0A0F] rounded-xl font-extrabold tracking-widest text-[11px] uppercase shadow-[0_0_15px_rgba(245,165,36,0.4)] hover:shadow-[0_0_25px_rgba(245,165,36,0.6)] transition-all z-10 relative">
                   UPGRADE TO PRO
                 </button>
               </div>
@@ -440,7 +489,7 @@ function DashboardContent() {
         <div className="flex items-center justify-between mt-20 mb-6">
           <h3 className="text-xl font-bold text-white items-center gap-2">
             <span className="text-3xl flex gap-3"> <span className={`mt-2 ${themeText}`}><LucideActivity /></span>  Historical Sessions</span>
-            <span className="text-sm font-bold text-white/40">Access and Manage your recent session's history from here.</span>
+            <span className="text-sm font-bold text-white/40">Access and manage your recent workspace history from here.</span>
           </h3>
           <span className="px-3 py-1 rounded-full bg-card border border-border text-xs font-bold text-muted-foreground">
             {recentRooms.length} / {isPro ? '20' : '10'} RECORDS
@@ -593,7 +642,7 @@ function DashboardContent() {
                           <div className="absolute inset-0 bg-white/20 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
                           <div className="relative flex items-center justify-center gap-2 rounded-[11px] bg-[#111118] px-4 py-3 transition-all duration-300 group-hover/btn:bg-transparent">
                             <span className="text-xs font-black uppercase tracking-[0.2em] text-white/90 group-hover/btn:text-black">
-                              Enter Session
+                              Enter Workspace
                             </span>
                             <ArrowRight size={14} className="text-white/50 group-hover/btn:text-white group-hover/btn:translate-x-1.5 transition-all duration-300" />
                           </div>
@@ -607,7 +656,7 @@ function DashboardContent() {
           </motion.div>
         ) : (
           <div className="bg-card border border-border rounded-xl p-8 text-center text-muted-foreground">
-            No Recent sessions found.
+            No recent workspaces found.
           </div>
         )}
       </main>
@@ -644,8 +693,8 @@ function DashboardContent() {
             <div className="w-12 h-12 rounded-full bg-danger/10 text-danger flex items-center justify-center mb-4">
               <Trash2 size={24} />
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">Delete Session?</h2>
-            <p className="text-sm text-muted-foreground mb-6">Are you sure you want to delete this session from your history? The data in this will be permanently deleted.</p>
+            <h2 className="text-xl font-bold text-white mb-2">Delete Workspace?</h2>
+            <p className="text-sm text-muted-foreground mb-6">Are you sure you want to delete this workspace from your history? The data in this will be permanently deleted.</p>
             <div className="flex gap-3 w-full">
               <button
                 onClick={() => setDeleteConfirm({ isOpen: false, roomId: null })}
@@ -705,3 +754,4 @@ export default function DashboardPage() {
     </Suspense>
   );
 }
+
