@@ -258,7 +258,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
                     }}
                     className="w-full cursor-pointer py-2 bg-danger/10 text-danger border border-danger/20 rounded-lg text-sm font-bold hover:bg-danger/20 transition-colors"
                   >
-                    End Room
+                    End Workspace
                   </button>
                   {activeParticipants.length > 1 && (
                     <button
@@ -271,7 +271,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
                       )}
                       className="w-full py-2 cursor-pointer bg-background border border-border text-white rounded-lg text-sm font-bold hover:bg-muted transition-colors"
                     >
-                      Leave Room
+                      Leave Workspace
                     </button>
                   )}
                 </div>

@@ -37,7 +37,7 @@ export default function FeedbackModal({ isOpen, onClose, context = 'General' }) 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: name.trim(),
+          name: name.trim() || 'Anonymous',
           rating,
           message: message.trim(),
           userEmail: user?.email || '',
