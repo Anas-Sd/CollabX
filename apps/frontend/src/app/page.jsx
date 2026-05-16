@@ -774,7 +774,83 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ---------------- 5. PRICING ---------------- */}
+      {/* ---------------- 5. FAQ ---------------- */}
+      <section className="py-28 px-6 bg-[#020202] border-t border-white/5 relative z-40">
+        <div className="max-w-3xl mx-auto">
+
+          <FadeIn className="text-center mb-16">
+            <span className="inline-block text-[10px] font-black uppercase tracking-[0.25em] text-[#F5A623] mb-4">Got Questions?</span>
+            <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-4">
+              Frequently Asked<span className="text-[#F5A623]">.</span>
+            </h2>
+            <p className="text-white/40 text-sm md:text-base max-w-md mx-auto">
+              Everything you need to know before getting started.
+            </p>
+          </FadeIn>
+
+          <div className="space-y-0">
+            {[
+              {
+                q: "Does CollabX work on mobile devices?",
+                a: "CollabX is designed exclusively for desktop and laptop screens. The collaborative code editor, whiteboard, and voice interface require a full keyboard and adequate screen real estate. Accessing CollabX on a smartphone or tablet is not supported and will result in a restricted experience."
+              },
+              {
+                q: "Is my code private and secure?",
+                a: "Absolutely. Each workspace is isolated to only the participants you invite. Your code is never stored on our servers after a session ends — all execution happens inside sandboxed Docker containers via the Judge0 API. Voice channels use end-to-end encrypted WebRTC (Agora). We never analyze, sell, or retain your source code."
+              },
+              {
+                q: "Which programming languages are supported?",
+                a: "The free plan includes Python, Java, C++, JavaScript (Node.js), and SQL — the five most used languages in professional and academic settings. The Pro plan unlocks additional niche languages. All code runs in isolated containers with no risk to your machine."
+              },
+              {
+                q: "Is CollabX completely free to use?",
+                a: "Yes. CollabX has a fully functional free tier with no credit card required. You can create workspaces, collaborate in real-time, execute code, use the whiteboard, and voice chat. The Pro plan (₹499/month) extends session duration to multiple hours, increases participant limits, and unlocks premium visual effects."
+              },
+              {
+                q: "Can I use CollabX for technical interviews or student learning and coordination?",
+                a: "Yes — CollabX is built for both. For technical interviews, hosts get full role-based control: assign Editor or Viewer permissions, observe candidates typing in real-time, and run code instantly without any third-party tool. For students and educators, CollabX makes pair programming, group assignments, and live code reviews seamless — a teacher can guide, a student can code, and everyone stays in sync. The collaborative whiteboard also doubles as a digital blackboard for explaining logic and algorithms."
+              },
+            ].map(({ q, a }, i) => (
+              <FadeIn key={i} delay={i * 0.08}>
+                <div className="group border-b border-white/[0.06] py-7 cursor-default">
+                  <div className="flex items-start justify-between gap-6">
+                    <h3 className="text-sm md:text-base font-bold text-white/80 group-hover:text-white transition-colors duration-300 leading-snug flex-1">
+                      {q}
+                    </h3>
+                    <div className="w-5 h-5 shrink-0 mt-0.5 rounded-full border border-white/10 group-hover:border-[#F5A623]/50 group-hover:bg-[#F5A623]/10 transition-all duration-300 flex items-center justify-center">
+                      <svg className="w-2.5 h-2.5 text-white/30 group-hover:text-[#F5A623] transition-all duration-300 group-hover:rotate-45" fill="none" viewBox="0 0 10 10" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 1v8M1 5h8" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="max-h-0 overflow-hidden group-hover:max-h-[200px] transition-all duration-500 ease-in-out">
+                    <p className="text-white/40 text-xs md:text-sm leading-relaxed pt-4 max-w-2xl">
+                      {a}
+                    </p>
+                  </div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+
+          {/* Contact nudge */}
+          <FadeIn delay={0.45} className="text-center mt-12">
+            <p className="text-xs text-white/30">
+              Got a different question?{' '}
+              <a
+                href="mailto:office.collabx@gmail.com"
+                className="text-white/50 hover:text-[#F5A623] underline underline-offset-4 transition-colors duration-200"
+              >
+                Tell us about it here
+              </a>
+            </p>
+          </FadeIn>
+
+        </div>
+      </section>
+
+
+      {/* ---------------- 6. PRICING ---------------- */}
       <section ref={pricingRef} id="pricing" className="py-24 bg-[#020202] relative z-40">
         <motion.div style={{ scale: pricingScale, opacity: pricingOpacity, y: pricingY }} className="max-w-5xl mx-auto px-6">
           <FadeIn className="text-center mb-12">
