@@ -1,6 +1,12 @@
 import Link from 'next/link';
 import { ArrowLeft, Mail, MapPin, MessageSquare, Phone } from 'lucide-react';
 
+export const metadata = {
+  title: 'Contact Us',
+  description: 'Get in touch with the CollabX team. We\'re here to help with technical issues, billing questions, and enterprise deployment options.',
+  alternates: { canonical: 'https://collabx.live/contact' },
+};
+
 export default function ContactPage() {
   return (
     <div className="min-h-screen bg-[#020202] text-white selection:bg-[#F5A623] selection:text-black py-24 px-6 md:px-12">

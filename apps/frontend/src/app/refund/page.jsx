@@ -1,6 +1,12 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
+export const metadata = {
+  title: 'Refund Policy',
+  description: 'CollabX Refund Policy. All payments are strictly non-refundable. Read about subscription cancellations, billing disputes, and service disruption policies.',
+  alternates: { canonical: 'https://collabx.live/refund' },
+};
+
 export default function RefundPage() {
   return (
     <div className="min-h-screen bg-[#020202] text-white selection:bg-[#F5A623] selection:text-black py-24 px-6 md:px-12">

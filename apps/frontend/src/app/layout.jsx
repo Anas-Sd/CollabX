@@ -124,9 +124,13 @@ export const metadata = {
 
   // ── Favicon / App Icons ────────────────────────────────────────────────────
   icons: {
-    icon: '/collabx_logo.svg',
-    shortcut: '/collabx_logo.svg',
-    apple: '/collabx_logo.svg',
+    icon: [
+      { url: '/collabx_icon.png', sizes: '512x512', type: 'image/png' },
+      { url: '/collabx_icon.png', sizes: '192x192', type: 'image/png' },
+      { url: '/collabx_icon.png', sizes: '32x32', type: 'image/png' },
+    ],
+    shortcut: '/collabx_icon.png',
+    apple: '/collabx_icon.png',
   },
 
   // ── App metadata ───────────────────────────────────────────────────────────
@@ -148,9 +152,9 @@ const organizationJsonLd = {
       url: SITE_URL,
       logo: {
         '@type': 'ImageObject',
-        url: `${SITE_URL}/collabx_logo.svg`,
-        width: 200,
-        height: 200,
+        url: `${SITE_URL}/collabx_icon.png`,
+        width: 512,
+        height: 512,
       },
       sameAs: ['https://github.com/Anas-Sd/CollabX'],
       contactPoint: {
