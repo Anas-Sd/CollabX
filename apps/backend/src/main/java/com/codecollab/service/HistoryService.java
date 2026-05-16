@@ -21,12 +21,14 @@ public class HistoryService {
     private final RoomRepository roomRepository;
     private final UserRepository userRepository;
 
+    // Get room history
     public List<CodeHistory> getHistory(String roomId) {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new RuntimeException("Room not found"));
         return codeHistoryRepository.findByRoomOrderBySavedAtDesc(room);
     }
 
+    // Save code snapshot
     public CodeHistory saveHistory(String roomId, String userEmail, HistoryRequest request) {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new RuntimeException("Room not found"));

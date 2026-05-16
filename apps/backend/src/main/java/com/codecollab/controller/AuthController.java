@@ -18,11 +18,13 @@ public class AuthController {
 
     private final AuthService authService;
 
+    // Register
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.ok(authService.register(request));
     }
 
+    // Check email availability
     @GetMapping("/check-email")
     public ResponseEntity<?> checkEmail(@RequestParam String email) {
         boolean exists = authService.checkEmailExists(email);
@@ -32,22 +34,26 @@ public class AuthController {
         return ResponseEntity.ok(java.util.Map.of("message", "Email is available"));
     }
 
+    // Reset password
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody java.util.Map<String, String> request) {
         authService.resetPassword(request.get("email"), request.get("newPassword"));
         return ResponseEntity.ok(java.util.Map.of("message", "Password reset successfully"));
     }
 
+    // Login
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
 
+    // Google OAuth login
     @PostMapping("/google")
     public ResponseEntity<AuthResponse> googleLogin(@RequestBody java.util.Map<String, String> request) {
         return ResponseEntity.ok(authService.googleLogin(request.get("token")));
     }
 
+    // Get current user
     @GetMapping("/me")
     public ResponseEntity<UserDto> getCurrentUser(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {

@@ -17,7 +17,8 @@ public class RoomCleanupService {
     private final RoomRepository roomRepository;
     private final RoomSocketHandler roomSocketHandler;
 
-    @Scheduled(fixedRate = 60000) // Runs every minute
+    // Auto-expire rooms — runs every 60 seconds
+    @Scheduled(fixedRate = 60000)
     @Transactional
     public void cleanupExpiredRooms() {
         List<Room> expiredRooms = roomRepository.findByIsActiveTrueAndExpiresAtBefore(LocalDateTime.now());

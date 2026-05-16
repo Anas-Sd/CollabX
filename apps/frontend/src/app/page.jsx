@@ -6,29 +6,11 @@ import { motion, useScroll, useTransform, useInView, useSpring, animate } from '
 import { useUserStore } from '../store/userStore';
 import {
   Code2, Users, Zap, Shield, PlayCircle, Mic, Terminal, Globe, ArrowRight,
-  Database, Activity, Server, Cpu, CheckCircle2, Mail, Code, Pencil, MessageSquare,
-  Book,
-  Monitor,
-  ScreenShare,
-  Banknote,
-  Currency,
-  CurrencyIcon,
-  LucideClipboard,
-  LucideClipboardPaste,
-  LucideClipboardEdit,
-  LucideMapPinCheckInside,
-  Crown,
-  Clock,
-  Timer,
-  Sparkles,
-  Loader2,
-  LogOut,
-  LucideFish,
-  LucideSettings,
-  LucideContainer,
-  LucideFishOff,
-  LucideFishSymbol,
-  LucideFishingHook
+  Database, Activity, Server, Mail, Code, Pencil,
+  Book, Banknote,
+  LucideClipboardEdit, LucideMapPinCheckInside,
+  Crown, Clock, Timer, Sparkles, Loader2, LogOut,
+  LucideSettings, LucideContainer
 } from 'lucide-react';
 import Whiteboard from '../components/room/Whiteboard';
 import api from '../lib/api';
@@ -187,41 +169,31 @@ export default function Home() {
     }
   };
 
-  // ----------------------------------------------------------------------
-  // SCROLL ANIMATION: HERO
-  // ----------------------------------------------------------------------
+  // Hero scroll
   const heroRef = useRef(null);
   const { scrollYProgress: heroProgress } = useScroll({
     target: heroRef,
     offset: ["start start", "end start"]
   });
 
-  // ----------------------------------------------------------------------
-  // SCROLL ANIMATION: HORIZONTAL FEATURES
-  // ----------------------------------------------------------------------
+  // Features horizontal scroll
   const featuresRef = useRef(null);
   const { scrollYProgress: featuresProgress } = useScroll({
     target: featuresRef,
     offset: ["start start", "end start"]
   });
-
   const xTransform = useTransform(featuresProgress, [0, 0.5, 1], ["0%", "-40%", "-85%"]);
   const featuresOpacity = useTransform(featuresProgress, [0, 0.8, 1], [1, 1, 0]);
 
-  // ----------------------------------------------------------------------
-  // SCROLL ANIMATION: HOW IT WORKS
-  // ----------------------------------------------------------------------
+  // How it works scroll
   const workflowRef = useRef(null);
   const { scrollYProgress: workflowProgress } = useScroll({
     target: workflowRef,
     offset: ["start end", "center center"]
   });
-
   const workflowLeftX = useTransform(workflowProgress, [0, 1], ["-200px", "0px"]);
   const workflowRightX = useTransform(workflowProgress, [0, 1], ["200px", "0px"]);
   const workflowOpacity = useTransform(workflowProgress, [0, 0.8], [0, 1]);
-  // Dedicated line scale — runs 0→1 across the full workflow scroll range
-  const workflowLineScale = useTransform(workflowProgress, [0, 1], [0, 1]);
 
   const textOpacity = useTransform(heroProgress, [0, 0.4], [1, 0]);
   const textY = useTransform(heroProgress, [0, 0.4], [0, -100]);
@@ -231,7 +203,7 @@ export default function Home() {
   const mockupY = useTransform(heroProgress, [0, 0.8], [150, -50]);
   const mockupOpacity = useTransform(heroProgress, [0, 0.1, 0.8, 1], [0.5, 1, 1, 0]);
 
-  // Hero extra parallax layers
+  // Hero parallax layers
   const heroOrb1Y = useTransform(heroProgress, [0, 1], ["0%", "30%"]);
   const heroOrb2Y = useTransform(heroProgress, [0, 1], ["0%", "-20%"]);
   const heroGlowScale = useTransform(heroProgress, [0, 1], [1, 1.6]);
@@ -240,25 +212,19 @@ export default function Home() {
   const { scrollYProgress: pageProgress } = useScroll();
   const scaleX = useSpring(pageProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
 
-  // Metrics section
+  // Refs
   const metricsRef = useRef(null);
-
-  // Pricing section
   const pricingRef = useRef(null);
-  const { scrollYProgress: pricingProgress } = useScroll({
-    target: pricingRef,
-    offset: ["start end", "center center"]
-  });
+  const ctaRef = useRef(null);
+
+  // Pricing scroll
+  const { scrollYProgress: pricingProgress } = useScroll({ target: pricingRef, offset: ["start end", "center center"] });
   const pricingScale = useTransform(pricingProgress, [0, 0.6], [0.88, 1]);
   const pricingOpacity = useTransform(pricingProgress, [0, 0.4], [0, 1]);
   const pricingY = useTransform(pricingProgress, [0, 0.6], [60, 0]);
 
-  // CTA section
-  const ctaRef = useRef(null);
-  const { scrollYProgress: ctaProgress } = useScroll({
-    target: ctaRef,
-    offset: ["start end", "center center"]
-  });
+  // CTA scroll
+  const { scrollYProgress: ctaProgress } = useScroll({ target: ctaRef, offset: ["start end", "center center"] });
   const ctaY = useTransform(ctaProgress, [0, 1], [80, 0]);
   const ctaOpacity = useTransform(ctaProgress, [0, 0.6], [0, 1]);
 

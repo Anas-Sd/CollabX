@@ -17,11 +17,13 @@ public class HistoryController {
 
     private final HistoryService historyService;
 
+    // Get room history
     @GetMapping
     public ResponseEntity<List<CodeHistory>> getHistory(@PathVariable String roomId) {
         return ResponseEntity.ok(historyService.getHistory(roomId));
     }
 
+    // Save code snapshot
     @PostMapping
     public ResponseEntity<CodeHistory> saveHistory(@PathVariable String roomId, @RequestBody HistoryRequest request, Authentication authentication) {
         String email = authentication.getName();

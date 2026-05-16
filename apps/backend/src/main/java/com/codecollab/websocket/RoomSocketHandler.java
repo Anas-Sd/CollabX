@@ -33,6 +33,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class RoomSocketHandler extends TextWebSocketHandler {
 
     // RoomId -> List of actively connected sessions
+    // State — roomId -> sessions, sessionId -> user
     private final Map<String, List<WebSocketSession>> roomSessions = new ConcurrentHashMap<>();
     
     // SessionId -> User info map to quickly retrieve user by socket session
@@ -42,7 +43,7 @@ public class RoomSocketHandler extends TextWebSocketHandler {
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
     
-    // Lazy to avoid circular dependency loop if RoomService uses RoomSocketHandler
+    // Lazy — avoids circular dependency with RoomService
     private final RoomService roomService;
 
     public RoomSocketHandler(ObjectMapper objectMapper, JwtUtil jwtUtil, UserRepository userRepository, @Lazy RoomService roomService) {
@@ -52,6 +53,7 @@ public class RoomSocketHandler extends TextWebSocketHandler {
         this.roomService = roomService;
     }
 
+    // On connect — validate JWT, register session
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         try {
@@ -96,6 +98,7 @@ public class RoomSocketHandler extends TextWebSocketHandler {
         }
     }
 
+    // On message — route action to correct handler
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         String roomId = (String) session.getAttributes().get("roomId");
@@ -176,6 +179,7 @@ public class RoomSocketHandler extends TextWebSocketHandler {
         }
     }
 
+    // On disconnect — clean up session maps
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         String roomId = (String) session.getAttributes().get("roomId");
@@ -194,8 +198,7 @@ public class RoomSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    // --- Broadcasting Utilities ---
-    
+    // Broadcast to all room members
     public void broadcastToRoom(String roomId, String destination, Object payload) {
         List<WebSocketSession> sessions = roomSessions.get(roomId);
         if (sessions == null || sessions.isEmpty()) return;
@@ -213,6 +216,7 @@ public class RoomSocketHandler extends TextWebSocketHandler {
         }
     }
 
+    // Broadcast to all except sender
     public void broadcastToRoomFilterSender(String roomId, String senderSessionId, String destination, Object payload) {
         List<WebSocketSession> sessions = roomSessions.get(roomId);
         if (sessions == null || sessions.isEmpty()) return;
@@ -230,6 +234,7 @@ public class RoomSocketHandler extends TextWebSocketHandler {
         }
     }
     
+    // Broadcast to one specific user
     public void broadcastToUser(String roomId, String targetUserId, String destination, Object payload) {
         List<WebSocketSession> sessions = roomSessions.get(roomId);
         if (sessions == null || sessions.isEmpty()) return;
@@ -248,14 +253,15 @@ public class RoomSocketHandler extends TextWebSocketHandler {
         }
     }
 
+    // Wrap payload into routing envelope
     private String createBroadcastPayload(String destination, Object payload) throws JsonProcessingException {
-        // Wrap payload in STOMP-like generic routing wrapper
         Map<String, Object> messageMap = new java.util.HashMap<>();
         messageMap.put("destination", destination);
         messageMap.put("body", payload != null ? payload : "");
         return objectMapper.writeValueAsString(messageMap);
     }
     
+    // Thread-safe message send
     private void sendMessageSafe(WebSocketSession session, TextMessage message) {
         try {
             synchronized(session) {
@@ -266,6 +272,7 @@ public class RoomSocketHandler extends TextWebSocketHandler {
         }
     }
 
+    // Extract single query param by name
     private String extractQueryParam(String query, String param) {
         String[] pairs = query.split("&");
         for (String pair : pairs) {

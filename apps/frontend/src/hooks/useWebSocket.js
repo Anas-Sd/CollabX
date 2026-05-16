@@ -10,6 +10,7 @@ export const useWebSocket = (roomId) => {
   const roomStore = useRoomStore();
   const isActive = useRoomStore((state) => state.isActive);
 
+  // Connection setup
   const connect = useCallback(() => {
     if (!user || !roomId || !isActive) return;
     if (ws.current && (ws.current.readyState === WebSocket.CONNECTING || ws.current.readyState === WebSocket.OPEN)) return;
@@ -19,12 +20,11 @@ export const useWebSocket = (roomId) => {
 
     const socket = new WebSocket(`${wsUrl}/ws?token=${token}&roomId=${roomId}`);
     ws.current = socket;
-
     socket.onopen = () => {
       console.log('WS Connected');
-      // Backend automatically adds to room based on roomId param
     };
 
+    // Message handler
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
@@ -45,7 +45,6 @@ export const useWebSocket = (roomId) => {
         }
         else if (destination === 'logs') {
           useRoomStore.getState().addLog(body);
-          useNotificationStore.getState().addNotification('DEBUG: Log received via WebSocket: ' + body.action, 'success');
         }
         else if (destination === 'cursor') {
           useRoomStore.getState().updateCursor(body.userId, { line: body.line, column: body.column, userName: body.userName, color: body.color });
@@ -101,7 +100,6 @@ export const useWebSocket = (roomId) => {
             localStorage.setItem('dashboardAlert', JSON.stringify({ title: 'You were kicked', message: 'The host has removed you from the workspace.' }));
             setTimeout(() => { window.location.href = '/dashboard'; }, 1500);
           } else {
-            // Immediately remove from local store so UI updates instantly
             useRoomStore.getState().removeParticipant(body);
             useRoomStore.getState().removeCursor(body);
             setTimeout(fetchRoomMembers, 500);
@@ -134,8 +132,6 @@ export const useWebSocket = (roomId) => {
           }
         }
         else if (destination === 'end' && body === 'ROOM_ENDED_BY_HOST') {
-          // Guard: if user is already off the room page (i.e. the host who redirected
-          // themselves), skip — otherwise a full reload wipes the popup on the dashboard.
           setTimeout(() => {
             if (!window.location.pathname.startsWith('/room/')) return;
             localStorage.setItem('dashboardAlert', JSON.stringify({
@@ -168,7 +164,7 @@ export const useWebSocket = (roomId) => {
     };
 
     return () => {
-      socket.onclose = null; // Prevent reconnect on unmount
+      socket.onclose = null;
       socket.close();
       if (ws.current === socket) {
         ws.current = null;
@@ -176,6 +172,7 @@ export const useWebSocket = (roomId) => {
     };
   }, [roomId, user, isActive]);
 
+  // Fetch room members
   const fetchRoomMembers = async () => {
     try {
       const res = await api.get(`/rooms/${roomId}?t=${new Date().getTime()}`);
@@ -192,6 +189,7 @@ export const useWebSocket = (roomId) => {
     return cleanup;
   }, [connect]);
 
+  // Action senders
   const sendAction = (action, payload) => {
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify({ action, payload }));

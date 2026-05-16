@@ -3,18 +3,20 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request) {
   try {
-    const body = await request.json();
-    const { roomId, userId } = body;
+    // Parse request
+    const { roomId, userId } = await request.json();
 
+    // Validate env credentials
     const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID?.trim();
     const appCertificate = process.env.AGORA_APP_CERTIFICATE?.trim();
 
     if (!appId || !appCertificate) {
       console.error('Missing Agora App ID or Certificate');
       return NextResponse.json({ error: 'Agora credentials missing in environment' }, { status: 500 });
+    // Role is publisher for everyone since everyone can talk (muted logic handled client-side)
     }
 
-    // Role is publisher for everyone since everyone can talk (muted logic handled client-side)
+    // Generate RTC token
     const role = RtcRole.PUBLISHER;
     // Token valid for 24 hours
     const expirationTimeInSeconds = 3600 * 24;
@@ -22,13 +24,8 @@ export async function POST(request) {
     const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
 
     const token = RtcTokenBuilder.buildTokenWithUserAccount(
-      appId,
-      appCertificate,
-      roomId,
-      userId,
-      role,
-      expirationTimeInSeconds,
-      privilegeExpiredTs
+      appId, appCertificate, roomId, userId,
+      role, expirationTimeInSeconds, privilegeExpiredTs
     );
 
     return NextResponse.json({ token });

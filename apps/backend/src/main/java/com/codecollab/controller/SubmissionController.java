@@ -18,6 +18,7 @@ public class SubmissionController {
 
     private final SubmissionService submissionService;
 
+    // Save submission result
     @PostMapping
     public ResponseEntity<SubmissionResponse> saveSubmission(
             @PathVariable String roomId,
@@ -27,6 +28,7 @@ public class SubmissionController {
         return ResponseEntity.ok(submissionService.saveSubmission(roomId, email, request));
     }
 
+    // Get all room submissions
     @GetMapping
     public ResponseEntity<List<SubmissionResponse>> getRoomSubmissions(
             @PathVariable String roomId) {

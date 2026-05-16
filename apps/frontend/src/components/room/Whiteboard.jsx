@@ -40,7 +40,6 @@ export default function Whiteboard({ wsHook }) {
   useEffect(() => {
     if (excalidrawAPI && whiteboardData && whiteboardData !== lastReceivedDataRef.current) {
       try {
-        console.log("Receiving whiteboard sync", whiteboardData.substring(0, 50));
         const parsedData = JSON.parse(whiteboardData);
         if (parsedData.elements) {
           lastReceivedDataRef.current = whiteboardData;
@@ -63,7 +62,6 @@ export default function Whiteboard({ wsHook }) {
       if (elements && elements.length > 0) {
         const dataStr = JSON.stringify({ elements });
         if (dataStr !== lastReceivedDataRef.current) {
-          console.log("Sending whiteboard sync", dataStr.substring(0, 50));
           lastReceivedDataRef.current = dataStr;
           useRoomStore.getState().setWhiteboardData(dataStr);
           if (wsHook && wsHook.sendWhiteboardSync) {

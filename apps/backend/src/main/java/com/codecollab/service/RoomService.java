@@ -50,8 +50,8 @@ public class RoomService {
     private static final int ROOM_ID_LENGTH = 8;
     private final SecureRandom random = new SecureRandom();
 
+    // Activity logging
     public void logActivity(Room room, User user, String action) {
-        System.out.println("LOG ACTIVITY CALLED FOR ACTION: " + action);
         RoomLog log = RoomLog.builder()
                 .room(room)
                 .user(user)
@@ -72,7 +72,6 @@ public class RoomService {
                 @Override
                 public void afterCommit() {
                     try {
-                        System.out.println("BROADCASTING LOG VIA WS AFTER COMMIT: " + res.getAction());
                         roomSocketHandler.broadcastToRoom(room.getId().toString(), "logs", res);
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -80,11 +79,11 @@ public class RoomService {
                 }
             });
         } else {
-            System.out.println("BROADCASTING LOG VIA WS IMMEDIATELY: " + res.getAction());
             roomSocketHandler.broadcastToRoom(room.getId().toString(), "logs", res);
         }
     }
 
+    // Room ID generator
     @Transactional
     public void logExecutionNative(String roomId, String userId, String type) {
         Room room = roomRepository.findById(roomId).orElseThrow();
@@ -109,6 +108,7 @@ public class RoomService {
         return id;
     }
 
+    // Room lifecycle
     @Transactional
     public RoomResponse createRoom(CreateRoomRequest request, String userEmail) {
         User host = userRepository.findByEmail(userEmail)
@@ -236,6 +236,7 @@ public class RoomService {
         return mapToRoomResponse(room, existingMembers);
     }
 
+    // Leave & end
     @Transactional
     public void leaveRoom(String roomId, String userEmail) {
         Room room = roomRepository.findById(roomId)
@@ -253,6 +254,7 @@ public class RoomService {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
+        // Output room closure if host left (optional implementation)
                 roomSocketHandler.broadcastToRoom(roomId, "members.leave", user.getId().toString());
             }
         });
@@ -341,6 +343,7 @@ public class RoomService {
                 .collect(Collectors.toList());
     }
 
+    // Code & language cache
     @Transactional
     public void updateRoomCodeCache(String roomId, String language, String sourceCode) {
         Room room = roomRepository.findById(roomId).orElseThrow();
@@ -401,6 +404,7 @@ public class RoomService {
         roomRepository.save(room);
     }
 
+    // Chat
     @Transactional
     public void saveChat(String roomId, ChatPayload payload) {
         Room room = roomRepository.findById(roomId).orElseThrow();
@@ -416,6 +420,7 @@ public class RoomService {
         roomChatRepository.save(chat);
     }
 
+    // Roles & permissions
     @Transactional
     public void updateRole(String roomId, String targetUserId, String newRole, String requesterEmail) {
         Room room = roomRepository.findById(roomId).orElseThrow();
@@ -530,6 +535,7 @@ public class RoomService {
         roomSocketHandler.broadcastToRoom(roomId, "voice", payload);
     }
 
+    // Waitlist
     @Transactional
     public void processWaitlist(String roomId, String userId, String requesterEmail, boolean accept) {
         Room room = roomRepository.findById(roomId).orElseThrow();
@@ -676,6 +682,7 @@ public class RoomService {
                 .build();
     }
 
+    // Whiteboard
     @Transactional
     public void updateWhiteboardToggle(String roomId, boolean isOpen) {
         Room room = roomRepository.findById(roomId).orElse(null);
@@ -694,6 +701,7 @@ public class RoomService {
         }
     }
 
+    // Room history cleanup
     @Transactional
     public void deleteRoomHistory(String roomId, String userEmail) {
         Room room = roomRepository.findById(roomId).orElseThrow(() -> new RuntimeException("Room not found"));

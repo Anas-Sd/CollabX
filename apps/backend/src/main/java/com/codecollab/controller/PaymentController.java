@@ -22,6 +22,7 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
+    // Create Razorpay order
     @PostMapping("/create-order")
     public ResponseEntity<?> createOrder(@Valid @RequestBody CreateOrderRequest request, Authentication authentication) {
         try {
@@ -32,6 +33,7 @@ public class PaymentController {
         }
     }
 
+    // Verify payment signature
     @PostMapping("/verify")
     public ResponseEntity<?> verifyPayment(@Valid @RequestBody VerifyPaymentRequest request, Authentication authentication) {
         String email = authentication.getName();
@@ -39,6 +41,7 @@ public class PaymentController {
         return ResponseEntity.ok(Map.of("success", verified));
     }
 
+    // Cancel subscription
     @PostMapping("/cancel")
     public ResponseEntity<?> cancelSubscription(Authentication authentication) {
         String email = authentication.getName();

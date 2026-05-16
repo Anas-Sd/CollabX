@@ -17,6 +17,7 @@ public class VoiceController {
     @Value("${agora.app.certificate:}")
     private String appCertificate;
 
+    // Get Agora token (token generation handled client-side via Next.js API route)
     @GetMapping("/agora-token")
     public ResponseEntity<String> getAgoraToken(@PathVariable String roomId) {
         // Simple token handler. In a production app with the full Agora SDK,

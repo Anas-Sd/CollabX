@@ -4,7 +4,8 @@ import { Resend } from 'resend';
 
 export async function POST(req) {
   try {
-    const { email, otp, purpose } = await req.json();
+  // Parse request
+  const { email, otp, purpose } = await req.json();
 
     const isForgotPassword = purpose === 'forgot_password';
     const subjectLine = `Your CollabX verification code: ${otp}`;
@@ -13,10 +14,8 @@ export async function POST(req) {
       ? 'Use the code below to reset your CollabX password. It is valid for 10 minutes.'
       : 'Use the code below to complete your CollabX registration. It is valid for 10 minutes.';
 
-    // Plain-text fallback — critical for spam scoring
     const plainText = `${headingText}\n\n${instructionText}\n\nYour code: ${otp}\n\nThis code expires in 10 minutes. If you did not request this, please ignore this email.\n\n— The CollabX Team\nhttps://collabx.live`;
 
-    // Clean white-background HTML — dark themes are a top spam trigger
     const htmlBody = `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -54,7 +53,7 @@ export async function POST(req) {
 </body>
 </html>`;
 
-    // ─── PRIMARY: Resend (sends from noreply@collabx.live — best inbox delivery) ───
+    // Send via Resend (primary)
     if (process.env.RESEND_API_KEY) {
       const resend = new Resend(process.env.RESEND_API_KEY);
       const { error } = await resend.emails.send({
@@ -68,13 +67,13 @@ export async function POST(req) {
       return NextResponse.json({ success: true });
     }
 
-    // ─── FALLBACK: Nodemailer + Gmail (if RESEND_API_KEY not set yet) ───
+    // Gmail fallback
     const gmailUser = process.env.GMAIL_USER;
     const gmailAppPassword = process.env.GMAIL_APP_PASSWORD;
 
     if (!gmailUser || !gmailAppPassword) {
-      console.log(`[DEV MODE] No credentials set. OTP for ${email} is: ${otp}`);
-      return NextResponse.json({ success: true, message: 'OTP logged to console (Dev Mode)' });
+      console.log(`[DEV] OTP for ${email}: ${otp}`);
+      return NextResponse.json({ success: true });
     }
 
     const transporter = nodemailer.createTransport({
@@ -98,10 +97,6 @@ export async function POST(req) {
 
   } catch (error) {
     console.error('Error sending OTP:', error.message);
-    return NextResponse.json({
-      success: true,
-      devFallback: true,
-      message: 'Email sending failed. Using Dev Fallback.'
-    });
+    return NextResponse.json({ success: true, devFallback: true });
   }
 }

@@ -1,7 +1,7 @@
 package com.codecollab.service;
 
-import com.codecollab.dto.request.UpdateProfileRequest;
 import com.codecollab.dto.response.ProfileResponse;
+import com.codecollab.dto.request.UpdateProfileRequest;
 import com.codecollab.model.Room;
 import com.codecollab.model.RoomMember;
 import com.codecollab.model.Submission;
@@ -43,10 +43,11 @@ public class ProfileService {
     private final RoomCodeCacheRepository roomCodeCacheRepository;
     private final RoomTestCaseRepository roomTestCaseRepository;
     private final CodeHistoryRepository codeHistoryRepository;
-    
+
     @Lazy
     private final RoomSocketHandler roomSocketHandler;
 
+    // Get user profile with stats
     public ProfileResponse getUserProfile(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -113,6 +114,7 @@ public class ProfileService {
                 .build();
     }
 
+    // Update profile info & picture
     public ProfileResponse updateProfile(String email, UpdateProfileRequest request) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -120,8 +122,8 @@ public class ProfileService {
         if (request.getName() != null && !request.getName().trim().isEmpty()) {
             user.setName(request.getName().trim());
         }
-        
-        // Always update if it's explicitly provided. If it's an empty string, treat it as null (removal).
+
+        // Empty string = remove picture
         if (request.getProfilePicture() != null) {
             if (request.getProfilePicture().trim().isEmpty()) {
                 user.setProfilePicture(null);
@@ -131,10 +133,10 @@ public class ProfileService {
         }
 
         userRepository.save(user);
-
         return getUserProfile(email);
     }
 
+    // Change password
     @Transactional
     public void changePassword(String email, com.codecollab.dto.request.ChangePasswordRequest request) {
         User user = userRepository.findByEmail(email)
@@ -148,6 +150,7 @@ public class ProfileService {
         userRepository.save(user);
     }
 
+    // Delete account & all associated data
     @Transactional
     public void deleteAccount(String email) {
         User user = userRepository.findByEmail(email)
@@ -166,14 +169,13 @@ public class ProfileService {
         List<RoomMember> memberships = roomMemberRepository.findByUser(user);
         roomMemberRepository.deleteAll(memberships);
 
-        // If user hosted rooms, we should technically delete the rooms or transfer host. Let's delete the rooms they host.
+        // Delete hosted rooms & notify active participants
         List<Room> hostedRooms = roomRepository.findByHost(user);
         for (Room room : hostedRooms) {
             // Alert any active participants that the room is terminating before we wipe it
             if (roomSocketHandler != null) {
                 roomSocketHandler.broadcastToRoom(room.getId().toString(), "end", "ROOM_ENDED_BY_HOST");
             }
-            
             submissionRepository.deleteByRoom(room);
             roomMemberRepository.deleteByRoom(room);
             roomChatRepository.deleteByRoom(room);

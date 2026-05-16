@@ -22,10 +22,10 @@ public class SubmissionService {
     private final RoomRepository roomRepository;
     private final UserRepository userRepository;
 
+    // Save submission result
     public SubmissionResponse saveSubmission(String roomId, String email, SubmissionRequest request) {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new RuntimeException("Room not found"));
-                
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -42,6 +42,7 @@ public class SubmissionService {
         return mapToResponse(submission);
     }
 
+    // Get all room submissions
     public List<SubmissionResponse> getRoomSubmissions(String roomId) {
         return submissionRepository.findByRoomIdOrderByExecutedAtDesc(roomId)
                 .stream()
@@ -49,6 +50,7 @@ public class SubmissionService {
                 .collect(Collectors.toList());
     }
 
+    // Map to response DTO
     private SubmissionResponse mapToResponse(Submission sub) {
         return SubmissionResponse.builder()
                 .id(sub.getId())

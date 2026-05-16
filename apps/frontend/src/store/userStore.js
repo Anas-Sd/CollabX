@@ -3,6 +3,7 @@ import { useNotificationStore } from './notificationStore';
 
 const SESSION_DURATION_MS = 8 * 60 * 60 * 1000; // 8 hours
 
+// Session restore from localStorage
 const getInitialState = () => {
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('token');
@@ -13,8 +14,8 @@ const getInitialState = () => {
       const now = Date.now();
       const sessionAge = now - parseInt(loginTimestamp, 10);
       
-      if (sessionAge > SESSION_DURATION_MS) {
         // Session expired
+      if (sessionAge > SESSION_DURATION_MS) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         localStorage.removeItem('loginTimestamp');
@@ -37,6 +38,7 @@ const getInitialState = () => {
   return { user: null, isAuthenticated: false };
 };
 
+// Store
 export const useUserStore = create((set) => ({
   ...getInitialState(),
 

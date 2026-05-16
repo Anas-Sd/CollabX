@@ -9,6 +9,7 @@ export default function FeedbackModal({ isOpen, onClose, context = 'General' }) 
   const user = useUserStore((state) => state.user);
   const addNotification = useNotificationStore((state) => state.addNotification);
   
+  // State
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [name, setName] = useState(user?.name || '');
@@ -20,6 +21,7 @@ export default function FeedbackModal({ isOpen, onClose, context = 'General' }) 
     setMounted(true);
   }, []);
 
+  // Submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (rating === 0) {
@@ -60,6 +62,7 @@ export default function FeedbackModal({ isOpen, onClose, context = 'General' }) 
 
   if (!mounted) return null;
 
+  // Modal UI
   return createPortal(
     <AnimatePresence>
       {isOpen && (
@@ -114,7 +117,6 @@ export default function FeedbackModal({ isOpen, onClose, context = 'General' }) 
                   <label className="block text-xs uppercase tracking-widest text-white/50 mb-2 font-medium">Name (Optional)</label>
                   <input 
                     type="text" 
-                    // value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="You could be completely Anonymous if you wish!!"
                     className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#F5A623]/50 transition-colors"

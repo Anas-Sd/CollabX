@@ -8,7 +8,7 @@ const api = axios.create({
   },
 });
 
-// Request interceptor to attach JWT token
+// Auth interceptor — attaches JWT token to every request
 api.interceptors.request.use(
   (config) => {
     // We'll manage token in localStorage or cookies. Using localStorage for simplicity in this implementation.
@@ -25,7 +25,7 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle 401 Unauthorized and Timeouts
+// Response interceptor — handles 401 and timeouts
 api.interceptors.response.use(
   (response) => response,
   (error) => {

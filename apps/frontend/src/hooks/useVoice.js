@@ -11,6 +11,7 @@ export const useVoice = (roomId, user, isActive = true) => {
 
     let mounted = true;
 
+    // Agora init
     const initAgora = async () => {
       try {
         // Hit the secure Next.js Backend node relay instead of Java to utilize the isolated NPM crypto hashing
@@ -24,7 +25,6 @@ export const useVoice = (roomId, user, isActive = true) => {
         const token = resData.token;
         const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID?.trim();
 
-        console.log('Agora Init Check:', { actualAppId: appId, tokenLength: token?.length });
 
         if (!appId || !token) {
           console.warn('Agora credentials missing. Voice chat disabled.');
@@ -33,9 +33,7 @@ export const useVoice = (roomId, user, isActive = true) => {
 
         const AgoraRTC = (await import('agora-rtc-sdk-ng')).default;
         
-        // Disable internal Agora console logs (4 = NONE)
         AgoraRTC.setLogLevel(4);
-        // Prevent Agora from sending telemetry to statscollector endpoints (stops Adblocker blocked errors)
         AgoraRTC.disableLogUpload();
 
         const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
@@ -50,7 +48,6 @@ export const useVoice = (roomId, user, isActive = true) => {
 
         if (!mounted) return;
 
-        // Use string user ID because we built the token using buildTokenWithUserAccount
         try {
           await client.join(appId, roomId, token, user.id);
         } catch (joinErr) {
@@ -115,6 +112,7 @@ export const useVoice = (roomId, user, isActive = true) => {
     };
   }, [roomId, user]);
 
+  // Mic controls
   const toggleMic = async () => {
     if (localAudioTrackRef.current) {
       const newMutedState = !isMicMuted;

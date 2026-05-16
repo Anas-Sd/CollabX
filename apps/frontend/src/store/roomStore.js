@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 export const useRoomStore = create((set, get) => ({
+  // State
   roomId: null,
   roomName: 'Workspace',
   isActive: true,
@@ -26,6 +27,7 @@ export const useRoomStore = create((set, get) => ({
   roleChangeAlert: null,
   hostTransferAlert: null,
 
+  // UI setters
   setActiveOutputTab: (tab) => set({ activeOutputTab: tab }),
   setShowOutputPanel: (show) => set({ showOutputPanel: show }),
   setSessionEndedReason: (reason) => set({ sessionEndedReason: reason }),
@@ -34,9 +36,11 @@ export const useRoomStore = create((set, get) => ({
   setIsWhiteboardOpen: (isOpen) => set({ isWhiteboardOpen: isOpen }),
   setWhiteboardData: (data) => set({ whiteboardData: data }),
 
+  // Room info
   setRoomInfo: (id, name, expiresAt = null, isActive = true) => set({ roomId: id, roomName: name, expiresAt, isActive }),
   setExpiresAt: (expiresAt) => set({ expiresAt }),
 
+  // Code & language
   setCode: (code) => set((state) => ({
     code,
     languageCache: { ...state.languageCache, [state.language]: code }
@@ -48,6 +52,7 @@ export const useRoomStore = create((set, get) => ({
   setLanguage: (language) => set({ language }),
   setLanguageCache: (cache) => set({ languageCache: cache }),
 
+  // Participants
   setParticipants: (participants) => set({ participants }),
   addParticipant: (participant) => set((state) => ({
     participants: [...state.participants.filter(p => p.id !== participant.id), participant]
@@ -64,6 +69,7 @@ export const useRoomStore = create((set, get) => ({
     participants: state.participants.map(p => p.id === userId ? { ...p, isMuted } : p)
   })),
 
+  // Chat & logs
   addChatMessage: (msg) => set((state) => ({ chatMessages: [...state.chatMessages, msg] })),
   setChatMessages: (chatMessages) => set({ chatMessages }),
   
@@ -81,6 +87,7 @@ export const useRoomStore = create((set, get) => ({
   }),
   setUnreadChatCount: (count) => set({ unreadChatCount: count }),
 
+  // Cursors
   setCursors: (cursors) => set({ cursors }),
   updateCursor: (userId, pos) => set((state) => ({
     cursors: { ...state.cursors, [userId]: pos }
@@ -91,6 +98,7 @@ export const useRoomStore = create((set, get) => ({
     return { cursors: newCursors };
   }),
 
+  // Test cases & execution
   setTestCases: (testCases) => set({ testCases }),
   addTestCase: (tc) => set((state) => ({ testCases: [...state.testCases, tc] })),
 
@@ -98,6 +106,7 @@ export const useRoomStore = create((set, get) => ({
   setIsExecuting: (isExecuting, executingUser = null) => set({ isExecuting, executingUser }),
   setExecutionProgress: (progress) => set({ executionProgress: progress }),
 
+  // Reset
   resetRoom: () => set({
     roomId: null,
     roomName: 'Workspace',

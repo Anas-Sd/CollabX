@@ -18,6 +18,7 @@ public class ExecutionController {
 
     private final ExecutionService executionService;
 
+    // Run code
     @PostMapping("/execute")
     public ResponseEntity<ExecutionResult> executeCode(
             @Valid @RequestBody ExecuteRequest request,
@@ -26,6 +27,7 @@ public class ExecutionController {
         return ResponseEntity.ok(executionService.executeCode(email, request.getCode(), request.getLanguage(), request.getStdin(), request.getRoomId()));
     }
 
+    // Submit code against test cases
     @PostMapping("/submit")
     public ResponseEntity<SubmitCodeResponse> submitCode(
             @Valid @RequestBody SubmitCodeRequest request,

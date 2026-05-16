@@ -30,6 +30,7 @@ public class PaymentService {
     @Value("${razorpay.key.secret:}")
     private String razorpayKeySecret;
 
+    // Create Razorpay order
     public Order createOrder(String userEmail, CreateOrderRequest request) throws RazorpayException {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -59,18 +60,16 @@ public class PaymentService {
                 .build();
 
         paymentRepository.save(payment);
-
         return order;
     }
 
+    // Verify payment signature & activate PRO
     public boolean verifySignature(String userEmail, VerifyPaymentRequest request) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         Payment payment = paymentRepository.findByRazorpayOrderId(request.getRazorpayOrderId());
-        if (payment == null) {
-            throw new RuntimeException("Payment record not found");
-        }
+        if (payment == null) throw new RuntimeException("Payment record not found");
 
         try {
             JSONObject options = new JSONObject();
@@ -100,6 +99,7 @@ public class PaymentService {
         }
     }
 
+    // Cancel subscription
     public void cancelSubscription(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));

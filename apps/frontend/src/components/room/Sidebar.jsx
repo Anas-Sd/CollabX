@@ -13,6 +13,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
   const router = useRouter();
   const { user } = useUserStore();
   const { isActive, participants, removeParticipant, updateParticipantRole, chatMessages, unreadChatCount, resetUnreadChat, isWhiteboardOpen, setIsWhiteboardOpen } = useRoomStore();
+  // State
   const [openMenuId, setOpenMenuId] = useState(null);
   const menuRef = useRef(null);
   const chatEndRef = useRef(null);
@@ -57,6 +58,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
   const openConfirm = (title, message, confirmText, onConfirm, hideCancel = false) => {
     setConfirmModalConfig({ isOpen: true, title, message, confirmText, hideCancel, onConfirm });
   };
+  // Participant helpers
   const currentUserParticipant = participants.find(p => p.id === user?.id);
   const isHost = currentUserParticipant?.role === 'HOST';
 
@@ -64,6 +66,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
   const pendingParticipants = participants.filter(p => p.status === 'PENDING');
   const otherParticipants = activeParticipants.filter(p => p.id !== user?.id);
 
+  // Action handlers
   const handleRoleChange = async (targetUserId, newRole) => {
     try {
       await api.put(`/rooms/${roomId}/members/${targetUserId}/role`, { role: newRole });
@@ -116,6 +119,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
     }
   }, [activeTab, resetUnreadChat, unreadChatCount]);
 
+  // Tab click — fetch fresh data on switch
   const handleTabClick = async (tab) => {
     setActiveTab(tab);
     try {
@@ -133,7 +137,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
 
   return (
     <>
-      {/* Icon Navigation Slim Bar Island */}
+      {/* Icon nav bar */}
       <div className="w-16 h-full flex flex-col items-center py-4 bg-card rounded-2xl border border-border shadow-sm gap-6 relative shrink-0">
         <div className="tooltip">
           <button
@@ -233,8 +237,9 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
         )}
       </div>
 
-      {/* Main Sidebar Content Island */}
+      {/* Sidebar content */}
       <div className="w-64 h-full bg-card rounded-2xl border border-border shadow-sm flex flex-col overflow-hidden shrink-0">
+        {/* Users panel */}
         {activeTab === 'USERS' && (
           <>
             <div className="p-4 flex gap-2">
@@ -428,6 +433,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
           </>
         )}
 
+        {/* Waitlist panel */}
         {activeTab === 'WAITLIST' && (
           <div className="flex flex-col h-full">
             <div className="px-4 py-4 border-b border-border flex items-center justify-between">
@@ -484,6 +490,7 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
           </div>
         )}
 
+        {/* Chat panel */}
         {activeTab === 'CHAT' && (
           <div className="flex flex-col h-full">
             <div className="px-4 py-4 border-b border-border">
@@ -524,13 +531,14 @@ export default function Sidebar({ roomId, wsHook, activeTab, setActiveTab, voice
           </div>
         )}
 
+        {/* Logs panel */}
         {activeTab === 'LOGS' && (isHost || !isActive) && (
           <div className="flex flex-col h-full overflow-hidden">
             <LogsPanel />
           </div>
         )}
       </div>
-      {/* Generic Confirmation Modal */}
+      {/* Confirm modal */}
       {confirmModalConfig.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-card w-full max-w-sm rounded-2xl border border-border shadow-2xl p-6 relative">

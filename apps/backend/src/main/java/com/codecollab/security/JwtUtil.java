@@ -20,15 +20,18 @@ public class JwtUtil {
     @Value("${jwt.expiration}")
     private long jwtExpiration;
 
+    // Extract email from token
     public String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
+    // Extract any claim
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
 
+    // Generate JWT token
     public String generateToken(String email) {
         return Jwts.builder()
                 .subject(email)
@@ -38,19 +41,23 @@ public class JwtUtil {
                 .compact();
     }
 
+    // Validate token
     public boolean isTokenValid(String token, String userEmail) {
         final String email = extractEmail(token);
         return (email.equals(userEmail)) && !isTokenExpired(token);
     }
 
+    // Check expiry
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
+    // Extract expiration date
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 
+    // Parse all claims
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
                 .verifyWith(getSignInKey())
@@ -59,6 +66,7 @@ public class JwtUtil {
                 .getPayload();
     }
 
+    // Build signing key
     private SecretKey getSignInKey() {
         return Keys.hmacShaKeyFor(secretKey.getBytes());
     }

@@ -17,12 +17,14 @@ public class ProfileController {
 
     private final ProfileService profileService;
 
+    // Get profile
     @GetMapping
     public ResponseEntity<ProfileResponse> getProfile(Authentication authentication) {
         String email = authentication.getName();
         return ResponseEntity.ok(profileService.getUserProfile(email));
     }
 
+    // Update profile
     @PutMapping
     public ResponseEntity<ProfileResponse> updateProfile(
             @Valid @RequestBody UpdateProfileRequest request,
@@ -31,6 +33,7 @@ public class ProfileController {
         return ResponseEntity.ok(profileService.updateProfile(email, request));
     }
 
+    // Change password
     @PostMapping("/password")
     public ResponseEntity<Void> changePassword(
             @Valid @RequestBody ChangePasswordRequest request,
@@ -40,6 +43,7 @@ public class ProfileController {
         return ResponseEntity.ok().build();
     }
 
+    // Delete account
     @DeleteMapping
     public ResponseEntity<Void> deleteAccount(Authentication authentication) {
         String email = authentication.getName();

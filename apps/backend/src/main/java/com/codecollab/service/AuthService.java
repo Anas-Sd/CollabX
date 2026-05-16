@@ -27,10 +27,12 @@ public class AuthService {
     @Value("${GOOGLE_CLIENT_ID:test}")
     private String googleClientId;
 
+    // Check email availability
     public boolean checkEmailExists(String email) {
         return userRepository.existsByEmail(email);
     }
 
+    // Register
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email is already in use");
@@ -52,6 +54,7 @@ public class AuthService {
                 .build();
     }
 
+    // Login
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("No user found with this email address"));
@@ -72,6 +75,7 @@ public class AuthService {
                 .build();
     }
 
+    // Google OAuth login
     public AuthResponse googleLogin(String accessToken) {
         try {
             org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
@@ -79,8 +83,8 @@ public class AuthService {
             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
             headers.setBearerAuth(accessToken);
             org.springframework.http.HttpEntity<String> entity = new org.springframework.http.HttpEntity<>("", headers);
-            
-            org.springframework.http.ResponseEntity<java.util.Map> response = 
+
+            org.springframework.http.ResponseEntity<java.util.Map> response =
                 restTemplate.exchange(userInfoUrl, org.springframework.http.HttpMethod.GET, entity, java.util.Map.class);
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
@@ -100,7 +104,7 @@ public class AuthService {
                 user = checkSubscriptionExpiration(user);
                 user.setLastLoginAt(java.time.LocalDateTime.now());
                 user = userRepository.save(user);
-                
+
                 String token = jwtUtil.generateToken(user.getEmail());
 
                 return AuthResponse.builder()
@@ -115,6 +119,7 @@ public class AuthService {
         }
     }
 
+    // Get current user
     public UserDto getCurrentUser(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -122,6 +127,7 @@ public class AuthService {
         return mapToUserDto(user);
     }
 
+    // Reset password
     public void resetPassword(String email, String newPassword) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -129,6 +135,7 @@ public class AuthService {
         userRepository.save(user);
     }
 
+    // Subscription expiry check
     private User checkSubscriptionExpiration(User user) {
         if ("PRO".equals(user.getSubscriptionType()) && user.getSubscriptionExpiresAt() != null) {
             if (user.getSubscriptionExpiresAt().isBefore(java.time.LocalDateTime.now())) {
@@ -139,6 +146,7 @@ public class AuthService {
         return user;
     }
 
+    // Map user to DTO
     private UserDto mapToUserDto(User user) {
         return UserDto.builder()
                 .id(user.getId())
