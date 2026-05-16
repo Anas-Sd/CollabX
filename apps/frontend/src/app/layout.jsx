@@ -125,9 +125,9 @@ export const metadata = {
   // ── Favicon / App Icons ────────────────────────────────────────────────────
   icons: {
     icon: [
-      { url: '/collabx_icon.png', sizes: '512x512', type: 'image/png' },
-      { url: '/collabx_icon.png', sizes: '192x192', type: 'image/png' },
-      { url: '/collabx_icon.png', sizes: '32x32', type: 'image/png' },
+      { url: '/collabx_logo.svg', type: 'image/svg+xml' },      // browser tab (crisp SVG X)
+      { url: '/collabx_icon.png', sizes: '512x512', type: 'image/png' }, // Google SERP
+      { url: '/collabx_icon.png', sizes: '32x32', type: 'image/png' },   // legacy browsers
     ],
     shortcut: '/collabx_icon.png',
     apple: '/collabx_icon.png',
