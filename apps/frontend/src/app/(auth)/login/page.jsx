@@ -145,11 +145,10 @@ function AuthContent() {
             
             setLoginExpectedOtp(generatedOtp);
             if (responseData.devFallback) {
-              useNotificationStore.getState().addNotification(`Email blocked by firewall. If on university Wi-Fi, please use a hotspot.`, 'error');
-              return; // Do not proceed to OTP step since they cannot receive it
-            } else {
-              useNotificationStore.getState().addNotification('OTP sent to your email', 'success');
+              useNotificationStore.getState().addNotification('Failed to send OTP. Please try again or use Google Sign-In.', 'error');
+              return;
             }
+            useNotificationStore.getState().addNotification('OTP sent to your email!', 'success');
             
             setLoginStep('FORGOT_OTP');
             setLoginUserInputCode('');
@@ -348,11 +347,10 @@ function AuthContent() {
           const responseData = await sendRes.json();
           
           if (responseData.devFallback) {
-            useNotificationStore.getState().addNotification(`Email blocked by firewall. If on university Wi-Fi, please use a hotspot.`, 'error');
-            return; // Do not proceed to OTP step since they cannot receive it
-          } else {
-            useNotificationStore.getState().addNotification('OTP sent to your email', 'success');
+            useNotificationStore.getState().addNotification('Failed to send OTP. Please try again or use Google Sign-In.', 'error');
+            return;
           }
+          useNotificationStore.getState().addNotification('OTP sent to your email!', 'success');
           
           setRegStep(3);
         } catch (err) {
