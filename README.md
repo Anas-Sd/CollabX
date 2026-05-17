@@ -18,7 +18,6 @@
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=flat-square&logo=springboot&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white)
-![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-000?style=flat-square&logo=vercel&logoColor=white)
 
@@ -36,7 +35,7 @@ A **full-stack collaborative environment** that allows high-performance engineer
 const collabx = {
     mission: "Make remote pair programming frictionless",
     features: ["Live Execution", "Voice Chat", "Whiteboard", "RBAC"],
-    stack: ["Next.js", "Spring Boot", "PostgreSQL", "Redis"],
+    stack: ["Next.js", "Spring Boot", "PostgreSQL"],
     integrations: ["Judge0", "Agora WebRTC", "Razorpay"],
     status: "🟢 Live in Production"
 };
@@ -46,6 +45,48 @@ async function startSession(team) {
     return room.executeCode(); // ✨ Magic happens here
 }
 ```
+---
+
+<div align="center">
+
+### 🏗️ Architecture at a Glance
+
+| Component | Responsibility | Technology |
+|:---|:---|:---|
+| **Client Gateway** | Handles all UI rendering, routing, and state | `Next.js 14`, `Tailwind` |
+| **Sync Engine** | Manages real-time keystrokes and cursor tracking | `Spring WebSockets` |
+| **Execution Node** | Compiles and runs user code securely | `Judge0 API`, `Docker` |
+| **Voice Router** | Manages low-latency audio streams | `Agora WebRTC SDK` |
+| **Persistence Layer**| Stores user profiles, billing, and room history | `PostgreSQL`, `Razorpay` |
+
+</div>
+
+---
+
+## 📖 How to Use CollabX
+
+Whether you are hosting an interview or pair programming with a friend, using CollabX is incredibly straightforward.
+
+### 1️⃣ Creating a Workspace
+- **Sign In**: Create a free account or log in via the dashboard.
+- **Start a Session**: Click `Start your workspace` from the main dashboard.
+- **Claim your Role**: As the creator, you are automatically assigned the **Host** role. This gives you exclusive rights to manage participants, execute code, and lock the room.
+
+### 2️⃣ Inviting Collaborators
+- **Share the Link**: Copy your unique Room ID from the top navigation bar.
+- **Assign Roles**: When a user joins, the host can manage them with specific roles:
+  - 📝 **Editor**: Can write code, draw on the whiteboard, and talk in the voice channel.
+  - 👁️ **Viewer**: Can only watch the code execution and listen to the voice channel (Perfect for interview observers).
+
+### 3️⃣ Writing & Executing Code
+- **Select Language**: Choose between `Python`, `Java`, `C++`, `JavaScript`, or `SQL` from the editor dropdown.
+- **Write Together**: Watch your teammates' cursors move in real-time with sub-100ms latency.
+- **Run**: Hit the `Run` button. The code is instantly sent to our secure Judge0 containers, and the terminal output is broadcasted to everyone in the room simultaneously.
+
+### 4️⃣ Utilizing the Tools
+- 🎙️ **Voice Chat**: Click the microphone icon to instantly connect via WebRTC. No external Discord or Google Meet call required.
+- 🎨 **Whiteboard**: Switch to the `Whiteboard` tab to draw system architectures, data flows, or algorithms collaboratively.
+- 💾 **Session Persistence**: Need to leave? Your code and whiteboard state are automatically persisted in the database. Rejoin the URL later to pick up exactly where you left off.
 
 ---
 
@@ -55,7 +96,7 @@ async function startSession(team) {
 
 | | Feature | Description |
 |:---:|:---|:---|
-| ⚡ | **Sub-100ms Synchronization** | Real-time pair programming powered by STOMP WebSockets |
+| ⚡ | **Sub-100ms Synchronization** | Real-time pair programming powered by WebSockets |
 | 💻 | **Live Code Execution** | Compile & run Python, Java, C++, JS, and SQL instantly |
 | 🛡️ | **Role-Based Access** | Secure 'Editor' or 'Viewer' permissions for room members |
 | 🎙️ | **Built-in Voice Chat** | Peer-to-peer WebRTC voice channels via Agora |
@@ -68,26 +109,36 @@ async function startSession(team) {
 
 ## 🛠️ Tech Stack
 
-### 🌐 Frontend
+### ⚡ Frontend
 ![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
-![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
-![Zustand](https://img.shields.io/badge/Zustand-443E38?style=for-the-badge&logoColor=white)
+![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=for-the-badge&logo=framer&logoColor=white)
 
 ### ⚙️ Backend
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
-![Java](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
-![WebSockets](https://img.shields.io/badge/STOMP_WebSockets-000000?style=for-the-badge)
+![WebSockets & Security](https://img.shields.io/badge/WebSockets_&_Security-000000?style=for-the-badge)
 
-### 🗄️ Database & Infra
+### 🗄️ Database
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
-![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
-### 🔌 Third-Party Integrations
-![Judge0](https://img.shields.io/badge/Judge0-Execution-FF4B4B?style=for-the-badge)
-![Agora](https://img.shields.io/badge/Agora-WebRTC-099DFD?style=for-the-badge)
-![Razorpay](https://img.shields.io/badge/Razorpay-Payments-02042B?style=for-the-badge)
+### 🛠️ Integrations
+![Judge0 API](https://img.shields.io/badge/Judge0_API-FF4B4B?style=for-the-badge)
+![Agora](https://img.shields.io/badge/Agora-099DFD?style=for-the-badge)
+![ExcaliDraw](https://img.shields.io/badge/ExcaliDraw-6965DB?style=for-the-badge)
+![Monaco Editor](https://img.shields.io/badge/Monaco_Editor-2C2C32?style=for-the-badge)
+![RazorPay](https://img.shields.io/badge/RazorPay-02042B?style=for-the-badge)
+
+### 🐳 DevOps
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![CI/CD](https://img.shields.io/badge/CI%2FCD-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
+![Railway](https://img.shields.io/badge/Railway-131415?style=for-the-badge&logo=railway&logoColor=white)
+
+### 🛠️ Tools
+![Google Antigravity](https://img.shields.io/badge/Google_Antigravity-4285F4?style=for-the-badge&logo=google&logoColor=white)
+![Stitch](https://img.shields.io/badge/Stitch-FF6B6B?style=for-the-badge)
+![Flow](https://img.shields.io/badge/Flow-00C7B7?style=for-the-badge)
+![Claude 3.5 Sonnet](https://img.shields.io/badge/Claude_3.5_Sonnet-D97757?style=for-the-badge)
 
 ---
 
@@ -113,7 +164,7 @@ async function startSession(team) {
 
 - Node.js `>= 18`
 - Java JDK `>= 17`
-- PostgreSQL & Redis instances
+- PostgreSQL
 - API Keys for Judge0, Agora, and Razorpay
 
 ### Installation
@@ -128,7 +179,7 @@ cd CollabX
 # Setup Backend (Spring Boot)
 cd apps/backend
 ./mvnw clean install
-# Add application-dev.yml with your DB/Redis credentials
+# Add application-dev.yml with your DB credentials
 ./mvnw spring-boot:run
 
 # Setup Frontend (Next.js)
@@ -151,7 +202,7 @@ CollabX/
 │   ├── 📂 frontend/        # Next.js App Router Application
 │   │   ├── 📂 src/app/     # Routes & Layouts
 │   │   ├── 📂 src/components/
-│   │   └── 📂 src/store/   # Zustand State Management
+│   │   └── 📂 src/store/   
 │   └── 📂 backend/         # Java Spring Boot Service
 │       ├── 📂 src/main/java/
 │       │   ├── 📂 controllers/
