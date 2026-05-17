@@ -178,7 +178,7 @@ const organizationJsonLd = {
       url: SITE_URL,
       name: 'CollabX',
       description:
-        'Real-time collaborative IDE for developer teams — code, execute, whiteboard, and voice chat together.',
+        'CollabX by Syed Anas — A real-time collaborative IDE designed for students and developers. Experience seamless pair programming and remote interviews with instant multi-language code execution, built-in voice chat, and an interactive whiteboard—all in one shared workspace.',
       publisher: { '@id': `${SITE_URL}/#organization` },
       potentialAction: {
         '@type': 'SearchAction',
@@ -200,7 +200,7 @@ const organizationJsonLd = {
       operatingSystem: 'Web Browser (Chrome, Firefox, Edge, Safari)',
       browserRequirements: 'Requires JavaScript',
       description:
-        'CollabX is a real-time collaborative IDE enabling developers to code, run, and review code together with voice communication and whiteboard — in the browser.',
+        'CollabX by Syed Anas — A real-time collaborative IDE designed for students and developers. Experience seamless pair programming and remote interviews with instant multi-language code execution, built-in voice chat, and an interactive whiteboard—all in one shared workspace.',
       screenshot: `${SITE_URL}/og-image.png`,
       featureList: [
         'Real-time collaborative code editing with sub-100ms sync',
