@@ -23,12 +23,12 @@ export const metadata = {
   metadataBase: new URL(SITE_URL),
 
   title: {
-    default: 'CollabX — Real-Time Collaborative IDE & Pair Programming Platform',
+    default: 'CollabX — Real-Time Collaborative IDE',
     template: '%s | CollabX',
   },
 
   description:
-    'CollabX is a real-time collaborative IDE for developers. Code together, execute code in 5+ languages, whiteboard, and voice chat — all in one shared workspace. The ultimate pair programming and remote technical interview platform.',
+    'CollabX by Syed Anas — A real-time collaborative IDE designed for students and developers. Experience seamless pair programming and remote interviews with instant multi-language code execution, built-in voice chat, and an interactive whiteboard—all in one shared workspace.',
 
   keywords: [
     // Primary — high-volume collaborative IDE terms
@@ -62,9 +62,13 @@ export const metadata = {
     'real-time code sharing',
   ],
 
-  authors: [{ name: 'CollabX', url: SITE_URL }],
-  creator: 'CollabX',
-  publisher: 'CollabX',
+  authors: [
+    { name: 'CollabX', url: SITE_URL },
+    { name: 'Syed Anas', url: 'https://github.com/Anas-Sd' },
+    {name : 'Syed Anas', url: 'https://www.linkedin.com/in/-syedanas'}
+  ],
+  creator: 'Syed Anas',
+  publisher: 'Syed Anas',
 
   // ── Robots directives ──────────────────────────────────────────────────────
   robots: {
@@ -85,7 +89,7 @@ export const metadata = {
     locale: 'en_US',
     url: SITE_URL,
     siteName: 'CollabX',
-    title: 'CollabX — Real-Time Collaborative IDE & Pair Programming Platform',
+    title: 'CollabX — Real-Time Collaborative IDE',
     description:
       'Code together in real-time. CollabX gives your team a shared IDE with voice chat, collaborative whiteboard, instant code execution, and role-based access — all in the browser.',
     images: [
