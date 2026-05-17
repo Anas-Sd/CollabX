@@ -52,7 +52,7 @@ export default function ProUpgradeModal({ isOpen, onClose }) {
 
       // Create Order
       const orderResponse = await api.post('/payments/create-order', {
-        amount: 49900, // ₹499 in paise
+        amount: 9900, // ₹99 in paise
         currency: 'INR'
       });
 
@@ -92,7 +92,7 @@ export default function ProUpgradeModal({ isOpen, onClose }) {
           email: user?.email || '',
         },
         theme: {
-          color: '#8B5CF6' // Primary purple
+          color: '#000000'
         }
       };
 
@@ -136,6 +136,11 @@ export default function ProUpgradeModal({ isOpen, onClose }) {
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-hidden">
+          <style>{`
+            .razorpay-container { z-index: 2147483647 !important; }
+            .razorpay-backdrop { background-color: rgba(0, 0, 0, 0.7) !important; }
+            body.razorpay-open { overflow: hidden !important; }
+          `}</style>
           {/* Backdrop */}
           <motion.div 
             initial={{ opacity: 0 }}
@@ -264,7 +269,7 @@ export default function ProUpgradeModal({ isOpen, onClose }) {
           <div className="w-full text-center mb-8">
             <p className="text-sm font-bold text-[#F5A623] mb-2 tracking-widest uppercase">30-Day Pass</p>
             <div className="flex items-end justify-center gap-1 mb-2">
-              <span className="text-5xl font-black text-white">₹499</span>
+              <span className="text-5xl font-black text-white">₹99</span>
               <span className="text-lg text-muted-foreground mb-1">/mo</span>
             </div>
             <p className="text-sm text-muted-foreground">Access for 30 days </p>
