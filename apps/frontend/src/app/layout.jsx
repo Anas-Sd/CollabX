@@ -136,9 +136,13 @@ export const metadata = {
   // ── App metadata ───────────────────────────────────────────────────────────
   applicationName: 'CollabX',
   referrer: 'origin-when-cross-origin',
-  colorScheme: 'dark',
+};
+
+export const viewport = {
   themeColor: '#F5A623',
-  viewport: 'width=device-width, initial-scale=1',
+  colorScheme: 'dark',
+  width: 'device-width',
+  initialScale: 1,
 };
 
 // ── JSON-LD Structured Data (server-rendered — read by ALL search engines) ──

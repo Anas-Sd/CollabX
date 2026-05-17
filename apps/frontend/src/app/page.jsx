@@ -252,31 +252,7 @@ export default function Home() {
                   },
                   {
                     '@type': 'Question',
-                    name: 'Is CollabX free to use?',
-                    acceptedAnswer: {
-                      '@type': 'Answer',
-                      text: 'Yes. CollabX has a free plan with core collaborative features. A Pro plan at ₹499/month unlocks extended session durations, up to 20 participants, niche languages, and premium visual effects.',
-                    },
-                  },
-                  {
-                    '@type': 'Question',
-                    name: 'Which programming languages does CollabX support?',
-                    acceptedAnswer: {
-                      '@type': 'Answer',
-                      text: 'CollabX supports Python, Java, C++, JavaScript (Node.js), and SQL through Judge0 API. More languages are available on the Pro plan.',
-                    },
-                  },
-                  {
-                    '@type': 'Question',
-                    name: 'Can I use CollabX for technical interviews?',
-                    acceptedAnswer: {
-                      '@type': 'Answer',
-                      text: 'Yes. CollabX is ideal for remote technical interviews. Share a workspace code, assign the candidate as Editor and yourself as Host, then code, run test cases, and communicate via built-in voice — no external tools needed.',
-                    },
-                  },
-                  {
-                    '@type': 'Question',
-                    name: 'What makes CollabX different from other online IDEs?',
+                    name: 'Why do we need to use CollabX over other online IDEs?',
                     acceptedAnswer: {
                       '@type': 'Answer',
                       text: 'CollabX combines real-time code collaboration (sub-100ms sync via WebSockets), built-in voice communication (WebRTC via Agora), a collaborative whiteboard, role-based access control, and session persistence — all in a single browser-based platform with no installation required.',
@@ -284,10 +260,26 @@ export default function Home() {
                   },
                   {
                     '@type': 'Question',
-                    name: 'How many people can collaborate at once in CollabX?',
+                    name: 'Is CollabX completely free to use?',
                     acceptedAnswer: {
                       '@type': 'Answer',
-                      text: 'The free plan supports up to 5 collaborators per workspace. The Pro plan expands this to 20+ participants for larger team sessions.',
+                      text: 'Yes. CollabX has a fully functional free tier with no credit card required. You can create workspaces, collaborate in real-time, execute code, use the whiteboard, and voice chat. The Pro plan (₹499/month) extends session duration to multiple hours, increases participant limits, and unlocks premium visual effects.',
+                    },
+                  },
+                  {
+                    '@type': 'Question',
+                    name: 'Does it support mobile version?',
+                    acceptedAnswer: {
+                      '@type': 'Answer',
+                      text: 'CollabX is designed exclusively for desktop and laptop screens. The collaborative code editor, whiteboard, and voice interface require a full keyboard and adequate screen real estate. Accessing CollabX on a smartphone or tablet is not supported and will result in a restricted experience.',
+                    },
+                  },
+                  {
+                    '@type': 'Question',
+                    name: 'Can I use CollabX for technical interviews or student learning and coordination?',
+                    acceptedAnswer: {
+                      '@type': 'Answer',
+                      text: 'Yes — CollabX is built for both. For technical interviews, hosts get full role-based control: assign Editor or Viewer permissions, observe candidates typing in real-time, and run code instantly without any third-party tool. For students and educators, CollabX makes pair programming, group assignments, and live code reviews seamless — a teacher can guide, a student can code, and everyone stays in sync. The collaborative whiteboard also doubles as a digital blackboard for explaining logic and algorithms.',
                     },
                   },
                 ],
@@ -757,20 +749,20 @@ export default function Home() {
           <div className="space-y-0">
             {[
               {
-                q: "Does CollabX work on mobile devices?",
-                a: "CollabX is designed exclusively for desktop and laptop screens. The collaborative code editor, whiteboard, and voice interface require a full keyboard and adequate screen real estate. Accessing CollabX on a smartphone or tablet is not supported and will result in a restricted experience."
+                q: "What is CollabX?",
+                a: "CollabX is a real-time collaborative IDE that lets students or developers code together in a shared workspace with voice communication, a collaborative whiteboard, chat and instant multi-language code execution — all in real time at one place."
               },
               {
-                q: "Is my code private and secure?",
-                a: "Absolutely. Each workspace is isolated to only the participants you invite. Your code is never stored on our servers after a session ends — all execution happens inside sandboxed Docker containers via the Judge0 API. Voice channels use end-to-end encrypted WebRTC (Agora). We never analyze, sell, or retain your source code."
-              },
-              {
-                q: "Which programming languages are supported?",
-                a: "The free plan includes Python, Java, C++, JavaScript (Node.js), and SQL — the five most used languages in professional and academic settings. The Pro plan unlocks additional niche languages. All code runs in isolated containers with no risk to your machine."
+                q: "Why do we need to use CollabX over other online IDEs?",
+                a: "CollabX combines real-time code collaboration (sub-100ms sync via WebSockets), built-in voice communication (WebRTC via Agora), a collaborative whiteboard, role-based access control, and session persistence — all in a single browser-based platform with no installation required."
               },
               {
                 q: "Is CollabX completely free to use?",
                 a: "Yes. CollabX has a fully functional free tier with no credit card required. You can create workspaces, collaborate in real-time, execute code, use the whiteboard, and voice chat. The Pro plan (₹499/month) extends session duration to multiple hours, increases participant limits, and unlocks premium visual effects."
+              },
+              {
+                q: "Does it support mobile version?",
+                a: "CollabX is designed exclusively for desktop and laptop screens. The collaborative code editor, whiteboard, and voice interface require a full keyboard and adequate screen real estate. Accessing CollabX on a smartphone or tablet is not supported and will result in a restricted experience."
               },
               {
                 q: "Can I use CollabX for technical interviews or student learning and coordination?",
