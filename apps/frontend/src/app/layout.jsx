@@ -24,7 +24,7 @@ export const metadata = {
   applicationName: 'CollabX',
 
   title: {
-    default: 'CollabX — Real-Time Collaborative IDE',
+    default: 'CollabX — Real Time Collaborative IDE',
     template: '%s | CollabX',
   },
 
@@ -225,7 +225,7 @@ const organizationJsonLd = {
         {
           '@type': 'Offer',
           name: 'Pro Plan',
-          price: '499',
+          price: '99',
           priceCurrency: 'INR',
           description:
             'Full-featured workspace with extended sessions, 20+ users, and premium effects',
@@ -240,7 +240,7 @@ const organizationJsonLd = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" style={{ backgroundColor: '#0A0A0F' }}>
       <head>
         {/* Bing: verified via GSC import — no meta tag needed */}
 
@@ -257,9 +257,9 @@ export default function RootLayout({ children }) {
         />
       </head>
 
-      <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased text-white min-h-screen flex flex-col`}>
-        {/* Mobile Blocker Overlay */}
-        <div className="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#0A0A0F] p-8 text-center md:hidden">
+      <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased text-white min-h-screen flex flex-col`} style={{ backgroundColor: '#0A0A0F' }}>
+        {/* Mobile Blocker Overlay — data-nosnippet tells Google NOT to use this text for search results */}
+        <div data-nosnippet="true" className="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#0A0A0F] p-8 text-center md:hidden">
           <div className="w-20 h-20 rounded-full bg-danger/10 text-danger flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(239,68,68,0.3)]">
             <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>

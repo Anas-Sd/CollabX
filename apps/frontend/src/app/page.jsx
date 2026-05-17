@@ -119,7 +119,7 @@ export default function Home() {
         return;
       }
 
-      const orderResponse = await api.post('/payments/create-order', { amount: 49900, currency: 'INR' });
+      const orderResponse = await api.post('/payments/create-order', { amount: 9900, currency: 'INR' });
       const orderData = typeof orderResponse.data === 'string' ? JSON.parse(orderResponse.data) : orderResponse.data;
 
       const options = {
@@ -151,7 +151,9 @@ export default function Home() {
           }
         },
         prefill: { name: user?.name || '', email: user?.email || '' },
-        theme: { color: '#8B5CF6' }
+        theme: {
+          color: '#000000'
+        }
       };
 
       const paymentObject = new window.Razorpay(options);
@@ -263,7 +265,7 @@ export default function Home() {
                     name: 'Is CollabX completely free to use?',
                     acceptedAnswer: {
                       '@type': 'Answer',
-                      text: 'Yes. CollabX has a fully functional free tier with no credit card required. You can create workspaces, collaborate in real-time, execute code, use the whiteboard, and voice chat. The Pro plan (₹499/month) extends session duration to multiple hours, increases participant limits, and unlocks premium visual effects.',
+                      text: 'Yes. CollabX has a fully functional free tier with no credit card required. You can create workspaces, collaborate in real-time, execute code, use the whiteboard, and voice chat. The Pro plan (₹99/month) extends session duration to multiple hours, increases participant limits, and unlocks premium visual effects.',
                     },
                   },
                   {
@@ -364,7 +366,7 @@ export default function Home() {
 
           <motion.div style={{ opacity: textOpacity, y: textY }} className="absolute top-[25vh] text-center z-20 px-4 w-full">
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-4">
-              Code <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-300 to-gray-600">Together.</span>
+              Code <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-300 to-gray-600">Together</span>
             </h1>
             <p className="text-lg md:text-xl text-white/40 max-w-2xl mx-auto font-medium tracking-tight">
               A hyper-synchronized IDE. Built for speed and collaboration.
@@ -450,7 +452,7 @@ export default function Home() {
             {/* Metric 1 */}
             <FadeIn delay={0.1} className="col-span-2 lg:col-span-2 bg-[#050508] border border-white/5 rounded-3xl p-6 relative overflow-hidden group hover:border-white/10 transition-colors">
               <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 blur-[40px] rounded-full group-hover:bg-green-500/20 transition-all"></div>
-              <div className="text-4xl font-black text-[#6DB33F] mb-2"><Counter from={0} to={99} prefix="<" suffix="ms" /></div>
+              <div className="text-4xl font-black text-[#6DB33F] mb-2"><Counter from={0} to={199} prefix="<" suffix="ms" /></div>
               <div className="text-sm font-bold text-white/90 mb-1">Global Sync Latency</div>
               <p className="text-[10px] text-white/40 leading-relaxed">Real-time WebSocket propagation across regions.</p>
             </FadeIn>
@@ -458,7 +460,7 @@ export default function Home() {
             {/* Metric 2 */}
             <FadeIn delay={0.2} className="col-span-2 lg:col-span-2 bg-[#050508] border border-white/5 rounded-3xl p-6 relative overflow-hidden group hover:border-white/10 transition-colors">
               <div className="absolute bottom-0 left-0 w-32 h-32 bg-[#F5A623]/10 blur-[40px] rounded-full group-hover:bg-[#F5A623]/20 transition-all"></div>
-              <div className="text-4xl font-black text-white mb-2"><Counter from={0} to={20} /><span className="text-2xl text-[#F5A623]">+</span></div>
+              <div className="text-4xl font-black text-white mb-2"><Counter from={0} to={20} /><span className="text-sm ml-0.5 text-[#F5A623]">max</span></div>
               <div className="text-sm font-bold text-white/90 mb-1">Users per Room</div>
               <p className="text-[10px] text-white/40 leading-relaxed">Concurrent editors with distinct cursors.</p>
             </FadeIn>
@@ -503,7 +505,7 @@ export default function Home() {
             className="absolute top-[20vh] left-6 md:left-24 z-10 w-full pr-6"
           >
             <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-2">
-              <ScrollReveal text="No Compromises." />
+              <ScrollReveal text="No Compromises" />
             </h2>
             <p className="text-white/50 text-sm md:text-base font-medium tracking-tight">
               <ScrollReveal text="Keep scrolling to explore the architecture." delay={0.2} />
@@ -621,7 +623,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <motion.div style={{ x: workflowLeftX, opacity: workflowOpacity }}>
-              <h2 className="text-3xl md:text-4xl font-black mb-4">Workflow Simplified.</h2>
+              <h2 className="text-3xl md:text-4xl font-black mb-4">Workflow Simplified</h2>
               <p className="text-white/50 text-sm md:text-base mb-10 max-w-md">We removed all the friction. From creating an account to collaborating in a live session takes less than 30 seconds.</p>
 
               <div className="space-y-6 relative">
@@ -739,7 +741,7 @@ export default function Home() {
           <FadeIn className="text-center mb-16">
             <span className="inline-block text-[10px] font-black uppercase tracking-[0.25em] text-[#F5A623] mb-4">Got Questions?</span>
             <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-4">
-              Frequently Asked<span className="text-[#F5A623]">.</span>
+              Frequently Asked<span className="text-[#F5A623]"></span>
             </h2>
             <p className="text-white/40 text-sm md:text-base max-w-md mx-auto">
               Everything you need to know before getting started.
@@ -758,7 +760,7 @@ export default function Home() {
               },
               {
                 q: "Is CollabX completely free to use?",
-                a: "Yes. CollabX has a fully functional free tier with no credit card required. You can create workspaces, collaborate in real-time, execute code, use the whiteboard, and voice chat. The Pro plan (₹499/month) extends session duration to multiple hours, increases participant limits, and unlocks premium visual effects."
+                a: "Yes. CollabX has a fully functional free tier with no credit card required. You can create workspaces, collaborate in real-time, execute code, use the whiteboard, and voice chat. The Pro plan (₹99/month) extends session duration to multiple hours, increases participant limits, and unlocks premium visual effects."
               },
               {
                 q: "Does it support mobile version?",
@@ -812,7 +814,7 @@ export default function Home() {
       <section ref={pricingRef} id="pricing" className="py-24 bg-[#020202] relative z-40">
         <motion.div style={{ scale: pricingScale, opacity: pricingOpacity, y: pricingY }} className="max-w-5xl mx-auto px-6">
           <FadeIn className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-black mb-3 tracking-tight">Simple Pricing.</h2>
+            <h2 className="text-3xl md:text-4xl font-black mb-3 tracking-tight">Simple Pricing</h2>
             <p className="text-white/50 text-sm md:text-base">Start for free. Upgrade when your team grows.</p>
           </FadeIn>
 
@@ -899,7 +901,7 @@ export default function Home() {
                     <div className="w-full text-center mb-8">
                       <p className="text-sm font-bold text-[#F5A623] mb-2 tracking-widest uppercase">30-Day Pass</p>
                       <div className="flex items-end justify-center gap-1 mb-2">
-                        <span className="text-5xl font-black text-white">₹499</span>
+                        <span className="text-5xl font-black text-white">₹99</span>
                         <span className="text-lg text-white/50 mb-1">/mo</span>
                       </div>
                       <p className="text-sm text-white/50">Access for 30 days </p>
