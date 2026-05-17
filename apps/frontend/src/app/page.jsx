@@ -17,6 +17,7 @@ import api from '../lib/api';
 import { useNotificationStore } from '../store/notificationStore';
 import { useRouter } from 'next/navigation';
 import FeedbackButton from '../components/ui/FeedbackButton';
+import Footer from '../components/ui/Footer';
 
 const FadeIn = ({ children, delay = 0, direction = "up", className = "" }) => {
   const ref = useRef(null);
@@ -972,67 +973,7 @@ export default function Home() {
 
 
       {/* ---------------- 7. FOOTER ---------------- */}
-      <footer className="py-12 bg-[#050508] border-t border-white/5 relative z-40">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-            <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center tracking-tighter mb-4">
-                <span className="text-xl font-black mr-1 text-white">Collab</span>
-                <span className="text-2xl font-black text-[#F5A623]">X</span>
-              </div>
-              <p className="text-white/40 max-w-sm mb-6 text-xs leading-relaxed">
-                The next-generation collaborative IDE. Built for high-performance engineering teams, remote interviews, and real-time pair programming.
-              </p>
-              <div className="flex gap-3">
-                <a href="https://github.com/Anas-Sd/CollabX" target="_blank" rel="noopener noreferrer" className="group relative w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:text-[#F5A623] hover:border-[#F5A623]/30 transition-all">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" /><path d="M9 18c-4.51 2-5-2-7-2" /></svg>
-                  <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2.5 py-1 bg-[#111115] border border-white/10 text-white text-[10px] rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-xl z-50">GitHub</span>
-                </a>
-                <a href="mailto:office.collabx@gmail.com" className="group relative w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:text-[#F5A623] hover:border-[#F5A623]/30 transition-all">
-                  <Mail className="w-3.5 h-3.5" />
-                  <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2.5 py-1 bg-[#111115] border border-white/10 text-white text-[10px] rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-xl z-50">Email Us</span>
-                </a>
-                <div className="group relative">
-                  <FeedbackButton
-                    context="Landing Page Footer"
-                    className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:text-[#F5A623] hover:border-[#F5A623]/30 transition-all"
-                  />
-                  <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2.5 py-1 bg-[#111115] border border-white/10 text-white text-[10px] rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-xl z-50">Give Feedback</span>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="font-bold text-white/90 mb-5 uppercase tracking-widest text-[10px]">Product</h4>
-              <ul className="space-y-3 text-xs font-medium text-white/40">
-                <li><Link href="#features" className="hover:text-white transition-colors">Features</Link></li>
-                <li><Link href="#how-it-works" className="hover:text-white transition-colors">How it Works</Link></li>
-                <li><Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link></li>
-                <li><Link href="/security" className="hover:text-white transition-colors">Security</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-bold text-white/90 mb-5 uppercase tracking-widest text-[10px]">Legal</h4>
-              <ul className="space-y-3 text-xs font-medium text-white/40">
-                <li><Link href="/terms" className="hover:text-white transition-colors">Terms and Condition</Link></li>
-                <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
-                <li><Link href="/refund" className="hover:text-white transition-colors">Refund Policy</Link></li>
-                <li><Link href="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="pt-6 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="text-[10px] font-medium text-white/30 uppercase tracking-widest">
-              &copy; {new Date().getFullYear()} CollabX. All rights reserved.
-            </div>
-            {/* <div className="text-[10px] font-medium text-white/30 flex items-center gap-1.5 uppercase tracking-widest">
-              Built with <Code className="w-3 h-3 text-[#F5A623] mx-0.5"/> by Anas-Sd
-            </div> */}
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
     </div>
   );

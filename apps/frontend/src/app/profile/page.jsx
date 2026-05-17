@@ -16,6 +16,8 @@ import { useNotificationStore } from '../../store/notificationStore';
 import { AnimatePresence } from 'framer-motion';
 import { Suspense } from 'react';
 import FeedbackButton from '../../components/ui/FeedbackButton';
+import Footer from '../../components/ui/Footer';
+import ProUpgradeModal from '../../components/subscription/ProUpgradeModal';
 
 function CountUp({ to, duration = 2, decimals = 0 }) {
   const [count, setCount] = useState(0);
@@ -63,6 +65,7 @@ function ProfileContent() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
   const [savingName, setSavingName] = useState(false);
+  const [isProModalOpen, setIsProModalOpen] = useState(false);
   
   const fileInputRef = useRef(null);
 
@@ -363,7 +366,7 @@ function ProfileContent() {
             {/* Identity Card */}
             <motion.div 
               initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
-              className="bg-[#0A0A0F]/90 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,1)] relative overflow-hidden group"
+              className={`bg-[#0A0A0F]/90 backdrop-blur-3xl rounded-[2.5rem] p-8 pb-12 border border-white/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,1)] relative overflow-hidden group`}
             >
               {/* Subtle hover glow */}
               <div className={`absolute -top-20 -left-20 w-48 h-48 blur-[60px] rounded-full group-hover:scale-150 transition-all duration-700 pointer-events-none ${themeBlurAvatar}`} />
@@ -497,9 +500,13 @@ function ProfileContent() {
                 <button onClick={() => setShowPasswordModal(true)} className="w-full text-left px-5 py-4 bg-white/5 hover:bg-white/10 rounded-xl text-white text-[11px] font-bold tracking-widest uppercase transition-colors cursor-pointer">
                   Change Password
                 </button>
-                {user?.subscriptionType === 'PRO' && (
+                {user?.subscriptionType === 'PRO' ? (
                   <button onClick={() => setShowCancelModal(true)} className="w-full text-left px-5 py-4 bg-white/5 hover:bg-white/10 rounded-xl text-white text-[11px] font-bold tracking-widest uppercase transition-colors cursor-pointer">
                     Cancel Subscription
+                  </button>
+                ) : (
+                  <button onClick={() => setIsProModalOpen(true)} className="w-full text-left px-5 py-4 bg-gradient-to-r from-[#F5A524]/10 to-[#F5A524]/5 hover:from-[#F5A524]/20 hover:to-[#F5A524]/10 rounded-xl text-[#F5A524] text-[11px] font-black tracking-widest uppercase transition-colors cursor-pointer border border-[#F5A524]/20">
+                    Upgrade to PRO
                   </button>
                 )}
                 <button onClick={() => setShowDeleteModal(true)} className="w-full text-left px-5 py-4 bg-danger/10 hover:bg-danger/20 rounded-xl text-danger text-[11px] font-bold tracking-widest uppercase transition-colors cursor-pointer">
@@ -763,6 +770,12 @@ function ProfileContent() {
           </div>
         )}
       </AnimatePresence>
+
+      <ProUpgradeModal isOpen={isProModalOpen} onClose={() => setIsProModalOpen(false)} />
+      
+      <div className="mt-10">
+        <Footer />
+      </div>
     </div>
   );
 }
