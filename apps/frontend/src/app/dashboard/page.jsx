@@ -12,6 +12,7 @@ import api from '../../lib/api';
 import { useNotificationStore } from '../../store/notificationStore';
 import ProUpgradeModal from '../../components/subscription/ProUpgradeModal';
 import FeedbackButton from '../../components/ui/FeedbackButton';
+import Footer from '../../components/ui/Footer';
 
 function DashboardContent() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -209,7 +210,7 @@ function DashboardContent() {
       className={`min-h-screen relative overflow-hidden`}
     >
       {/* Fixed background — stays locked to viewport on scroll */}
-      <div aria-hidden="true" className={`fixed inset-0 -z-10 ${themeDashboardWrapper}`} />
+      <div aria-hidden="true" className={`fixed inset-0 z-0 ${themeDashboardWrapper}`} />
       {/* FREE users: subtle white ambient glow — the "white light" on the dark bg */}
       {!isPro && (
         <div
@@ -709,6 +710,7 @@ function DashboardContent() {
       )}
 
       <ProUpgradeModal isOpen={isProModalOpen} onClose={() => setIsProModalOpen(false)} />
+      <Footer />
     </motion.div>
   );
 }
