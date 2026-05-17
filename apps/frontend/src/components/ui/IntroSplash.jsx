@@ -12,6 +12,104 @@ export default function IntroSplash() {
   const [isClient, setIsClient] = useState(false);
   const isMountRef = useRef(true);
 
+  // ── Electrical flicker + slam sound via Web Audio API ───────────────────────
+  const playZapSound = () => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const now = ctx.currentTime;
+
+      // ── PHASE 1: Rapid electrical flickers (matches ghost X stutter at 0s) ──
+      // Fire 4 quick crackle bursts to simulate the flickering ghost X's
+      const flickerTimes = [0, 0.05, 0.12, 0.20];
+      flickerTimes.forEach((offset) => {
+        // Crackle oscillator burst
+        const fOsc = ctx.createOscillator();
+        const fGain = ctx.createGain();
+        fOsc.type = 'sawtooth';
+        fOsc.frequency.setValueAtTime(1800 - offset * 1000, now + offset);
+        fOsc.frequency.exponentialRampToValueAtTime(300, now + offset + 0.04);
+        fGain.gain.setValueAtTime(0.22, now + offset);
+        fGain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.04);
+        fOsc.connect(fGain);
+        fGain.connect(ctx.destination);
+        fOsc.start(now + offset);
+        fOsc.stop(now + offset + 0.04);
+
+        // Paired noise pop for each flicker
+        const popSize = ctx.sampleRate * 0.03;
+        const popBuf = ctx.createBuffer(1, popSize, ctx.sampleRate);
+        const popData = popBuf.getChannelData(0);
+        for (let i = 0; i < popSize; i++) popData[i] = (Math.random() * 2 - 1);
+        const popSrc = ctx.createBufferSource();
+        popSrc.buffer = popBuf;
+        const popGain = ctx.createGain();
+        const popFilter = ctx.createBiquadFilter();
+        popFilter.type = 'highpass';
+        popFilter.frequency.value = 2000;
+        popGain.gain.setValueAtTime(0.15, now + offset);
+        popGain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.03);
+        popSrc.connect(popFilter);
+        popFilter.connect(popGain);
+        popGain.connect(ctx.destination);
+        popSrc.start(now + offset);
+        popSrc.stop(now + offset + 0.03);
+      });
+
+      // ── PHASE 2: Hard SLAM (matches final golden X slamming in at 0.1s later) ──
+      const slamAt = 0.28; // 0.1s after the last flicker
+
+      // Deep thud — the "weight" of the X hitting
+      const thudOsc = ctx.createOscillator();
+      const thudGain = ctx.createGain();
+      thudOsc.type = 'sine';
+      thudOsc.frequency.setValueAtTime(200, now + slamAt);
+      thudOsc.frequency.exponentialRampToValueAtTime(35, now + slamAt + 0.18);
+      thudGain.gain.setValueAtTime(0.7, now + slamAt);
+      thudGain.gain.exponentialRampToValueAtTime(0.001, now + slamAt + 0.22);
+      thudOsc.connect(thudGain);
+      thudGain.connect(ctx.destination);
+      thudOsc.start(now + slamAt);
+      thudOsc.stop(now + slamAt + 0.22);
+
+      // High crack on impact — the sharp "snap"
+      const snapOsc = ctx.createOscillator();
+      const snapGain = ctx.createGain();
+      snapOsc.type = 'sawtooth';
+      snapOsc.frequency.setValueAtTime(900, now + slamAt);
+      snapOsc.frequency.exponentialRampToValueAtTime(60, now + slamAt + 0.08);
+      snapGain.gain.setValueAtTime(0.4, now + slamAt);
+      snapGain.gain.exponentialRampToValueAtTime(0.001, now + slamAt + 0.08);
+      snapOsc.connect(snapGain);
+      snapGain.connect(ctx.destination);
+      snapOsc.start(now + slamAt);
+      snapOsc.stop(now + slamAt + 0.08);
+
+      // Noise burst on impact — the "bzzt" energy burst
+      const noiseSize = Math.floor(ctx.sampleRate * 0.12);
+      const noiseBuf = ctx.createBuffer(1, noiseSize, ctx.sampleRate);
+      const noiseData = noiseBuf.getChannelData(0);
+      for (let i = 0; i < noiseSize; i++) noiseData[i] = Math.random() * 2 - 1;
+      const noiseSrc = ctx.createBufferSource();
+      noiseSrc.buffer = noiseBuf;
+      const noiseGain = ctx.createGain();
+      const noiseFilter = ctx.createBiquadFilter();
+      noiseFilter.type = 'bandpass';
+      noiseFilter.frequency.value = 2500;
+      noiseFilter.Q.value = 0.8;
+      noiseGain.gain.setValueAtTime(0.3, now + slamAt);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + slamAt + 0.12);
+      noiseSrc.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(ctx.destination);
+      noiseSrc.start(now + slamAt);
+      noiseSrc.stop(now + slamAt + 0.12);
+
+      setTimeout(() => ctx.close(), 1000);
+    } catch (e) {
+      // Silently fail if browser blocks audio
+    }
+  };
+
   useEffect(() => {
     setIsClient(true);
     let shouldPlay = false;
@@ -43,6 +141,9 @@ export default function IntroSplash() {
 
     setShow(true);
     document.body.classList.add('intro-playing');
+
+    // Fire zap sound 500ms early to compensate for Web Audio API init overhead
+    const zapTimer = setTimeout(() => playZapSound(), 1250);
     
     const timer = setTimeout(() => {
       setShow(false);
@@ -50,6 +151,7 @@ export default function IntroSplash() {
     }, 3250);
     
     return () => {
+      clearTimeout(zapTimer);
       clearTimeout(timer);
       document.body.classList.remove('intro-playing');
     };
