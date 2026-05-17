@@ -130,12 +130,12 @@ export const metadata = {
   // ── Favicon / App Icons ────────────────────────────────────────────────────
   icons: {
     icon: [
-      { url: '/collabx_logo.svg', type: 'image/svg+xml' },      // browser tab (crisp SVG X)
-      { url: '/collabx_icon.png', sizes: '512x512', type: 'image/png' }, // Google SERP
-      { url: '/collabx_icon.png', sizes: '32x32', type: 'image/png' },   // legacy browsers
+      { url: '/collabx_logo.png', type: 'image/svg+xml' },      // browser tab (crisp SVG X)
+      { url: '/collabx_logo.png', sizes: '512x512', type: 'image/png' }, // Google SERP
+      { url: '/collabx_logo.png', sizes: '32x32', type: 'image/png' },   // legacy browsers
     ],
-    shortcut: '/collabx_icon.png',
-    apple: '/collabx_icon.png',
+    shortcut: '/collabx_logo.png',
+    apple: '/collabx_logo.png',
   },
 
   // ── App metadata ───────────────────────────────────────────────────────────
@@ -165,7 +165,12 @@ const organizationJsonLd = {
         width: 512,
         height: 512,
       },
-      sameAs: ['https://github.com/Anas-Sd/CollabX'],
+      sameAs: [
+        'https://github.com/Anas-Sd/CollabX',
+        'https://www.linkedin.com/in/-syedanas',
+        'https://www.instagram.com/collabx.live',
+        'https://x.com/collabx_live'
+      ],
       contactPoint: {
         '@type': 'ContactPoint',
         email: 'office.collabx@gmail.com',
@@ -240,7 +245,7 @@ const organizationJsonLd = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" style={{ backgroundColor: '#0A0A0F' }}>
+    <html lang="en">
       <head>
         {/* Bing: verified via GSC import — no meta tag needed */}
 
@@ -257,7 +262,7 @@ export default function RootLayout({ children }) {
         />
       </head>
 
-      <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased text-white min-h-screen flex flex-col`} style={{ backgroundColor: '#0A0A0F' }}>
+      <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased text-white min-h-screen flex flex-col`}>
         {/* Mobile Blocker Overlay — data-nosnippet tells Google NOT to use this text for search results */}
         <div data-nosnippet="true" className="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#0A0A0F] p-8 text-center md:hidden">
           <div className="w-20 h-20 rounded-full bg-danger/10 text-danger flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(239,68,68,0.3)]">
