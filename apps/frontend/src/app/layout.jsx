@@ -21,6 +21,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://collabx.live';
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),
+  applicationName: 'CollabX',
 
   title: {
     default: 'CollabX — Real-Time Collaborative IDE',
