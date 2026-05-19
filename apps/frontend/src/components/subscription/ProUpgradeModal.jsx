@@ -93,6 +93,22 @@ export default function ProUpgradeModal({ isOpen, onClose }) {
         },
         theme: {
           color: '#000000'
+        },
+        config: {
+          display: {
+            blocks: {
+              upi: {
+                name: "Pay by any UPI App",
+                instruments: [
+                  { method: "upi" }
+                ]
+              }
+            },
+            sequence: ["block.upi"],
+            preferences: {
+              show_default_blocks: true
+            }
+          }
         }
       };
 

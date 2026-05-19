@@ -1,4 +1,5 @@
 import localFont from "next/font/local";
+import Script from "next/script";
 import "./globals.css";
 import ToastContainer from '../components/ui/ToastContainer';
 import IntroSplash from '../components/ui/IntroSplash';
@@ -263,6 +264,26 @@ export default function RootLayout({ children }) {
       </head>
 
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased text-white min-h-screen flex flex-col`}>
+        {/* Google Analytics Tracking */}
+        {process.env.NEXT_PUBLIC_GA_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){window.dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}', {
+                  page_path: window.location.pathname,
+                });
+              `}
+            </Script>
+          </>
+        )}
+
         {/* Mobile Blocker Overlay — data-nosnippet tells Google NOT to use this text for search results */}
         <div data-nosnippet="true" className="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#0A0A0F] p-8 text-center md:hidden">
           <div className="w-20 h-20 rounded-full bg-danger/10 text-danger flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(239,68,68,0.3)]">
