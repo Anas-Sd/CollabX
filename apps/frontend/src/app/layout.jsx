@@ -353,7 +353,7 @@ export default function RootLayout({ children }) {
                   We&apos;ll be right back
                 </h1>
                 <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.5)', lineHeight: '1.6' }}>
-                  CollabX is currently undergoing scheduled maintenance. We&apos;re working hard to get everything back online. Thank you for your patience.
+                  CollabX is currently undergoing scheduled maintenance. We&apos;re working to get everything back online. Thank you for your patience.
                 </p>
               </div>
 
