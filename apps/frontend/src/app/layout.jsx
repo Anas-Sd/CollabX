@@ -20,6 +20,10 @@ const geistMono = localFont({
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://collabx.live';
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ─── Set to false when Railway is back online ────────────────────────────────
+const MAINTENANCE_MODE = true;
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const metadata = {
   metadataBase: new URL(SITE_URL),
   applicationName: 'CollabX',
@@ -305,11 +309,73 @@ export default function RootLayout({ children }) {
         </div>
 
         <div className="hidden md:flex flex-col min-h-screen">
-          <IntroSplash />
-          <main id="app-content" className="flex-1 flex flex-col">
-            {children}
-            <ToastContainer />
-          </main>
+          {MAINTENANCE_MODE ? (
+            <div style={{
+              position: 'fixed', inset: 0, zIndex: 999999,
+              background: 'linear-gradient(135deg, #0A0A0F 0%, #0f0f1a 50%, #0A0A0F 100%)',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: '24px', padding: '40px', textAlign: 'center'
+            }}>
+              {/* Animated glow orb */}
+              <div style={{
+                width: '100px', height: '100px', borderRadius: '50%',
+                background: 'radial-gradient(circle, rgba(251,191,36,0.3) 0%, rgba(251,191,36,0.05) 70%)',
+                border: '1px solid rgba(251,191,36,0.4)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 0 60px rgba(251,191,36,0.2)',
+                animation: 'pulse 2s infinite'
+              }}>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#FBbf24" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                  <path d="M2 17l10 5 10-5"/>
+                  <path d="M2 12l10 5 10-5"/>
+                </svg>
+              </div>
+
+              {/* Brand */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '28px', fontWeight: '900', color: '#ffffff', letterSpacing: '-1px' }}>CollabX</span>
+              </div>
+
+              {/* Status badge */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)',
+                borderRadius: '999px', padding: '6px 16px'
+              }}>
+                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FBbf24', animation: 'pulse 1.5s infinite' }}></div>
+                <span style={{ fontSize: '13px', color: '#FBbf24', fontWeight: '600', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Under Maintenance</span>
+              </div>
+
+              {/* Message */}
+              <div style={{ maxWidth: '420px' }}>
+                <h1 style={{ fontSize: '32px', fontWeight: '800', color: '#ffffff', marginBottom: '12px', lineHeight: '1.2' }}>
+                  We&apos;ll be right back
+                </h1>
+                <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.5)', lineHeight: '1.6' }}>
+                  CollabX is currently undergoing scheduled maintenance. We&apos;re working hard to get everything back online. Thank you for your patience.
+                </p>
+              </div>
+
+              {/* Divider */}
+              <div style={{ width: '60px', height: '2px', background: 'rgba(251,191,36,0.3)', borderRadius: '2px' }}></div>
+
+              {/* Footer note */}
+              <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.25)', fontFamily: 'monospace', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                collabx.live — expected back shortly
+              </p>
+
+              <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
+            </div>
+          ) : (
+            <>
+              <IntroSplash />
+              <main id="app-content" className="flex-1 flex flex-col">
+                {children}
+                <ToastContainer />
+              </main>
+            </>
+          )}
         </div>
       </body>
     </html>
