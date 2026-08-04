@@ -21,7 +21,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://collabx.live';
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ─── Set to false when Railway is back online ────────────────────────────────
-const MAINTENANCE_MODE = true;
+const MAINTENANCE_MODE = false;
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const metadata = {
