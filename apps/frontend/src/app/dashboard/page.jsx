@@ -14,6 +14,7 @@ import ProUpgradeModal from '../../components/subscription/ProUpgradeModal';
 import FeedbackButton from '../../components/ui/FeedbackButton';
 import Footer from '../../components/ui/Footer';
 
+
 function DashboardContent() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [joinCode, setJoinCode] = useState('');
